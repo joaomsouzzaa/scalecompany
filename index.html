@@ -43,6 +43,12 @@
 </head>
 
 <body class="text-slate-900 font-inter bg-cover bg-center bg-fixed" style="background-image: url('dashboard-bg.jpg');">
+    <script>
+        window.onerror = function (msg, url, line, col, error) {
+            alert("ERRO CRITICO (Script Crash):\n" + msg + "\nLinha: " + line);
+            return false;
+        };
+    </script>
     <!-- Login Screen -->
     <div id="login-screen" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative overflow-hidden">
