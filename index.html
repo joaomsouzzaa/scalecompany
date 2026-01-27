@@ -426,6 +426,20 @@
                                 </div>
                             </div>
 
+                            <!-- Product Filter -->
+                            <div class="relative">
+                                <div
+                                    class="flex items-center px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer group">
+                                    <i data-lucide="tag" class="w-4 h-4 mr-2 text-slate-500"></i>
+                                    <select id="product-select" onchange="updateSelectedProduct(this.value)"
+                                        class="bg-transparent border-none outline-none text-slate-700 text-sm font-medium appearance-none pr-8 cursor-pointer focus:ring-0 w-full min-w-[150px]">
+                                        <option value="all">Todos os produtos</option>
+                                    </select>
+                                    <i data-lucide="chevron-down"
+                                        class="w-3 h-3 ml-2 text-slate-400 absolute right-3 pointer-events-none"></i>
+                                </div>
+                            </div>
+
                             <button onclick="initRealFbData(localStorage.getItem('fb_access_token'))"
                                 class="p-2 text-slate-400 hover:text-blue-600 hover:bg-slate-50 rounded-lg transition-colors"
                                 title="Atualizar Dados">
@@ -1206,6 +1220,7 @@
         let currentMonth = 0; // Jan
         let currentYear = 2026;
         let selectedCampaign = 'all'; // 'all', 'curso_ia', 'consultoria'
+        let selectedProductName = 'all'; // New State for Product Filter
         const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
         // --- Core Update Logic ---
@@ -1250,19 +1265,29 @@
                 }
 
                 totalInv += day.investment;
-                totalRev += day.revenue;
 
-                const sales = day.vips + day.indiv + day.double;
+                // Revenue/Sales Source Logic: Product Filter takes precedence for Revenue
+                let salesSource = day; // Default to Campaign/All data source
+                if (selectedProductName && selectedProductName !== 'all' && d.products && d.products[selectedProductName]) {
+                    salesSource = d.products[selectedProductName];
+                } else if (selectedProductName && selectedProductName !== 'all') {
+                    // Product selected but no sales for this product on this day
+                    salesSource = { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 };
+                }
+
+                totalRev += salesSource.revenue;
+
+                const sales = salesSource.vips + salesSource.indiv + salesSource.double;
                 totalSales += sales;
 
-                totalVip += day.vips;
-                totalIndiv += day.indiv;
-                totalDouble += day.double;
+                totalVip += salesSource.vips;
+                totalIndiv += salesSource.indiv;
+                totalDouble += salesSource.double;
 
                 return {
                     date: d.date,
-                    inv: day.investment,
-                    rev: day.revenue
+                    inv: day.investment, // Investment always follows Campaign Filter
+                    rev: salesSource.revenue // Revenue follows Product Filter
                 };
             });
 
@@ -2301,80 +2326,84 @@
         }
 
         function recalcDailyDataFromSales() {
-            // Rebuild DAILY_DATA based on ALL_SALES + Mock Investment data (since we don't have real FB cost data linked yet)
-            // We want to preserve the Mock Investment structure BUT overwrite Revenue/Sales counts.
-
-            // 1. Group Sales by Date (YYYY-MM-DD)
-            const salesByDate = {};
-            ALL_SALES.forEach(s => {
-                const k = s.rawDate.toISOString().split('T')[0]; // YYYY-MM-DD
-                if (!salesByDate[k]) salesByDate[k] = {
-                    rev: 0, count: 0, vips: 0, indiv: 0, double: 0,
-                    cons_rev: 0, cons_count: 0, ia_rev: 0, ia_count: 0
+            // Reset daily counts (keep investment from FB)
+            DAILY_DATA.forEach(d => {
+                // Keep d.all.investment
+                // Reset revenue metrics
+                const resetMetrics = (obj) => {
+                    obj.revenue = 0; obj.participants = 0; obj.vips = 0; obj.indiv = 0; obj.double = 0;
                 };
 
-                if (s.status === 'Aprovado') {
-                    salesByDate[k].rev += s.value;
-                    salesByDate[k].count++;
+                resetMetrics(d.all);
+                d.products = {}; // Reset product map completely
 
-                    // Product categorization heuristic
-                    const p = s.product.toLowerCase();
-                    if (p.includes('vip') || p.includes('mentoria')) salesByDate[k].vips++;
-                    else if (p.includes('duplo')) salesByDate[k].double++;
-                    else salesByDate[k].indiv++;
-
-                    // Campaign/Category heuristic (Mocking based on product)
-                    if (p.includes('consultoria')) {
-                        salesByDate[k].cons_rev += s.value;
-                        salesByDate[k].cons_count++;
-                    } else {
-                        salesByDate[k].ia_rev += s.value;
-                        salesByDate[k].ia_count++;
+                // Also reset campaign revenue metrics if they exist
+                Object.keys(d).forEach(key => {
+                    if (key !== 'date' && key !== 'all' && key !== 'products' && typeof d[key] === 'object') {
+                        resetMetrics(d[key]);
                     }
+                });
+            });
+
+            // Iterate Real Sales
+            const productsSet = new Set();
+
+            ALL_SALES.forEach(sale => {
+                // Collect Product Name
+                if (sale.product) productsSet.add(sale.product);
+
+                // Find Day
+                // sale.rawDate is Date object
+                // DAILY_DATA is sorted. Find matching date (ignore exact time)
+                const saleDate = new Date(sale.rawDate);
+                saleDate.setHours(0, 0, 0, 0);
+
+                const dayData = DAILY_DATA.find(d => d.date.getTime() === saleDate.getTime());
+                if (dayData) {
+                    // Aggregate Global
+                    dayData.all.revenue += sale.value;
+                    dayData.all.participants += 1;
+                    if (sale.product.toLowerCase().includes('vip')) dayData.all.vips++;
+                    else if (sale.product.toLowerCase().includes('duplo')) dayData.all.double++;
+                    else dayData.all.indiv++;
+
+                    // Aggregate Product Specific
+                    if (!dayData.products[sale.product]) {
+                        dayData.products[sale.product] = { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 };
+                    }
+                    const pData = dayData.products[sale.product];
+                    pData.revenue += sale.value;
+                    pData.participants += 1;
+                    if (sale.product.toLowerCase().includes('vip')) pData.vips++;
+                    else if (sale.product.toLowerCase().includes('duplo')) pData.double++;
+                    else pData.indiv++;
                 }
             });
 
-            // 2. Iterate existing DAILY_DATA (which has mock dates) OR rebuild it entirely for the viewed range?
-            // The current DAILY_DATA generator makes data from Nov 1 2025 to Jan 31 2026.
-            // Let's UPDATE it.
+            // Update UI Dropdown
+            const select = document.getElementById('product-select');
+            if (select) {
+                // Keep 'all' option
+                select.innerHTML = '<option value="all">Todos os produtos</option>';
+                productsSet.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p;
+                    opt.innerText = p;
+                    select.appendChild(opt);
+                });
+                // Restore selection if needed
+                select.value = selectedProductName;
+            }
 
-            DAILY_DATA.forEach(day => {
-                const k = day.date.toISOString().split('T')[0];
-                const real = salesByDate[k];
+            console.log("Recalculated Daily Data with Products:", DAILY_DATA);
+            refreshDashboard();
+        }
 
-                if (real) {
-                    // Overwrite Revenue & Counts
-                    day.all.revenue = real.rev;
-                    day.all.participants = real.count;
-                    day.all.vips = real.vips;
-                    day.all.indiv = real.indiv;
-                    day.all.double = real.double;
-
-                    // Update Sub-objects (Simple proportion or strict assignment if we had camp tags)
-                    day.consultoria.revenue = real.cons_rev;
-                    day.consultoria.participants = real.cons_count;
-                    // ... (rest of sub-fields update simplified for brevity)
-
-                    day.curso_ia.revenue = real.ia_rev;
-                    day.curso_ia.participants = real.ia_count;
-
-                    // Note: Investment stays as Mock (from original gen) because we don't have real FB Spend yet.
-                } else {
-                    // If no sales that day, zero out revenue? 
-                    // NO, because we might not have historical data imported.
-                    // But for "Today" tests, it should be accurate.
-                    // Let's Zero out revenue if it's "Today" or recent, to show truth.
-                    const now = new Date();
-                    const isRecent = (now - day.date) < (1000 * 60 * 60 * 24 * 7); // Last 7 days
-                    if (isRecent) {
-                        day.all.revenue = 0;
-                        day.all.participants = 0;
-                        day.all.vips = 0;
-                        day.all.indiv = 0;
-                        day.all.double = 0;
-                    }
-                }
-            });
+        function updateSelectedProduct(val) {
+            console.log("Product Filter Changed:", val);
+            selectedProductName = val;
+            refreshDashboard();
+        }
 
             // Also ensure if we have sales for dates NOT in DAILY_DATA, we append them?
             // (Skipping for now to avoid complexity, assuming DAILY_DATA range covers it)
@@ -3042,19 +3071,21 @@
                     dateMap[d] = {
                         date: new Date(d + 'T12:00:00'),
                         all: { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 },
-                        // dynamic keys handled below
+                        products: {} // Initialize dynamic product map
                     };
                 }
 
                 const spend = parseFloat(row.spend || 0);
 
                 let revenue = 0;
+                let sales = 0;
+                let productName = 'unknown'; // Default product name
+
                 if (row.action_values) {
                     const purch = row.action_values.find(a => a.action_type === 'purchase' || a.action_type === 'offsite_conversion.fb_pixel_purchase');
                     if (purch) revenue = parseFloat(purch.value);
                 }
 
-                let sales = 0;
                 if (row.actions) {
                     const purchCnt = row.actions.find(a => a.action_type === 'purchase' || a.action_type === 'offsite_conversion.fb_pixel_purchase');
                     if (purchCnt) sales = parseInt(purchCnt.value);
