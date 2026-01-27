@@ -1077,53 +1077,68 @@
         }
 
         function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-password').value;
-            const errorEl = document.getElementById('login-error');
-            const btn = document.getElementById('login-btn');
+            try {
+                e.preventDefault();
+                console.log("Login clicked");
+                const email = document.getElementById('login-email').value;
+                const pass = document.getElementById('login-password').value;
+                const errorEl = document.getElementById('login-error');
+                const btn = document.getElementById('login-btn');
 
-            // Loading State
-            const originalBtnText = btn.innerText;
-            btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin h-5 w-5"></i>';
-            if (window.lucide) lucide.createIcons();
-            btn.disabled = true;
+                if (!email || !pass) {
+                    alert("Por favor preencha email e senha.");
+                    return;
+                }
 
-            setTimeout(() => {
-                if (USERS[email] && USERS[email].pass === pass) {
-                    // Success
-                    const overlay = document.getElementById('global-loading-overlay');
-                    if (overlay) {
-                        overlay.classList.remove('hidden');
-                        overlay.classList.add('flex');
-                    }
+                // Loading State
+                const originalBtnText = btn.innerText;
+                btn.innerHTML = 'Carregando...'; // Simpler loading text to avoid Lucide dependency issues
+                btn.disabled = true;
 
-                    setTimeout(() => {
-                        const userData = { email, name: USERS[email].name, role: USERS[email].role };
-                        localStorage.setItem('scale_user', JSON.stringify(userData));
-                        errorEl.classList.add('hidden');
-                        checkAuth();
+                setTimeout(() => {
+                    try {
+                        if (USERS[email] && USERS[email].pass === pass) {
+                            // Success
+                            const overlay = document.getElementById('global-loading-overlay');
+                            if (overlay) {
+                                overlay.classList.remove('hidden');
+                                overlay.classList.add('flex');
+                            }
 
-                        // Reset button
+                            setTimeout(() => {
+                                const userData = { email, name: USERS[email].name, role: USERS[email].role };
+                                localStorage.setItem('scale_user', JSON.stringify(userData));
+                                errorEl.classList.add('hidden');
+                                checkAuth();
+
+                                // Reset button
+                                btn.innerText = originalBtnText;
+                                btn.disabled = false;
+
+                                // Hide Overlay
+                                if (overlay) {
+                                    overlay.classList.add('opacity-0');
+                                    setTimeout(() => {
+                                        overlay.classList.remove('flex', 'opacity-0');
+                                        overlay.classList.add('hidden');
+                                    }, 300);
+                                }
+                            }, 600);
+                        } else {
+                            // Error
+                            errorEl.classList.remove('hidden');
+                            btn.innerText = originalBtnText;
+                            btn.disabled = false;
+                        }
+                    } catch (innerErr) {
+                        alert("Erro interno no login: " + innerErr.message);
                         btn.innerText = originalBtnText;
                         btn.disabled = false;
-
-                        // Hide Overlay
-                        if (overlay) {
-                            overlay.classList.add('opacity-0');
-                            setTimeout(() => {
-                                overlay.classList.remove('flex', 'opacity-0');
-                                overlay.classList.add('hidden');
-                            }, 300);
-                        }
-                    }, 600);
-                } else {
-                    // Error
-                    errorEl.classList.remove('hidden');
-                    btn.innerText = originalBtnText;
-                    btn.disabled = false;
-                }
-            }, 800);
+                    }
+                }, 800);
+            } catch (err) {
+                alert("Erro ao iniciar login: " + err.message);
+            }
         }
 
         function handleLogout() {
