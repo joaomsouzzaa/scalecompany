@@ -52,7 +52,7 @@
                 <h2 class="text-3xl font-bold text-slate-800 mb-2">Scale<span class="text-red-500">Marketing</span></h2>
                 <p class="text-slate-500 text-sm">Faça login para acessar o painel</p>
             </div>
-            <form onsubmit="handleLogin(event)" class="space-y-6">
+            <form onsubmit="event.preventDefault(); handleLogin(event)" class="space-y-6">
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
                     <div class="relative">
@@ -1053,7 +1053,14 @@
     </div> <!-- End App Container -->
 
     <script>
-        lucide.createIcons();
+        // Safety check for Lucide
+        if (window.lucide) {
+            try {
+                lucide.createIcons();
+            } catch (e) {
+                console.warn("Lucide icons failed to load:", e);
+            }
+        }
 
         // --- AUTH SYSTEM ---
         const USERS = {
