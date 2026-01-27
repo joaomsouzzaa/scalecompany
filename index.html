@@ -1069,57 +1069,70 @@
         };
 
         function checkAuth() {
-            const user = localStorage.getItem('scale_user');
-            if (!user) {
+            try {
+                const user = localStorage.getItem('scale_user');
+                if (!user) {
+                    document.getElementById('login-screen').classList.remove('hidden');
+                    document.getElementById('app-container').classList.add('hidden');
+                } else {
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('app-container').classList.remove('hidden');
+                    updateUserProfile(JSON.parse(user));
+                    // Ensure lucide icons re-render in app
+                    if (window.lucide && typeof lucide.createIcons === 'function') {
+                        lucide.createIcons();
+                    }
+                }
+            } catch (e) {
+                console.error("Auth Fail", e);
+                // Fallback to login if auth check fails
                 document.getElementById('login-screen').classList.remove('hidden');
-                document.getElementById('login-screen').classList.remove('opacity-0');
-                document.getElementById('app-container').classList.add('hidden');
-            } else {
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('app-container').classList.remove('hidden');
-                updateUserProfile(JSON.parse(user));
-                // Ensure lucide icons re-render in app
-                if (window.lucide) lucide.createIcons();
             }
         }
 
         function handleLogin(e) {
+            // DEBUG MODE: Alerting flow
             e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-password').value;
+
+            const emailField = document.getElementById('login-email');
+            const passField = document.getElementById('login-password');
             const errorEl = document.getElementById('login-error');
             const btn = document.getElementById('login-btn');
+
+            if (!emailField || !passField) {
+                alert("Erro critico: Campos de login não encontrados no DOM.");
+                return;
+            }
+
+            const email = emailField.value.trim(); // Trim for safety
+            const pass = passField.value;
 
             if (!email || !pass) {
                 alert("Por favor preencha email e senha.");
                 return;
             }
 
-            // Simple Loading State
-            const originalBtnText = btn.innerText;
-            btn.innerText = 'Entrando...';
-            btn.disabled = true;
+            btn.innerText = 'Verificando...';
 
-            setTimeout(() => {
-                if (USERS[email] && USERS[email].pass === pass) {
-                    // Success
-                    const userData = { email, name: USERS[email].name, role: USERS[email].role };
-                    localStorage.setItem('scale_user', JSON.stringify(userData));
+            // Synchronous Check for Debugging
+            if (USERS[email] && USERS[email].pass === pass) {
+                // Success
+                const userData = { email, name: USERS[email].name, role: USERS[email].role };
+                localStorage.setItem('scale_user', JSON.stringify(userData));
 
-                    if (errorEl) errorEl.classList.add('hidden');
+                if (errorEl) errorEl.classList.add('hidden');
 
-                    checkAuth();
+                // Force checkAuth immediately
+                checkAuth();
 
-                    // Reset Button
-                    btn.innerText = originalBtnText;
-                    btn.disabled = false;
-                } else {
-                    // Error
-                    if (errorEl) errorEl.classList.remove('hidden');
-                    btn.innerText = originalBtnText;
-                    btn.disabled = false;
-                }
-            }, 500);
+                // Reset UI
+                btn.innerText = 'Entrar';
+            } else {
+                // Error
+                if (errorEl) errorEl.classList.remove('hidden');
+                btn.innerText = 'Entrar';
+                alert("Login falhou para: " + email + "\nVerifique as credenciais no código.");
+            }
         }
 
         function handleLogout() {
