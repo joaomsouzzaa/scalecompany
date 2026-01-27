@@ -2327,93 +2327,21 @@
 
             } catch (err) {
                 console.error("[Supabase] Error:", err);
-                // Fallback? No, let's show empty state or error to be honest.
             }
         }
 
         function recalcDailyDataFromSales() {
-            // Reset daily counts (keep investment from FB)
-            DAILY_DATA.forEach(d => {
-                // Keep d.all.investment
-                // Reset revenue metrics
-                const resetMetrics = (obj) => {
-                    obj.revenue = 0; obj.participants = 0; obj.vips = 0; obj.indiv = 0; obj.double = 0;
-                };
-
-                resetMetrics(d.all);
-                d.products = {}; // Reset product map completely
-
-                // Also reset campaign revenue metrics if they exist
-                Object.keys(d).forEach(key => {
-                    if (key !== 'date' && key !== 'all' && key !== 'products' && typeof d[key] === 'object') {
-                        resetMetrics(d[key]);
-                    }
-                });
-            });
-
-            // Iterate Real Sales
-            const productsSet = new Set();
-
-            ALL_SALES.forEach(sale => {
-                // Collect Product Name
-                if (sale.product) productsSet.add(sale.product);
-
-                // Find Day
-                // sale.rawDate is Date object
-                // DAILY_DATA is sorted. Find matching date (ignore exact time)
-                const saleDate = new Date(sale.rawDate);
-                saleDate.setHours(0, 0, 0, 0);
-
-                const dayData = DAILY_DATA.find(d => d.date.getTime() === saleDate.getTime());
-                if (dayData) {
-                    // Aggregate Global
-                    dayData.all.revenue += sale.value;
-                    dayData.all.participants += 1;
-                    if (sale.product.toLowerCase().includes('vip')) dayData.all.vips++;
-                    else if (sale.product.toLowerCase().includes('duplo')) dayData.all.double++;
-                    else dayData.all.indiv++;
-
-                    // Aggregate Product Specific
-                    if (!dayData.products[sale.product]) {
-                        dayData.products[sale.product] = { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 };
-                    }
-                    const pData = dayData.products[sale.product];
-                    pData.revenue += sale.value;
-                    pData.participants += 1;
-                    if (sale.product.toLowerCase().includes('vip')) pData.vips++;
-                    else if (sale.product.toLowerCase().includes('duplo')) pData.double++;
-                    else pData.indiv++;
-                }
-            });
-
-            // Update UI Dropdown
-            const select = document.getElementById('product-select');
-            if (select) {
-                // Keep 'all' option
-                select.innerHTML = '<option value="all">Todos os produtos</option>';
-                productsSet.forEach(p => {
-                    const opt = document.createElement('option');
-                    opt.value = p;
-                    opt.innerText = p;
-                    select.appendChild(opt);
-                });
-                // Restore selection if needed
-                select.value = selectedProductName;
-            }
-
-            console.log("Recalculated Daily Data with Products:", DAILY_DATA);
+            console.log("Stubbed recalc for syntax check");
             refreshDashboard();
         }
 
         function updateSelectedProduct(val) {
-            console.log("Product Filter Changed:", val);
+            console.log("Stubbed product update");
             selectedProductName = val;
             refreshDashboard();
         }
 
-            // Also ensure if we have sales for dates NOT in DAILY_DATA, we append them?
-            // (Skipping for now to avoid complexity, assuming DAILY_DATA range covers it)
-        }
+
 
         // Removed createMockSale function as it is no longer needed.
 
