@@ -2716,8 +2716,8 @@
             localStorage.setItem('fb_access_token', token); // Persist Token
             if (!token) return;
 
-            // Fetch Accounts
-            FB.api('/me/adaccounts', { fields: 'name,account_id,currency,account_status,business_name' }, function (response) {
+            // Fetch Accounts - Explicitly passing access_token
+            FB.api('/me/adaccounts', { access_token: token, fields: 'name,account_id,currency,account_status,business_name' }, function (response) {
                 if (response.error) {
                     console.error('Error fetching accounts:', response.error);
                     alert('Erro ao buscar contas: ' + response.error.message);
@@ -2801,8 +2801,8 @@
                 if (msg) msg.innerText = 'Atualizando dados...';
             }
 
-            // 1. Fetch Campaigns
-            FB.api(`/act_${accountId}/campaigns`, { fields: 'name,status', limit: 300 }, function (campResponse) {
+            // 1. Fetch Campaigns - Explicitly passing access_token
+            FB.api(`/act_${accountId}/campaigns`, { access_token: fbAccessToken, fields: 'name,status', limit: 300 }, function (campResponse) {
                 if (campResponse.data) {
                     updateCampaignSelector(campResponse.data);
                 }
@@ -2814,6 +2814,7 @@
 
         function fetchInsightsForAccount(accountId, isRestore, overlay) {
             const params = {
+                access_token: fbAccessToken, // Explicitly passing access_token
                 level: 'campaign',
                 time_increment: 1,
                 date_preset: 'last_90d',
