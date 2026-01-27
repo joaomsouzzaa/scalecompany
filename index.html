@@ -1467,14 +1467,13 @@
                     start.setMonth(today.getMonth() - 1);
                     start.setDate(1);
                     end.setDate(0); // Last day of previous month
-                    break;
                 case 'lifetime':
                     start.setFullYear(2024, 0, 1); // Mock lifetime start
                     break;
             }
             // Normalize times
             start.setHours(0, 0, 0, 0);
-            end.setHours(0, 0, 0, 0);
+            end.setHours(23, 59, 59, 999); // Include full end days
             return { start, end };
         }
 
@@ -2244,8 +2243,8 @@
         function initDailyData() {
             DAILY_DATA = [];
             const today = new Date();
-            // Generate last 90 days backbone
-            for (let i = 0; i < 90; i++) {
+            // Generate last 365 days backbone (Increased from 90 to support longer views)
+            for (let i = 0; i < 365; i++) {
                 const d = new Date(today);
                 d.setDate(today.getDate() - i);
                 d.setHours(0, 0, 0, 0); // Normalize to midnight for matching
@@ -2361,8 +2360,9 @@
             const productsSet = new Set();
 
             ALL_SALES.forEach(sale => {
-                // Collect Product Name
-                if (sale.product) productsSet.add(sale.product);
+                // Collect Product Name (Trimmed)
+                const pName = sale.product ? sale.product.trim() : 'Produto Padrão';
+                if (pName) productsSet.add(pName);
 
                 // Find Day
                 // sale.rawDate is Date object
@@ -2381,10 +2381,10 @@
                     else dayData.all.indiv++;
 
                     // Aggregate Product Specific
-                    if (!dayData.products[sale.product]) {
-                        dayData.products[sale.product] = { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 };
+                    if (!dayData.products[pName]) {
+                        dayData.products[pName] = { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 };
                     }
-                    const pData = dayData.products[sale.product];
+                    const pData = dayData.products[pName];
                     pData.revenue += sale.value;
                     pData.participants += 1;
                     if (sale.product.toLowerCase().includes('vip')) pData.vips++;
