@@ -1230,8 +1230,12 @@
         // --- Core Update Logic ---
         function refreshDashboard() {
             // 1. Determine Range
-            const start = selectedStartDate ? selectedStartDate : new Date(2026, 0, 18); // Default Last 7
-            const end = selectedEndDate ? selectedEndDate : new Date(2026, 0, 24);
+            const defaultEnd = new Date();
+            const defaultStart = new Date();
+            defaultStart.setDate(defaultEnd.getDate() - 6); // Last 7 days including today
+
+            const start = selectedStartDate ? selectedStartDate : defaultStart;
+            const end = selectedEndDate ? selectedEndDate : defaultEnd;
 
             // Normalize
             start.setHours(0, 0, 0, 0);
@@ -1281,7 +1285,7 @@
 
                 totalRev += salesSource.revenue;
 
-                const sales = salesSource.vips + salesSource.indiv + salesSource.double;
+                const sales = salesSource.participants || 0; // Use direct count from source
                 totalSales += sales;
 
                 totalVip += salesSource.vips;
