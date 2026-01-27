@@ -2645,11 +2645,8 @@
                     if (typeof generateSalesData === 'function') generateSalesData();
                 }
 
-                // Filter to hide "future" mock sales (beyond Jan 25)
-                const mockToday = new Date(2026, 0, 25, 23, 59, 59);
-                const recent = ALL_SALES
-                    .filter(s => s.rawDate <= mockToday)
-                    .slice(0, 5);
+                // Show top 5 recent sales (regardless of date)
+                const recent = ALL_SALES.slice(0, 5);
 
                 recent.forEach(sale => {
                     let statusBadge = '';
