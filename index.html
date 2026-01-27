@@ -2370,7 +2370,9 @@
                 const saleDate = new Date(sale.rawDate);
                 saleDate.setHours(0, 0, 0, 0);
 
-                const dayData = DAILY_DATA.find(d => d.date.getTime() === saleDate.getTime());
+                const checkDateStr = saleDate.toDateString();
+                const dayData = DAILY_DATA.find(d => d.date.toDateString() === checkDateStr);
+
                 if (dayData) {
                     // console.log(`[Metric] Sale ${sale.id} ($${sale.value}) mapped to ${saleDate.toLocaleDateString()}`);
                     // Aggregate Global
