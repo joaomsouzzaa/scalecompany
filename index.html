@@ -2818,7 +2818,7 @@
                 level: 'campaign',
                 time_increment: 1,
                 date_preset: 'last_90d',
-                limit: 500,
+                limit: 5000, // Increased limit to capture more data rows
                 fields: 'campaign_name,campaign_id,spend,impressions,clicks,actions,action_values'
             };
 
@@ -2837,6 +2837,8 @@
                     if (!isRestore) alert('Erro ao baixar dados: ' + insightResponse.error.message);
                     return;
                 }
+
+                console.log("[Scale] Insights Rows Fetched:", insightResponse.data ? insightResponse.data.length : 0);
 
                 // Process Data
                 processFbInsights(insightResponse.data);
@@ -2907,7 +2909,8 @@
                 dateMap[d].all.revenue += revenue;
                 dateMap[d].all.participants += sales;
 
-                // Aggregate Campaign
+                // Aggregate Campaign key MUST match filtered ID
+                // row.campaign_id is string, select value is string.
                 const cid = row.campaign_id;
                 if (!dateMap[d][cid]) {
                     dateMap[d][cid] = { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 };
