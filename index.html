@@ -1234,8 +1234,9 @@
             const defaultStart = new Date();
             defaultStart.setDate(defaultEnd.getDate() - 6); // Last 7 days including today
 
-            const start = selectedStartDate ? selectedStartDate : defaultStart;
-            const end = selectedEndDate ? selectedEndDate : defaultEnd;
+            // CRITICAL: Clone dates to avoid mutating global state
+            const start = selectedStartDate ? new Date(selectedStartDate) : defaultStart;
+            const end = selectedEndDate ? new Date(selectedEndDate) : defaultEnd;
 
             // Normalize
             start.setHours(0, 0, 0, 0);
@@ -2371,6 +2372,7 @@
 
                 const dayData = DAILY_DATA.find(d => d.date.getTime() === saleDate.getTime());
                 if (dayData) {
+                    // console.log(`[Metric] Sale ${sale.id} ($${sale.value}) mapped to ${saleDate.toLocaleDateString()}`);
                     // Aggregate Global
                     dayData.all.revenue += sale.value;
                     dayData.all.participants += 1;
