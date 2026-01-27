@@ -43,6 +43,14 @@
 </head>
 
 <body class="text-slate-900 font-inter bg-cover bg-center bg-fixed" style="background-image: url('dashboard-bg.jpg');">
+    <script>
+        // GLOBAL ERROR TRAP
+        window.onerror = function (msg, url, line, col, error) {
+            alert("ERRO GLOBAL DETECTADO:\n" + msg + "\nLinha: " + line + "\nColuna: " + col);
+            return false;
+        };
+        console.log("Error Trap Installed");
+    </script>
 
     <!-- Login Screen -->
     <div id="login-screen" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-4">
@@ -1194,7 +1202,6 @@
         }(document, 'script', 'facebook-jssdk'));
 
 
-        // --- DATA ENGINE ---
         // --- DATA ENGINE ---
         // Initialized as empty; populated by initDailyData() and Supabase
         let DAILY_DATA = [];
@@ -2799,6 +2806,15 @@
 
         // Run Init
         initApp();
+
+        // FAILSAFE: Manual Event Listener for Login
+        setTimeout(() => {
+            const btn = document.getElementById('login-btn');
+            if (btn) {
+                btn.onclick = handleLogin; // Direct override
+                console.log("Login button listener attached manually");
+            }
+        }, 1000);
 
 
         // Helper to toggle Account Dropdown
