@@ -2247,6 +2247,7 @@
             for (let i = 0; i < 90; i++) {
                 const d = new Date(today);
                 d.setDate(today.getDate() - i);
+                d.setHours(0, 0, 0, 0); // Normalize to midnight for matching
 
                 // Base Structure
                 DAILY_DATA.push({
