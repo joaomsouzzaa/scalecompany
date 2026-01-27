@@ -1084,68 +1084,42 @@
         }
 
         function handleLogin(e) {
-            try {
-                e.preventDefault();
-                console.log("Login clicked");
-                const email = document.getElementById('login-email').value;
-                const pass = document.getElementById('login-password').value;
-                const errorEl = document.getElementById('login-error');
-                const btn = document.getElementById('login-btn');
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            const btn = document.getElementById('login-btn');
 
-                if (!email || !pass) {
-                    alert("Por favor preencha email e senha.");
-                    return;
-                }
-
-                // Loading State
-                const originalBtnText = btn.innerText;
-                btn.innerHTML = 'Carregando...'; // Simpler loading text to avoid Lucide dependency issues
-                btn.disabled = true;
-
-                setTimeout(() => {
-                    try {
-                        if (USERS[email] && USERS[email].pass === pass) {
-                            // Success
-                            const overlay = document.getElementById('global-loading-overlay');
-                            if (overlay) {
-                                overlay.classList.remove('hidden');
-                                overlay.classList.add('flex');
-                            }
-
-                            setTimeout(() => {
-                                const userData = { email, name: USERS[email].name, role: USERS[email].role };
-                                localStorage.setItem('scale_user', JSON.stringify(userData));
-                                errorEl.classList.add('hidden');
-                                checkAuth();
-
-                                // Reset button
-                                btn.innerText = originalBtnText;
-                                btn.disabled = false;
-
-                                // Hide Overlay
-                                if (overlay) {
-                                    overlay.classList.add('opacity-0');
-                                    setTimeout(() => {
-                                        overlay.classList.remove('flex', 'opacity-0');
-                                        overlay.classList.add('hidden');
-                                    }, 300);
-                                }
-                            }, 600);
-                        } else {
-                            // Error
-                            errorEl.classList.remove('hidden');
-                            btn.innerText = originalBtnText;
-                            btn.disabled = false;
-                        }
-                    } catch (innerErr) {
-                        alert("Erro interno no login: " + innerErr.message);
-                        btn.innerText = originalBtnText;
-                        btn.disabled = false;
-                    }
-                }, 800);
-            } catch (err) {
-                alert("Erro ao iniciar login: " + err.message);
+            if (!email || !pass) {
+                alert("Por favor preencha email e senha.");
+                return;
             }
+
+            // Simple Loading State
+            const originalBtnText = btn.innerText;
+            btn.innerText = 'Entrando...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                if (USERS[email] && USERS[email].pass === pass) {
+                    // Success
+                    const userData = { email, name: USERS[email].name, role: USERS[email].role };
+                    localStorage.setItem('scale_user', JSON.stringify(userData));
+
+                    if (errorEl) errorEl.classList.add('hidden');
+
+                    checkAuth();
+
+                    // Reset Button
+                    btn.innerText = originalBtnText;
+                    btn.disabled = false;
+                } else {
+                    // Error
+                    if (errorEl) errorEl.classList.remove('hidden');
+                    btn.innerText = originalBtnText;
+                    btn.disabled = false;
+                }
+            }, 500);
         }
 
         function handleLogout() {
@@ -1208,59 +1182,9 @@
 
 
         // --- DATA ENGINE ---
-        let DAILY_DATA = (function generateHistory() {
-            const data = [];
-            const start = new Date(2025, 10, 1); // Nov 1 2025
-            const end = new Date(2026, 0, 31);   // Jan 31 2026
-
-            let curr = new Date(start);
-            while (curr <= end) {
-                const isDec = curr.getMonth() === 11;
-                const baseVol = isDec ? 1.5 : 1.0;
-
-                // 1. Investment
-                const inv = 800 + Math.random() * 500 * baseVol;
-
-                // 2. Sales Counts (Derived from basic efficiency guess)
-                // Let's say CPA is roughly 250
-                const rawSales = Math.floor(inv / (200 + Math.random() * 100));
-                const salesVol = Math.max(1, rawSales); // At least 1 sale
-
-                // 3. Product Splits
-                const vips = Math.floor(salesVol * 0.15); // 15% VIP
-                const doubles = Math.floor(salesVol * 0.25); // 25% Double
-                const indiv = Math.max(0, salesVol - vips - doubles); // Rest Individual
-
-                // 4. Calculate Exact Revenue
-                const rev = (vips * 2997) + (doubles * 1597) + (indiv * 997);
-
-                // 5. Campaign Splits (60/40)
-                // We must split COUNTS first to ensure integer sales
-                const ia_part = Math.ceil(salesVol * 0.6);
-                const ia_vips = Math.ceil(vips * 0.6);
-                const ia_doub = Math.ceil(doubles * 0.6);
-                const ia_indiv = Math.max(0, ia_part - ia_vips - ia_doub);
-                const ia_rev = (ia_vips * 2997) + (ia_doub * 1597) + (ia_indiv * 997);
-                const ia_inv = inv * 0.6;
-
-                const cons_part = Math.max(0, salesVol - ia_part);
-                const cons_vips = Math.max(0, vips - ia_vips);
-                const cons_doub = Math.max(0, doubles - ia_doub);
-                const cons_indiv = Math.max(0, indiv - ia_indiv);
-                const cons_rev = (cons_vips * 2997) + (cons_doub * 1597) + (cons_indiv * 997);
-                const cons_inv = inv * 0.4;
-
-                data.push({
-                    date: new Date(curr),
-                    all: { investment: inv, revenue: rev, participants: salesVol, vips: vips, indiv: indiv, double: doubles },
-                    curso_ia: { investment: ia_inv, revenue: ia_rev, participants: ia_part, vips: ia_vips, indiv: ia_indiv, double: ia_doub },
-                    consultoria: { investment: cons_inv, revenue: cons_rev, participants: cons_part, vips: cons_vips, indiv: cons_indiv, double: cons_doub }
-                });
-
-                curr.setDate(curr.getDate() + 1);
-            }
-            return data;
-        })();
+        // --- DATA ENGINE ---
+        // Initialized as empty; populated by initDailyData() and Supabase
+        let DAILY_DATA = [];
 
         // --- State ---
         let selectedStartDate = null;
