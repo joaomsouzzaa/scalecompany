@@ -1,0 +1,2577 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scale Dashboard - Demo Visual</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        red: {
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="text-slate-900 font-inter bg-cover bg-center bg-fixed" style="background-image: url('dashboard-bg.jpg');">
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 to-orange-500"></div>
+            <div class="mb-8 text-center">
+                <h2 class="text-3xl font-bold text-slate-800 mb-2">Scale<span class="text-red-500">Marketing</span></h2>
+                <p class="text-slate-500 text-sm">Faça login para acessar o painel</p>
+            </div>
+            <form onsubmit="handleLogin(event)" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="mail" class="h-5 w-5 text-slate-400"></i>
+                        </div>
+                        <input type="email" id="login-email" required
+                            class="block w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors outline-none"
+                            placeholder="seu@email.com">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Senha</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="lock" class="h-5 w-5 text-slate-400"></i>
+                        </div>
+                        <input type="password" id="login-password" required
+                            class="block w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors outline-none"
+                            placeholder="••••••••">
+                    </div>
+                </div>
+                <div id="login-error" class="hidden bg-red-50 text-red-600 text-sm p-3 rounded-lg flex items-center">
+                    <i data-lucide="alert-circle" class="w-4 h-4 mr-2"></i>
+                    <span>Credenciais inválidas</span>
+                </div>
+                <button type="submit" id="login-btn"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all transform hover:scale-[1.02]">
+                    Entrar
+                </button>
+            </form>
+            <div class="mt-6 text-center text-xs text-slate-400">
+                &copy; 2026 Scale Marketing. Todos os direitos reservados.
+            </div>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div id="app-container" class="hidden flex h-screen overflow-hidden w-full">
+
+        <!-- Sidebar -->
+        <aside
+            class="w-64 bg-slate-900 text-white flex flex-col border-r border-slate-800 transition-all duration-300 ease-in-out relative"
+            id="sidebar">
+            <!-- Header / Logo -->
+            <div id="sidebar-header"
+                class="h-16 flex items-center justify-between px-4 border-b border-slate-800 overflow-hidden transition-all duration-300">
+                <span id="sidebar-logo"
+                    class="font-bold text-xl tracking-tight whitespace-nowrap transition-all duration-300">
+                    Scale<span class="text-red-500">Marketing</span>
+                </span>
+                <button onclick="toggleSidebar()"
+                    class="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors">
+                    <i data-lucide="chevron-left" id="sidebar-toggle-icon"
+                        class="w-5 h-5 transition-transform duration-300"></i>
+                </button>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 py-6 space-y-2 px-3">
+                <!-- Parent Item: Dashboard -->
+                <div>
+                    <button onclick="toggleDashboardMenu()"
+                        class="w-full flex items-center justify-between px-3 py-3 rounded-lg bg-red-600/10 text-red-500 group overflow-hidden whitespace-nowrap min-h-[44px] transition-colors hover:bg-slate-800 hover:text-white"
+                        id="nav-dashboard-parent">
+                        <div class="flex items-center">
+                            <i data-lucide="layout-dashboard" class="w-5 h-5 min-w-[20px]"></i>
+                            <span
+                                class="font-medium text-sm ml-3 transition-opacity duration-300 opacity-100 sidebar-text">Dashboard</span>
+                        </div>
+                        <i data-lucide="chevron-down" id="dashboard-chevron"
+                            class="w-4 h-4 transition-transform sidebar-text"></i>
+                    </button>
+
+                    <!-- Submenu -->
+                    <div id="dashboard-submenu" class="ml-4 mt-1 space-y-1 hidden border-l border-slate-700 pl-2">
+                        <!-- Workshop Scale (Active & Linked) -->
+                        <a href="#" onclick="navigateTo('dashboard'); setActiveSubItem(this)"
+                            class="flex items-center px-3 py-2 rounded-lg text-white text-sm transition-colors group">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-500 mr-2 transition-colors"></span>
+                            <span class="sidebar-text">Workshop Scale</span>
+                        </a>
+
+                        <!-- Scale Summit (Inactive) -->
+                        <a href="#"
+                            class="flex items-center px-3 py-2 rounded-lg text-slate-500 cursor-default text-sm transition-colors group">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-700 mr-2 transition-colors"></span>
+                            <span class="sidebar-text">Scale Summit</span>
+                        </a>
+
+                        <!-- Program Scale (Inactive) -->
+                        <a href="#"
+                            class="flex items-center px-3 py-2 rounded-lg text-slate-500 cursor-default text-sm transition-colors group">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-700 mr-2 transition-colors"></span>
+                            <span class="sidebar-text">Program Scale</span>
+                        </a>
+
+                        <!-- Scale Club (Inactive) -->
+                        <a href="#"
+                            class="flex items-center px-3 py-2 rounded-lg text-slate-500 cursor-default text-sm transition-colors group">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-700 mr-2 transition-colors"></span>
+                            <span class="sidebar-text">Scale Club</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Vendas Link -->
+                <a href="#" id="nav-vendas" onclick="navigateTo('vendas')"
+                    class="flex items-center px-3 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors group overflow-hidden whitespace-nowrap min-h-[44px]"
+                    title="Vendas">
+                    <i data-lucide="shopping-cart" class="w-5 h-5 min-w-[20px]"></i>
+                    <span
+                        class="font-medium text-sm ml-3 transition-opacity duration-300 opacity-100 sidebar-text">Vendas</span>
+                </a>
+
+                <a href="#" id="nav-settings" onclick="navigateTo('settings')"
+                    class="flex items-center px-3 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors group overflow-hidden whitespace-nowrap min-h-[44px] mt-auto"
+                    title="Configurações">
+                    <i data-lucide="settings" class="w-5 h-5 min-w-[20px]"></i>
+                    <span
+                        class="font-medium text-sm ml-3 transition-opacity duration-300 opacity-100 sidebar-text">Configurações</span>
+                </a>
+            </nav>
+
+            <!-- Footer / Profile -->
+            <div class="p-4 border-t border-slate-800 relative group" id="profile-footer">
+                <!-- Dropup Menu -->
+                <div id="profile-dropdown"
+                    class="hidden absolute bottom-full left-4 bg-white rounded-lg shadow-xl border border-slate-200 w-56 mb-2 text-slate-700 overflow-hidden z-20">
+                    <a href="#" class="flex items-center px-4 py-2 hover:bg-slate-50 text-sm transition-colors"
+                        onclick="alert('Funcionalidade de Editar Perfil')">
+                        <i data-lucide="user" class="w-4 h-4 mr-2 text-slate-400"></i>
+                        Editar Perfil
+                    </a>
+                    <div class="border-t border-slate-100 my-1"></div>
+                    <a href="#"
+                        class="flex items-center px-4 py-2 hover:bg-red-50 text-red-600 text-sm transition-colors"
+                        onclick="handleLogout()">
+                        <i data-lucide="log-out" class="w-4 h-4 mr-2 text-red-500"></i>
+                        Sair
+                    </a>
+                </div>
+
+                <button onclick="toggleProfileMenu()"
+                    class="flex items-center whitespace-nowrap w-full hover:bg-slate-800 rounded-lg p-2 -ml-2 transition-colors text-left outline-none focus:bg-slate-800">
+                    <div
+                        class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border-2 border-slate-600 font-bold min-w-[40px]">
+                        US</div>
+                    <div class="ml-3 transition-opacity duration-300 opacity-100 sidebar-text" id="user-profile-info">
+                        <p class="text-sm font-medium text-white">Admin User</p>
+                        <p class="text-xs text-slate-500">admin@scale.com</p>
+                    </div>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-screen overflow-hidden bg-transparent relative">
+            <!-- Scrollable Area -->
+            <div class="flex-1 overflow-y-auto p-8">
+                <div class="max-w-7xl mx-auto space-y-8">
+
+                    <!-- VIEW: DASHBOARD -->
+                    <div id="view-dashboard" class="space-y-8 transition-opacity duration-300">
+                        <!-- Header -->
+                        <div class="flex items-center justify-between">
+                            <h1 class="text-2xl font-bold text-slate-800">Dashboard de Vendas</h1>
+                        </div>
+
+                        <!-- Filters -->
+                        <div
+                            class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                            <!-- Date Picker Container -->
+                            <div class="relative" id="datePickerContainer">
+                                <button onclick="toggleDatePicker()"
+                                    class="flex items-center px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 hover:bg-slate-100 transition-colors">
+                                    <i data-lucide="calendar" class="w-4 h-4 mr-2 text-slate-500"></i>
+                                    <span id="dateRangeLabel">Últimos 30 dias</span>
+                                    <i data-lucide="chevron-down" class="w-3 h-3 ml-2 text-slate-400"></i>
+                                </button>
+
+                                <!-- Meta-style Date Picker Dropdown -->
+                                <div id="datePickerDropdown"
+                                    class="hidden absolute top-full left-0 mt-2 bg-white rounded-lg shadow-xl border border-slate-200 z-50 flex w-[800px] overflow-hidden">
+
+                                    <!-- Sidebar: Presets -->
+                                    <div
+                                        class="w-64 border-r border-slate-100 p-4 bg-slate-50/50 flex flex-col gap-1 max-h-[500px] overflow-y-auto">
+                                        <h4 class="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">
+                                            Predefinições</h4>
+                                        <label
+                                            class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700">
+                                            <input type="radio" name="datePreset"
+                                                class="text-blue-600 focus:ring-blue-500" />
+                                            Hoje
+                                        </label>
+                                        <label
+                                            class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700">
+                                            <input type="radio" name="datePreset"
+                                                class="text-blue-600 focus:ring-blue-500" />
+                                            Ontem
+                                        </label>
+                                        <label
+                                            class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700">
+                                            <input type="radio" name="datePreset"
+                                                class="text-blue-600 focus:ring-blue-500" />
+                                            Últimos 7 dias
+                                        </label>
+                                        <label
+                                            class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700">
+                                            <input type="radio" name="datePreset"
+                                                class="text-blue-600 focus:ring-blue-500" />
+                                            Últimos 14 dias
+                                        </label>
+                                        <label
+                                            class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 bg-blue-50 font-medium text-blue-700">
+                                            <input type="radio" name="datePreset"
+                                                class="text-blue-600 focus:ring-blue-500" checked />
+                                            Últimos 30 dias
+                                        </label>
+                                        <label
+                                            class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700">
+                                            <input type="radio" name="datePreset"
+                                                class="text-blue-600 focus:ring-blue-500" />
+                                            Este mês
+                                        </label>
+                                        <label
+                                            class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700">
+                                            <input type="radio" name="datePreset"
+                                                class="text-blue-600 focus:ring-blue-500" />
+                                            Mês passado
+                                        </label>
+                                        <label
+                                            class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700">
+                                            <input type="radio" name="datePreset"
+                                                class="text-blue-600 focus:ring-blue-500" />
+                                            Vitalício
+                                        </label>
+                                        <label
+                                            class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700"
+                                            id="preset-custom-container">
+                                            <input type="radio" name="datePreset" id="preset-custom"
+                                                class="text-blue-600 focus:ring-blue-500" disabled />
+                                            Personalizado
+                                        </label>
+                                    </div>
+
+                                    <!-- Main Area: Calendars -->
+                                    <div class="flex-1 p-6">
+                                        <div class="flex justify-between items-center mb-6">
+                                            <!-- Inputs -->
+                                            <div class="flex items-center gap-4">
+                                                <div
+                                                    class="border rounded px-3 py-1.5 text-sm w-32 text-center bg-slate-50">
+                                                    25 dez 2025</div>
+                                                <span class="text-slate-400">-</span>
+                                                <div
+                                                    class="border rounded px-3 py-1.5 text-sm w-32 text-center bg-slate-50">
+                                                    25 jan 2026</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex gap-8">
+                                            <!-- Calendar 1 -->
+                                            <div class="flex-1">
+                                                <div class="flex justify-between font-medium text-slate-700 mb-4 px-2">
+                                                    <span>Dezembro 2025</span>
+                                                </div>
+                                                <div
+                                                    class="grid grid-cols-7 gap-1 text-center text-xs text-slate-400 mb-2">
+                                                    <div>D</div>
+                                                    <div>S</div>
+                                                    <div>T</div>
+                                                    <div>Q</div>
+                                                    <div>Q</div>
+                                                    <div>S</div>
+                                                    <div>S</div>
+                                                </div>
+                                                <div class="grid grid-cols-7 gap-1 text-sm" id="cal-container-1">
+                                                    <!-- JS Injected -->
+                                                </div>
+                                            </div>
+
+                                            <!-- Calendar 2 -->
+                                            <div class="flex-1">
+                                                <div class="flex justify-between font-medium text-slate-700 mb-4 px-2">
+                                                    <span>Janeiro 2026</span>
+                                                </div>
+                                                <div
+                                                    class="grid grid-cols-7 gap-1 text-center text-xs text-slate-400 mb-2">
+                                                    <div>D</div>
+                                                    <div>S</div>
+                                                    <div>T</div>
+                                                    <div>Q</div>
+                                                    <div>Q</div>
+                                                    <div>S</div>
+                                                    <div>S</div>
+                                                </div>
+                                                <div class="grid grid-cols-7 gap-1 text-sm" id="cal-container-2">
+                                                    <!-- JS Injected -->
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div
+                                            class="flex justify-end items-center gap-3 mt-8 pt-4 border-t border-slate-100">
+                                            <button onclick="toggleDatePicker()"
+                                                class="px-4 py-2 text-slate-600 hover:bg-slate-50 text-sm font-medium rounded">Cancelar</button>
+                                            <button onclick="applyDateSelection()"
+                                                class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded shadow-sm transition-colors">Atualizar</button>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col items-end gap-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Scale
+                                    Club</span>
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="flex items-center px-3 py-2 border border-slate-200 rounded-lg bg-white">
+                                        <i data-lucide="filter" class="w-4 h-4 text-slate-400 mr-2"></i>
+                                        <select id="campaign-select" onchange="filterCampaigns(this.value)"
+                                            class="bg-transparent text-sm text-slate-700 outline-none cursor-pointer">
+                                            <option value="all">Todas as campanhas</option>
+                                            <option value="curso_ia">Curso de IA</option>
+                                            <option value="consultoria">Consultoria</option>
+                                        </select>
+                                    </div>
+                                    <button
+                                        class="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                        <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KPI Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <!-- Card 1 -->
+                            <div
+                                class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md group">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div
+                                        class="p-2 bg-slate-50 rounded-lg text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                                        <i data-lucide="dollar-sign" class="w-5 h-5"></i>
+                                    </div>
+                                    <span id="trend-investment"
+                                        class="bg-green-50 text-green-600 text-xs font-medium px-2 py-1 rounded-full flex items-center">+12%</span>
+                                </div>
+                                <p class="text-slate-500 text-sm font-medium">Investimento Total</p>
+                                <h3 id="val-investment" class="text-2xl font-bold text-slate-900 mt-1">R$ 25.700,70</h3>
+                            </div>
+
+                            <!-- Card 2 (Highlight) -->
+                            <div
+                                class="bg-red-600 p-6 rounded-xl border border-red-500 shadow-sm text-white relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-red-200 hover:shadow-lg">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="p-2 bg-red-500/50 rounded-lg text-white"><i data-lucide="trending-up"
+                                            class="w-5 h-5"></i></div>
+                                    <span id="trend-revenue"
+                                        class="bg-white/20 text-white text-xs font-medium px-2 py-1 rounded-full flex items-center">+24%</span>
+                                </div>
+                                <p class="text-red-100 text-sm font-medium">Faturamento Total</p>
+                                <h3 id="val-revenue" class="text-2xl font-bold mt-1">R$ 145.850,00</h3>
+                            </div>
+
+                            <!-- Card 3 -->
+                            <div
+                                class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md group">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div
+                                        class="p-2 bg-slate-50 rounded-lg text-slate-500 group-hover:bg-purple-50 group-hover:text-purple-600 transition-colors">
+                                        <i data-lucide="briefcase" class="w-5 h-5"></i>
+                                    </div>
+                                    <span id="trend-cpa"
+                                        class="bg-red-50 text-red-600 text-xs font-medium px-2 py-1 rounded-full flex items-center">-5%</span>
+                                </div>
+                                <p class="text-slate-500 text-sm font-medium">CPA Médio</p>
+                                <h3 id="val-cpa" class="text-2xl font-bold text-slate-900 mt-1">R$ 229,47</h3>
+                            </div>
+
+                            <!-- Card 4 -->
+                            <div
+                                class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md group">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div
+                                        class="p-2 bg-slate-50 rounded-lg text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                                        <i data-lucide="credit-card" class="w-5 h-5"></i>
+                                    </div>
+                                </div>
+                                <p class="text-slate-500 text-sm font-medium">Ticket Médio</p>
+                                <h3 id="val-ticket" class="text-2xl font-bold text-slate-900 mt-1">R$ 1.302,23</h3>
+                            </div>
+                        </div>
+
+                        <!-- Secondary Stats -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div
+                                class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center transition-all duration-300 hover:-translate-y-1 hover:shadow-md cursor-default">
+                                <div class="p-2 bg-slate-50 rounded text-slate-500 mr-3"><i data-lucide="users"
+                                        class="w-4 h-4"></i></div>
+                                <div>
+                                    <p class="text-xs text-slate-400">Participantes</p>
+                                    <p id="val-parts" class="font-bold text-lg">112</p>
+                                </div>
+                            </div>
+                            <div
+                                class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center transition-all duration-300 hover:-translate-y-1 hover:shadow-md cursor-default">
+                                <div class="p-2 bg-slate-50 rounded text-slate-500 mr-3"><i data-lucide="crown"
+                                        class="w-4 h-4"></i></div>
+                                <div>
+                                    <p class="text-xs text-slate-400">VIPs</p>
+                                    <p id="val-vips" class="font-bold text-lg">15</p>
+                                </div>
+                            </div>
+                            <div
+                                class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center transition-all duration-300 hover:-translate-y-1 hover:shadow-md cursor-default">
+                                <div class="p-2 bg-slate-50 rounded text-slate-500 mr-3"><i data-lucide="ticket"
+                                        class="w-4 h-4"></i></div>
+                                <div>
+                                    <p class="text-xs text-slate-400">Individuais</p>
+                                    <p id="val-indiv" class="font-bold text-lg">70</p>
+                                </div>
+                            </div>
+                            <div
+                                class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center transition-all duration-300 hover:-translate-y-1 hover:shadow-md cursor-default">
+                                <div class="p-2 bg-slate-50 rounded text-slate-500 mr-3"><i data-lucide="users-2"
+                                        class="w-4 h-4"></i></div>
+                                <div>
+                                    <p class="text-xs text-slate-400">Duplos</p>
+                                    <p id="val-double" class="font-bold text-lg">27</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Charts Placeholder -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm h-80 flex flex-col">
+                                <h3 class="font-semibold text-slate-800 mb-4">Faturamento Acumulado</h3>
+                                <div class="flex-1 flex items-end justify-between gap-2 px-2"
+                                    id="revenue-chart-container">
+                                    <!-- Chart Bars with Tooltips -->
+                                    <div class="w-full bg-red-100 rounded-t transition-all duration-500 h-[20%] group relative hover:opacity-90 cursor-pointer"
+                                        id="bar-rev-0">
+                                        <div
+                                            class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg font-medium">
+                                            Jan 18<br>R$ 12.500
+                                            <div
+                                                class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-red-100 rounded-t transition-all duration-500 h-[35%] group relative hover:opacity-90 cursor-pointer"
+                                        id="bar-rev-1">
+                                        <div
+                                            class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg font-medium">
+                                            Jan 19<br>R$ 25.400
+                                            <div
+                                                class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-red-100 rounded-t transition-all duration-500 h-[50%] group relative hover:opacity-90 cursor-pointer"
+                                        id="bar-rev-2">
+                                        <div
+                                            class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg font-medium">
+                                            Jan 20<br>R$ 45.100
+                                            <div
+                                                class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-red-200 rounded-t transition-all duration-500 h-[45%] group relative hover:opacity-90 cursor-pointer"
+                                        id="bar-rev-3">
+                                        <div
+                                            class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg font-medium">
+                                            Jan 21<br>R$ 48.900
+                                            <div
+                                                class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-red-300 rounded-t transition-all duration-500 h-[60%] group relative hover:opacity-90 cursor-pointer"
+                                        id="bar-rev-4">
+                                        <div
+                                            class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg font-medium">
+                                            Jan 22<br>R$ 85.000
+                                            <div
+                                                class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-red-500 rounded-t transition-all duration-500 h-[80%] group relative hover:opacity-90 cursor-pointer"
+                                        id="bar-rev-5">
+                                        <div
+                                            class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg font-medium">
+                                            Jan 23<br>R$ 115.500
+                                            <div
+                                                class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-red-600 rounded-t transition-all duration-500 h-[75%] group relative hover:opacity-90 cursor-pointer"
+                                        id="bar-rev-6">
+                                        <div
+                                            class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg font-medium">
+                                            Jan 24<br>R$ 145.850
+                                            <div
+                                                class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between mt-2 text-xs text-slate-400">
+                                    <span id="chart-date-start">Jan 18</span><span id="chart-date-end">Jan 24</span>
+                                </div>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm h-80 flex flex-col">
+                                <h3 class="font-semibold text-slate-800 mb-4">Investimento Diário</h3>
+                                <div class="flex-1 flex items-end justify-between gap-2 px-2">
+                                    <div class="w-full bg-slate-800 rounded-t transition-all duration-500 h-[40%] group relative hover:opacity-90 cursor-pointer"
+                                        id="bar-inv-0">
+                                        <div
+                                            class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg font-medium">
+                                            Jan 18<br>R$ 850
+                                            <div
+                                                class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-slate-800 rounded-t transition-all duration-500 h-[30%] group relative hover:opacity-90 cursor-pointer"
+                                        id="bar-inv-1">
+                                        <div
+                                            class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg font-medium">
+                                            Jan 19<br>R$ 720
+                                            <div
+                                                class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-slate-800 rounded-t transition-all duration-500 h-[50%] group relative hover:opacity-90 cursor-pointer"
+                                        id="bar-inv-2">
+                                        <div
+                                            class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg font-medium">
+                                            Jan 20<br>R$ 1.200
+                                            <div
+                                                class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-slate-800 rounded-t transition-all duration-500 h-[45%] group relative hover:opacity-90 cursor-pointer"
+                                        id="bar-inv-3">
+                                        <div
+                                            class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg font-medium">
+                                            Jan 21<br>R$ 950
+                                            <div
+                                                class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-slate-800 rounded-t transition-all duration-500 h-[60%] group relative hover:opacity-90 cursor-pointer"
+                                        id="bar-inv-4">
+                                        <div
+                                            class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg font-medium">
+                                            Jan 22<br>R$ 1.500
+                                            <div
+                                                class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-slate-800 rounded-t transition-all duration-500 h-[70%] group relative hover:opacity-90 cursor-pointer"
+                                        id="bar-inv-5">
+                                        <div
+                                            class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg font-medium">
+                                            Jan 23<br>R$ 1.800
+                                            <div
+                                                class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-slate-800 rounded-t transition-all duration-500 h-[65%] group relative hover:opacity-90 cursor-pointer"
+                                        id="bar-inv-6">
+                                        <div
+                                            class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg font-medium">
+                                            Jan 24<br>R$ 1.650
+                                            <div
+                                                class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between mt-2 text-xs text-slate-400">
+                                    <span id="chart-inv-start">Jan 18</span><span id="chart-inv-end">Jan 24</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Table -->
+                        <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+                            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                                <h3 class="font-semibold text-slate-800">Vendas Recentes</h3>
+                                <button onclick="navigateTo('vendas')"
+                                    class="text-sm text-red-600 font-medium hover:underline">Ver todas</button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm text-slate-600">
+                                    <thead class="bg-slate-50 text-slate-700 font-semibold uppercase text-xs">
+                                        <tr>
+                                            <th class="px-6 py-4">Data</th>
+                                            <th class="px-6 py-4">Cliente</th>
+                                            <th class="px-6 py-4">Produto</th>
+                                            <th class="px-6 py-4">Plataforma</th>
+                                            <th class="px-6 py-4">Status</th>
+                                            <th class="px-6 py-4 text-right">Valor</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recent-sales-body" class="divide-y divide-slate-100">
+                                        <!-- JS Injected -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VIEW: VENDAS (New) -->
+                    <div id="view-vendas" class="space-y-8 hidden transition-opacity duration-300">
+                        <div class="flex items-center justify-between">
+                            <h1 class="text-2xl font-bold text-slate-800">Vendas</h1>
+                            <div class="flex gap-4">
+                                <!-- Sales Date Picker Container -->
+                                <div class="relative" id="salesDatePickerContainer">
+                                    <button onclick="toggleSalesDatePicker()"
+                                        class="flex items-center px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 hover:bg-slate-100 transition-colors">
+                                        <i data-lucide="calendar" class="w-4 h-4 mr-2 text-slate-500"></i>
+                                        <span id="salesDateRangeLabel">Últimos 30 dias</span>
+                                        <i data-lucide="chevron-down" class="w-3 h-3 ml-2 text-slate-400"></i>
+                                    </button>
+
+                                    <!-- Meta-style Date Picker Dropdown -->
+                                    <div id="salesDatePickerDropdown"
+                                        class="hidden absolute top-full right-0 mt-2 bg-white rounded-lg shadow-xl border border-slate-200 z-50 flex w-[800px] overflow-hidden">
+
+                                        <!-- Sidebar: Presets -->
+                                        <div
+                                            class="w-64 border-r border-slate-100 p-4 bg-slate-50/50 flex flex-col gap-1 max-h-[500px] overflow-y-auto">
+                                            <h4
+                                                class="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">
+                                                Predefinições</h4>
+                                            <label
+                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700">
+                                                <input type="radio" name="salesDatePreset"
+                                                    class="text-blue-600 focus:ring-blue-500" /> Hoje
+                                            </label>
+                                            <label
+                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700">
+                                                <input type="radio" name="salesDatePreset"
+                                                    class="text-blue-600 focus:ring-blue-500" /> Ontem
+                                            </label>
+                                            <label
+                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700">
+                                                <input type="radio" name="salesDatePreset"
+                                                    class="text-blue-600 focus:ring-blue-500" /> Últimos 7 dias
+                                            </label>
+                                            <label
+                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700">
+                                                <input type="radio" name="salesDatePreset"
+                                                    class="text-blue-600 focus:ring-blue-500" /> Últimos 14 dias
+                                            </label>
+                                            <label
+                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 bg-blue-50 font-medium text-blue-700">
+                                                <input type="radio" name="salesDatePreset"
+                                                    class="text-blue-600 focus:ring-blue-500" checked /> Últimos 30 dias
+                                            </label>
+                                            <label
+                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700">
+                                                <input type="radio" name="salesDatePreset"
+                                                    class="text-blue-600 focus:ring-blue-500" /> Este mês
+                                            </label>
+                                            <label
+                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700">
+                                                <input type="radio" name="salesDatePreset"
+                                                    class="text-blue-600 focus:ring-blue-500" /> Mês passado
+                                            </label>
+                                            <label
+                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700">
+                                                <input type="radio" name="salesDatePreset"
+                                                    class="text-blue-600 focus:ring-blue-500" /> Vitalício
+                                            </label>
+                                            <label
+                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700"
+                                                id="sales-preset-custom-container">
+                                                <input type="radio" name="salesDatePreset" id="sales-preset-custom"
+                                                    class="text-blue-600 focus:ring-blue-500" disabled /> Personalizado
+                                            </label>
+                                        </div>
+
+                                        <!-- Main Area: Calendars -->
+                                        <div class="flex-1 p-6">
+                                            <div class="flex justify-between items-center mb-6">
+                                                <div class="flex items-center gap-4">
+                                                    <div class="border rounded px-3 py-1.5 text-sm w-32 text-center bg-slate-50"
+                                                        id="sales-input-start">-</div>
+                                                    <span class="text-slate-400">-</span>
+                                                    <div class="border rounded px-3 py-1.5 text-sm w-32 text-center bg-slate-50"
+                                                        id="sales-input-end">-</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex gap-8">
+                                                <!-- Calendar 1 -->
+                                                <div class="flex-1">
+                                                    <div
+                                                        class="flex justify-between font-medium text-slate-700 mb-4 px-2">
+                                                        <button onclick="changeSalesMonth(-1)"
+                                                            class="p-1 hover:bg-slate-100 rounded">
+                                                            << /button>
+                                                                <span id="sales-cal-title-1"></span>
+                                                                <span></span>
+                                                    </div>
+                                                    <div
+                                                        class="grid grid-cols-7 gap-1 text-center text-xs text-slate-400 mb-2">
+                                                        <div>D</div>
+                                                        <div>S</div>
+                                                        <div>T</div>
+                                                        <div>Q</div>
+                                                        <div>Q</div>
+                                                        <div>S</div>
+                                                        <div>S</div>
+                                                    </div>
+                                                    <div class="grid grid-cols-7 gap-1 text-sm"
+                                                        id="sales-cal-container-1">
+                                                    </div>
+                                                </div>
+
+                                                <!-- Calendar 2 -->
+                                                <div class="flex-1">
+                                                    <div
+                                                        class="flex justify-between font-medium text-slate-700 mb-4 px-2">
+                                                        <span id="sales-cal-title-2"></span>
+                                                        <button onclick="changeSalesMonth(1)"
+                                                            class="p-1 hover:bg-slate-100 rounded">></button>
+                                                    </div>
+                                                    <div
+                                                        class="grid grid-cols-7 gap-1 text-center text-xs text-slate-400 mb-2">
+                                                        <div>D</div>
+                                                        <div>S</div>
+                                                        <div>T</div>
+                                                        <div>Q</div>
+                                                        <div>Q</div>
+                                                        <div>S</div>
+                                                        <div>S</div>
+                                                    </div>
+                                                    <div class="grid grid-cols-7 gap-1 text-sm"
+                                                        id="sales-cal-container-2">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div
+                                                class="flex justify-end items-center gap-3 mt-8 pt-4 border-t border-slate-100">
+                                                <button onclick="toggleSalesDatePicker()"
+                                                    class="px-4 py-2 text-slate-600 hover:bg-slate-50 text-sm font-medium rounded">Cancelar</button>
+                                                <button onclick="applySalesDateSelection()"
+                                                    class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded shadow-sm transition-colors">Atualizar</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onclick="navigateTo('dashboard')"
+                                    class="text-sm text-slate-500 hover:text-slate-900 border border-slate-200 px-3 py-2 rounded-lg bg-white">Voltar</button>
+                            </div>
+                        </div>
+
+                        <!-- Full Sales Table -->
+                        <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden relative">
+                            <div class="p-6 border-b border-slate-100 flex gap-4 flex-wrap">
+                                <div class="relative">
+                                    <i data-lucide="search"
+                                        class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                                    <input type="text" id="sales-search" onkeyup="renderSalesTable()"
+                                        placeholder="Buscar por cliente, email..."
+                                        class="pl-10 bg-slate-50 border border-slate-200 text-sm rounded-lg pr-4 py-2 w-64 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-200 transition-all">
+                                </div>
+                                <select id="sales-status-filter" onchange="renderSalesTable()"
+                                    class="bg-slate-50 border border-slate-200 text-sm rounded-lg px-4 py-2 outline-none cursor-pointer focus:border-red-500 focus:ring-1 focus:ring-red-200 transition-all">
+                                    <option value="all">Status: Todos</option>
+                                    <option value="Aprovado">Aprovado</option>
+                                    <option value="Pendente">Pendente</option>
+                                    <option value="Recusado">Recusado</option>
+                                </select>
+                            </div>
+                            <div class="overflow-x-auto relative">
+                                <table class="w-full text-left text-sm text-slate-600">
+                                    <thead class="bg-slate-50 text-slate-700 font-semibold uppercase text-xs">
+                                        <tr>
+                                            <th class="px-6 py-4">Data</th>
+                                            <th class="px-6 py-4">Cliente</th>
+                                            <th class="px-6 py-4">Produto</th>
+                                            <th class="px-6 py-4">Status</th>
+                                            <th class="px-6 py-4 text-right">Valor</th>
+                                            <th class="px-6 py-4 text-center">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sales-table-body" class="divide-y divide-slate-100">
+                                        <!-- JS Injected -->
+                                    </tbody>
+                                </table>
+                                </table>
+                            </div>
+                            <!-- Pagination -->
+                            <div
+                                class="p-4 border-t border-slate-100 flex justify-between items-center text-sm text-slate-500">
+                                <span id="sales-pagination-info">Mostrando 0 de 0 resultados</span>
+                                <div class="flex items-center gap-6">
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <span>Linhas por página:</span>
+                                        <select id="sales-page-size" onchange="changeSalesPageSize(this.value)"
+                                            class="border border-slate-200 rounded px-2 py-1 bg-white outline-none focus:ring-1 focus:ring-red-200 cursor-pointer">
+                                            <option value="10">10</option>
+                                            <option value="20">20</option>
+                                            <option value="50">50</option>
+                                            <option value="100">100</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button id="sales-prev-btn" onclick="changeSalesPage(-1)"
+                                            class="px-3 py-1 border rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                            disabled>Anterior</button>
+                                        <button id="sales-next-btn" onclick="changeSalesPage(1)"
+                                            class="px-3 py-1 border rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                            disabled>Próxima</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Loading Overlay -->
+                        <div id="table-loading-overlay"
+                            class="absolute inset-0 bg-white/80 backdrop-blur-[1px] hidden flex-col items-center justify-center z-50 transition-all duration-300 rounded-xl">
+                            <div
+                                class="bg-white p-4 rounded-xl shadow-lg border border-slate-100 flex flex-col items-center animate-in fade-in zoom-in duration-300">
+                                <i data-lucide="loader-2" class="w-8 h-8 text-indigo-600 animate-spin mb-3"></i>
+                                <span class="text-sm font-medium text-slate-700">Carregando...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VIEW: SETTINGS (Initially Hidden) -->
+                    <div id="view-settings" class="space-y-8 hidden transition-opacity duration-300">
+                        <div class="flex items-center justify-between">
+                            <h1 class="text-2xl font-bold text-slate-800">Configurações</h1>
+                            <button onclick="navigateTo('dashboard')"
+                                class="text-sm text-slate-500 hover:text-slate-900">Voltar para Dashboard</button>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                            <div class="p-6 border-b border-slate-100">
+                                <h2 class="text-lg font-semibold text-slate-800">Integrações</h2>
+                                <p class="text-sm text-slate-500 mt-1">Conecte suas contas para sincronizar dados
+                                    automaticamente.</p>
+                            </div>
+
+                            <div class="p-6 space-y-6">
+                                <!-- Facebook Ads -->
+                                <div
+                                    class="flex items-start gap-4 p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
+                                    <div
+                                        class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 shrink-0">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-facebook">
+                                            <path
+                                                d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <h3 class="font-medium text-slate-900">Facebook & Instagram Ads</h3>
+                                            <span
+                                                class="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full"
+                                                id="status-fb">Desconectado</span>
+                                        </div>
+                                        <p class="text-sm text-slate-500 mb-3">Conecte sua conta de anúncios para
+                                            importar
+                                            dados de impressões, cliques e custos (CPA/CPC).</p>
+                                        <button id="btn-connect-fb" onclick="connectIntegration('fb')"
+                                            class="text-sm font-medium px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Conectar
+                                            Conta</button>
+                                    </div>
+                                </div>
+
+                                <!-- GoExplosion (Mock Platform) -->
+                                <div
+                                    class="flex items-start gap-4 p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
+                                    <div
+                                        class="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center text-purple-600 shrink-0">
+                                        <i data-lucide="zap" class="w-6 h-6"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <h3 class="font-medium text-slate-900">GoExplosion</h3>
+                                            <span
+                                                class="text-xs font-medium bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full hidden"
+                                                id="status-go">Conectado</span>
+                                        </div>
+                                        <p class="text-sm text-slate-500 mb-3">Integre com a plataforma GoExplosion para
+                                            refletir seus dados de vendas reais em tempo real.</p>
+
+                                        <div id="go-connect-form" class="space-y-3">
+                                            <div class="flex flex-col gap-1">
+                                                <span class="text-xs font-medium text-slate-500">Sua URL de
+                                                    Webhook:</span>
+                                                <div class="flex gap-2">
+                                                    <div class="relative flex-1 group">
+                                                        <input type="text" id="webhook-url"
+                                                            value="https://api.scaledashboard.com/wh/v1/go/user_8823"
+                                                            readonly
+                                                            class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-600 focus:outline-none font-mono cursor-pointer selection:bg-blue-100"
+                                                            onclick="copyWebhookUrl()">
+                                                        <button onclick="copyWebhookUrl()"
+                                                            class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all active:95"
+                                                            title="Copiar URL">
+                                                            <i data-lucide="copy" class="w-4 h-4"></i>
+                                                        </button>
+                                                    </div>
+                                                    <button onclick="connectIntegration('go')"
+                                                        class="text-sm font-medium px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors whitespace-nowrap shadow-sm">
+                                                        Verificar Conexão
+                                                    </button>
+                                                </div>
+                                                <p class="text-xs text-slate-400">Configure no painel da GoExplosion >
+                                                    Integrações > Webhooks</p>
+                                            </div>
+                                        </div>
+
+                                        <div id="go-connected-msg"
+                                            class="hidden text-sm text-slate-600 bg-emerald-50 border border-emerald-100 rounded-lg p-3">
+                                            <!-- Injected via JS -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div> <!-- End App Container -->
+
+    <script>
+        lucide.createIcons();
+
+        // --- AUTH SYSTEM ---
+        const USERS = {
+            'joaosouza@playerfranchising.com.br': { pass: 'A&A2Ts2@93', name: 'João Souza', role: 'admin' },
+            'flavia@playerfranchising.com.br': { pass: '12345678', name: 'Flávia', role: 'user' }
+        };
+
+        function checkAuth() {
+            const user = localStorage.getItem('scale_user');
+            if (!user) {
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('login-screen').classList.remove('opacity-0');
+                document.getElementById('app-container').classList.add('hidden');
+            } else {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                updateUserProfile(JSON.parse(user));
+                // Ensure lucide icons re-render in app
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            const btn = document.getElementById('login-btn');
+
+            // Loading State
+            const originalBtnText = btn.innerText;
+            btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin h-5 w-5"></i>';
+            if (window.lucide) lucide.createIcons();
+            btn.disabled = true;
+
+            setTimeout(() => {
+                if (USERS[email] && USERS[email].pass === pass) {
+                    // Success
+                    const overlay = document.getElementById('global-loading-overlay');
+                    if (overlay) {
+                        overlay.classList.remove('hidden');
+                        overlay.classList.add('flex');
+                    }
+
+                    setTimeout(() => {
+                        const userData = { email, name: USERS[email].name, role: USERS[email].role };
+                        localStorage.setItem('scale_user', JSON.stringify(userData));
+                        errorEl.classList.add('hidden');
+                        checkAuth();
+
+                        // Reset button
+                        btn.innerText = originalBtnText;
+                        btn.disabled = false;
+
+                        // Hide Overlay
+                        if (overlay) {
+                            overlay.classList.add('opacity-0');
+                            setTimeout(() => {
+                                overlay.classList.remove('flex', 'opacity-0');
+                                overlay.classList.add('hidden');
+                            }, 300);
+                        }
+                    }, 600);
+                } else {
+                    // Error
+                    errorEl.classList.remove('hidden');
+                    btn.innerText = originalBtnText;
+                    btn.disabled = false;
+                }
+            }, 800);
+        }
+
+        function handleLogout() {
+            const overlay = document.getElementById('global-loading-overlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+            }
+
+            setTimeout(() => {
+                localStorage.removeItem('scale_user');
+                checkAuth();
+
+                if (overlay) {
+                    overlay.classList.add('opacity-0');
+                    setTimeout(() => {
+                        overlay.classList.remove('flex', 'opacity-0');
+                        overlay.classList.add('hidden');
+                    }, 300);
+                }
+            }, 600);
+        }
+
+        function updateUserProfile(user) {
+            // Sidebar Footer Profile
+            const sidebar = document.querySelector('aside');
+            if (sidebar) {
+                const nameEl = sidebar.querySelector('.absolute.bottom-4 .font-medium');
+                const mailEl = sidebar.querySelector('.absolute.bottom-4 .text-xs');
+                // Also update the initials circle
+                const initEl = sidebar.querySelector('.absolute.bottom-4 .rounded-full.bg-slate-700 span');
+
+                if (nameEl) nameEl.innerText = user.name;
+                if (mailEl) mailEl.innerText = user.email;
+                if (initEl) {
+                    const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                    initEl.innerText = initials;
+                }
+            }
+        }
+
+        // --- Facebook SDK Init ---
+        window.fbAsyncInit = function () {
+            FB.init({
+                appId: '24154258840827764',
+                cookie: true,
+                xfbml: true,
+                version: 'v19.0'
+            });
+            FB.AppEvents.logPageView();
+        };
+
+        (function (d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) { return; }
+            js = d.createElement(s); js.id = id;
+            js.src = "https://connect.facebook.net/en_US/sdk.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+
+
+        // --- DATA ENGINE ---
+        const DAILY_DATA = (function generateHistory() {
+            const data = [];
+            const start = new Date(2025, 10, 1); // Nov 1 2025
+            const end = new Date(2026, 0, 31);   // Jan 31 2026
+
+            let curr = new Date(start);
+            while (curr <= end) {
+                const isDec = curr.getMonth() === 11;
+                const baseVol = isDec ? 1.5 : 1.0;
+
+                // 1. Investment
+                const inv = 800 + Math.random() * 500 * baseVol;
+
+                // 2. Sales Counts (Derived from basic efficiency guess)
+                // Let's say CPA is roughly 250
+                const rawSales = Math.floor(inv / (200 + Math.random() * 100));
+                const salesVol = Math.max(1, rawSales); // At least 1 sale
+
+                // 3. Product Splits
+                const vips = Math.floor(salesVol * 0.15); // 15% VIP
+                const doubles = Math.floor(salesVol * 0.25); // 25% Double
+                const indiv = Math.max(0, salesVol - vips - doubles); // Rest Individual
+
+                // 4. Calculate Exact Revenue
+                const rev = (vips * 2997) + (doubles * 1597) + (indiv * 997);
+
+                // 5. Campaign Splits (60/40)
+                // We must split COUNTS first to ensure integer sales
+                const ia_part = Math.ceil(salesVol * 0.6);
+                const ia_vips = Math.ceil(vips * 0.6);
+                const ia_doub = Math.ceil(doubles * 0.6);
+                const ia_indiv = Math.max(0, ia_part - ia_vips - ia_doub);
+                const ia_rev = (ia_vips * 2997) + (ia_doub * 1597) + (ia_indiv * 997);
+                const ia_inv = inv * 0.6;
+
+                const cons_part = Math.max(0, salesVol - ia_part);
+                const cons_vips = Math.max(0, vips - ia_vips);
+                const cons_doub = Math.max(0, doubles - ia_doub);
+                const cons_indiv = Math.max(0, indiv - ia_indiv);
+                const cons_rev = (cons_vips * 2997) + (cons_doub * 1597) + (cons_indiv * 997);
+                const cons_inv = inv * 0.4;
+
+                data.push({
+                    date: new Date(curr),
+                    all: { investment: inv, revenue: rev, participants: salesVol, vips: vips, indiv: indiv, double: doubles },
+                    curso_ia: { investment: ia_inv, revenue: ia_rev, participants: ia_part, vips: ia_vips, indiv: ia_indiv, double: ia_doub },
+                    consultoria: { investment: cons_inv, revenue: cons_rev, participants: cons_part, vips: cons_vips, indiv: cons_indiv, double: cons_doub }
+                });
+
+                curr.setDate(curr.getDate() + 1);
+            }
+            return data;
+        })();
+
+        // --- State ---
+        let selectedStartDate = null;
+        let selectedEndDate = null;
+        let currentMonth = 0; // Jan
+        let currentYear = 2026;
+        let selectedCampaign = 'all'; // 'all', 'curso_ia', 'consultoria'
+        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+        // --- Core Update Logic ---
+        function refreshDashboard() {
+            // 1. Determine Range
+            const start = selectedStartDate ? selectedStartDate : new Date(2026, 0, 18); // Default Last 7
+            const end = selectedEndDate ? selectedEndDate : new Date(2026, 0, 24);
+
+            // Normalize
+            start.setHours(0, 0, 0, 0);
+            end.setHours(23, 59, 59, 999);
+
+            // Update Label if not manual
+            if (!selectedStartDate) {
+                // If it was a preset, logic handled elsewhere, but for safety:
+                const strStart = start.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+                const strEnd = end.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+                document.getElementById('dateRangeLabel').innerText = `${strStart} - ${strEnd}`;
+            }
+
+            // 2. Filter Data
+            const filtered = DAILY_DATA.filter(d => d.date >= start && d.date <= end);
+
+            // 3. Aggregate
+            let totalInv = 0;
+            let totalRev = 0;
+            let totalSales = 0;
+            let totalVip = 0;
+            let totalIndiv = 0;
+            let totalDouble = 0;
+
+            const chartData = filtered.map(d => {
+                const day = d[selectedCampaign];
+                totalInv += day.investment;
+                totalRev += day.revenue;
+
+                const sales = day.vips + day.indiv + day.double;
+                totalSales += sales;
+
+                totalVip += day.vips;
+                totalIndiv += day.indiv;
+                totalDouble += day.double;
+
+                return {
+                    date: d.date,
+                    inv: day.investment,
+                    rev: day.revenue
+                };
+            });
+
+            // 4. Calculate KPIs
+            const safeSales = totalSales > 0 ? totalSales : 1;
+            const cpa = totalInv / safeSales;
+            const ticket = totalRev / safeSales;
+
+            // 5. Update UI - Cards
+            const fmt = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+            document.getElementById('val-investment').innerText = fmt(totalInv);
+            document.getElementById('val-revenue').innerText = fmt(totalRev);
+            document.getElementById('val-cpa').innerText = totalSales > 0 ? fmt(cpa) : 'R$ 0,00';
+            document.getElementById('val-ticket').innerText = totalSales > 0 ? fmt(ticket) : 'R$ 0,00'; // Fixed: Ticket calculated on Revenue/Sales
+
+            document.getElementById('val-parts').innerText = totalSales; // Participants = Total Sales
+            document.getElementById('val-vips').innerText = totalVip;
+            document.getElementById('val-indiv').innerText = totalIndiv;
+            document.getElementById('val-double').innerText = totalDouble;
+
+            // Update Trends (Simulated based on range length comparison or random for demo)
+            // For demo robustness, let's keep them static or simple random
+            // document.getElementById('trend-investment').innerText = ...
+
+            // 6. Render Charts
+            renderCharts(chartData);
+
+            // Update Chart Dates Labels
+            if (chartData.length > 0) {
+                const s = chartData[0].date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+                const e = chartData[chartData.length - 1].date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+                document.getElementById('chart-date-start').innerText = s;
+                document.getElementById('chart-date-end').innerText = e;
+                document.getElementById('chart-inv-start').innerText = s;
+                document.getElementById('chart-inv-end').innerText = e;
+            }
+        }
+
+        function renderCharts(data) {
+            const revContainer = document.getElementById('revenue-chart-container');
+            const invContainer = document.getElementById('sidebar').nextElementSibling.querySelector('#bar-inv-0').parentElement; // Hacky find or add ID to container
+
+            // We need to add an ID to the Investment Chart Container for easier access
+            // Let's assume I fix the HTML in a separate step or just use the selector above.
+            // Actually, best to clear innerHTML.
+
+            // Find max for scaling
+            const maxRev = Math.max(...data.map(d => d.rev)) || 1;
+            const maxInv = Math.max(...data.map(d => d.inv)) || 1;
+
+            const generateBars = (type, max) => {
+                let html = '';
+                data.forEach(d => {
+                    const val = type === 'rev' ? d.rev : d.inv;
+                    const h = Math.max(5, (val / max) * 100) + '%';
+                    const dateStr = d.date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+                    const valStr = val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    const colorClass = type === 'rev' ? 'bg-red-500' : 'bg-slate-800';
+
+                    html += `
+                        <div class="w-full ${colorClass} rounded-t transition-all duration-500 group relative hover:opacity-90 cursor-pointer" style="height: ${h}">
+                            <div class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg font-medium">
+                                ${dateStr}<br>${valStr}
+                                <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></div>
+                            </div>
+                        </div>`;
+                });
+                return html;
+            };
+
+            revContainer.innerHTML = generateBars('rev', maxRev);
+
+            // Fix inv container selection safely
+            // The Investment Chart container is the parent of the bars.
+            // In original HTML: <div class="flex-1 flex items-end justify-between gap-2 px-2">...</div> inside the 2nd chart card
+            // Let's try to query it by context
+            const chartCards = document.querySelectorAll('.h-80.flex-col');
+            if (chartCards.length >= 2) {
+                const invCont = chartCards[1].querySelector('.flex-1.flex.items-end');
+                if (invCont) invCont.innerHTML = generateBars('inv', maxInv);
+            }
+        }
+
+        function filterCampaigns(val) {
+            selectedCampaign = val;
+            refreshDashboard();
+        }
+
+        function applyDateSelection() {
+            if (selectedStartDate && selectedEndDate) {
+                const startStr = selectedStartDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+                const endStr = selectedEndDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+                document.getElementById('dateRangeLabel').innerText = `${startStr} - ${endStr}`;
+
+                // Consistency Check: Does this range match a preset?
+                const presetKeys = ['today', 'yesterday', 'last7', 'last14', 'last30', 'month', 'lastMonth'];
+                let matchedKey = null;
+
+                // Normalize selected dates to 0 hours for comparison
+                const selStart = new Date(selectedStartDate); selStart.setHours(0, 0, 0, 0);
+                const selEnd = new Date(selectedEndDate); selEnd.setHours(0, 0, 0, 0);
+
+                for (let key of presetKeys) {
+                    const { start, end } = getPresetDates(key);
+                    if (start.getTime() === selStart.getTime() && end.getTime() === selEnd.getTime()) {
+                        matchedKey = key;
+                        break;
+                    }
+                }
+
+                // UI Reset
+                const presets = document.querySelectorAll('input[name="datePreset"]');
+                presets.forEach(p => {
+                    p.checked = false;
+                    p.parentElement.classList.remove('bg-blue-50', 'text-blue-700', 'font-medium');
+                });
+                if (matchedKey) {
+                    const presetIndex = presetKeys.indexOf(matchedKey);
+                    if (presetIndex >= 0 && presets[presetIndex]) {
+                        presets[presetIndex].checked = true;
+                        presets[presetIndex].parentElement.classList.add('bg-blue-50', 'text-blue-700', 'font-medium');
+                    }
+                } else {
+                    const customRadio = document.getElementById('preset-custom');
+                    if (customRadio) {
+                        customRadio.checked = true;
+                        customRadio.parentElement.classList.add('bg-blue-50', 'text-blue-700', 'font-medium');
+                    }
+                }
+                document.getElementById('datePickerDropdown').classList.add('hidden');
+
+                // Trigger Logic
+                refreshDashboard();
+            }
+        }
+
+        // --- Date Calculation Helper ---
+        function getPresetDates(key) {
+            const today = new Date();
+            const start = new Date(today);
+            const end = new Date(today);
+
+            switch (key) {
+                case 'today':
+                    // start/end already today
+                    break;
+                case 'yesterday':
+                    start.setDate(today.getDate() - 1);
+                    end.setDate(today.getDate() - 1);
+                    break;
+                case 'last7':
+                    start.setDate(today.getDate() - 6);
+                    break;
+                case 'last14':
+                    start.setDate(today.getDate() - 13);
+                    break;
+                case 'last30':
+                    start.setDate(today.getDate() - 29);
+                    break;
+                case 'month': // This month
+                    start.setDate(1);
+                    break;
+                case 'lastMonth':
+                    start.setMonth(today.getMonth() - 1);
+                    start.setDate(1);
+                    end.setDate(0); // Last day of previous month
+                    break;
+                case 'lifetime':
+                    start.setFullYear(2024, 0, 1); // Mock lifetime start
+                    break;
+            }
+            // Normalize times
+            start.setHours(0, 0, 0, 0);
+            end.setHours(0, 0, 0, 0);
+            return { start, end };
+        }
+
+        // --- Preset Click Handlers ---
+        const presets = document.querySelectorAll('input[name="datePreset"]');
+        const presetMap = ['today', 'yesterday', 'last7', 'last14', 'last30', 'month', 'lastMonth', 'lifetime'];
+        const labelMap = ['Hoje', 'Ontem', 'Últimos 7 dias', 'Últimos 14 dias', 'Últimos 30 dias', 'Este mês', 'Mês passado', 'Vitalício'];
+
+        // --- Preset Logic (Refactored for Robustness) ---
+        presets.forEach((radio, index) => {
+            // Remove old potential inline listeners
+            const label = radio.closest('label');
+            if (label) label.onclick = null;
+
+            // Use CHANGE event on the input itself (most reliable for radios)
+            radio.addEventListener('change', (e) => {
+                try {
+                    // UI Update (Visuals)
+                    presets.forEach(p => {
+                        const pLabel = p.closest('label') || p.parentElement;
+                        if (pLabel) pLabel.classList.remove('bg-blue-50', 'text-blue-700', 'font-medium');
+                    });
+                    const activeLabel = radio.closest('label') || radio.parentElement;
+                    if (activeLabel) activeLabel.classList.add('bg-blue-50', 'text-blue-700', 'font-medium');
+
+                    // 1. Calculate and Set Dates
+                    const { start, end } = getPresetDates(presetMap[index]);
+                    selectedStartDate = start;
+                    selectedEndDate = end;
+
+                    // 2. Sync Calendar & Inputs
+                    currentYear = selectedStartDate.getFullYear();
+                    currentMonth = selectedStartDate.getMonth();
+                    renderCalendars();
+                    updateDateInputs();
+
+                    document.getElementById('dateRangeLabel').innerText = labelMap[index];
+
+                    // 3. Close Dropdown FIRST (Per User Request)
+                    const d = document.getElementById('datePickerDropdown');
+                    if (d) d.classList.add('hidden');
+
+                    // 4. Update Dashboard
+                    refreshDashboard();
+
+                } catch (err) {
+                    console.error("Preset Error:", err);
+                    // Ensure close even on error
+                    document.getElementById('datePickerDropdown').classList.add('hidden');
+                }
+            });
+        });
+
+        // --- Date Selection Logic ---
+        function handleDateClick(d, m, y) {
+            const clickedDate = new Date(y, m, d);
+
+            if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
+                // Start new selection
+                selectedStartDate = clickedDate;
+                selectedEndDate = null;
+            } else {
+                // Complete selection
+                if (clickedDate < selectedStartDate) {
+                    selectedEndDate = selectedStartDate;
+                    selectedStartDate = clickedDate;
+                } else {
+                    selectedEndDate = clickedDate;
+                }
+            }
+            renderCalendars();
+            updateDateInputs();
+        }
+
+        function updateDateInputs() {
+            const wrappers = document.querySelectorAll('#datePickerDropdown .border.rounded.text-center');
+            if (wrappers.length >= 2) {
+                if (selectedStartDate) {
+                    wrappers[0].innerText = selectedStartDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' });
+                } else {
+                    wrappers[0].innerText = '-';
+                }
+                if (selectedEndDate) {
+                    wrappers[1].innerText = selectedEndDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' });
+                } else {
+                    wrappers[1].innerText = '-';
+                }
+            }
+        }
+
+        // --- Calendar Rendering ---
+        function renderCalendars() {
+            renderMonth(currentYear, currentMonth, 'cal-container-1', 'cal-title-1');
+
+            let nextMonth = currentMonth + 1;
+            let nextYear = currentYear;
+            if (nextMonth > 11) { nextMonth = 0; nextYear++; }
+
+            renderMonth(nextYear, nextMonth, 'cal-container-2', 'cal-title-2');
+        }
+
+        function renderMonth(year, month, containerId, titleId) {
+            const container = document.getElementById(containerId);
+            const title = document.getElementById(titleId);
+            if (!container || !title) return;
+
+            title.innerText = `${monthNames[month]} ${year}`;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            let html = '';
+            for (let i = 0; i < firstDay; i++) { html += `<div></div>`; }
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const currentDate = new Date(year, month, d);
+                // Normalize dates to midnight for comparison
+                const normCurrentDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+                const normSelectedStartDate = selectedStartDate ? new Date(selectedStartDate.getFullYear(), selectedStartDate.getMonth(), selectedStartDate.getDate()) : null;
+                const normSelectedEndDate = selectedEndDate ? new Date(selectedEndDate.getFullYear(), selectedEndDate.getMonth(), selectedEndDate.getDate()) : null;
+
+                let classes = "p-1 cursor-pointer rounded-full transition-colors flex items-center justify-center h-8 w-8 mx-auto ";
+
+                let isStart = normSelectedStartDate && normCurrentDate.getTime() === normSelectedStartDate.getTime();
+                let isEnd = normSelectedEndDate && normCurrentDate.getTime() === normSelectedEndDate.getTime();
+                let isInRange = normSelectedStartDate && normSelectedEndDate && normCurrentDate > normSelectedStartDate && normCurrentDate < normSelectedEndDate;
+
+                if (isStart || isEnd) {
+                    classes += "bg-blue-600 text-white font-medium hover:bg-blue-700";
+                } else if (isInRange) {
+                    classes += "bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-none";
+                    // To look like a contiguous bar we might need different CSS, but rounded-none helps imply continuity locally
+                } else {
+                    classes += "hover:bg-slate-100 text-slate-700";
+                }
+
+                html += `<div class="${classes}" onclick="handleDateClick(${d}, ${month}, ${year})">${d}</div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function initCalendarHTML() {
+            const calWrappers = document.querySelectorAll('#datePickerDropdown .grid-cols-7.text-sm');
+            if (calWrappers.length >= 2) {
+                calWrappers[0].id = 'cal-container-1';
+                calWrappers[1].id = 'cal-container-2';
+            }
+            const calTitles = document.querySelectorAll('#datePickerDropdown .flex.justify-between.font-medium span');
+            if (calTitles.length >= 2) {
+                calTitles[0].parentElement.innerHTML = `<button onclick="changeMonth(-1)" class="p-1 hover:bg-slate-100 rounded"><</button><span id="cal-title-1"></span><span></span>`;
+                calTitles[1].parentElement.innerHTML = `<span id="cal-title-2"></span><button onclick="changeMonth(1)" class="p-1 hover:bg-slate-100 rounded">></button>`;
+            }
+        }
+
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+            renderCalendars();
+        }
+
+        function toggleDatePicker() {
+            const dropdown = document.getElementById('datePickerDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        // Initialize with a default fake selection for visuals
+        // MOVED TO initApp()
+
+        // --- Profile Menu Logic ---
+        function toggleProfileMenu() {
+            const menu = document.getElementById('profile-dropdown');
+            menu.classList.toggle('hidden');
+        }
+
+        // Close on click outside (Generalized)
+        window.onclick = function (event) {
+            // Check Date Picker
+            const dateContainer = document.getElementById('datePickerContainer');
+            if (dateContainer && !dateContainer.contains(event.target)) {
+                document.getElementById('datePickerDropdown').classList.add('hidden');
+            }
+
+            // Check Profile Menu
+            const profileFooter = document.getElementById('profile-footer');
+            if (profileFooter && !profileFooter.contains(event.target)) {
+                document.getElementById('profile-dropdown').classList.add('hidden');
+            }
+        }
+
+        // Fix: Stop propagation on container to prevent "click outside" logic 
+        // from firing when elements (like calendar days) are removed from DOM during re-render
+        document.getElementById('datePickerContainer').addEventListener('click', function (event) {
+            event.stopPropagation();
+        });
+
+        // --- Navigation Logic ---
+        function navigateTo(viewId) {
+            console.log("Navigating to:", viewId);
+            try {
+                // Persist state
+                localStorage.setItem('last_active_view', viewId);
+
+                const views = ['dashboard', 'settings'];
+
+                // Hide all views
+                views.forEach(v => {
+                    const el = document.getElementById('view-' + v);
+                    if (el) {
+                        el.classList.add('hidden');
+                        el.classList.remove('fade-in');
+                    } else {
+                        console.warn("View element not found:", v);
+                    }
+                });
+
+                // Show target
+                const target = document.getElementById('view-' + viewId);
+                if (target) {
+                    target.classList.remove('hidden');
+                    console.log("View shown:", viewId);
+                } else {
+                    console.error("Target view not found:", viewId);
+                    alert("Erro: Tela '" + viewId + "' não encontrada.");
+                }
+
+                // Close menus if open
+                const profile = document.getElementById('profile-dropdown');
+                if (profile) profile.classList.add('hidden');
+
+                // --- Toggle Sidebar Active State ---
+                const navDashboard = document.getElementById('nav-dashboard');
+                const navSettings = document.getElementById('nav-settings');
+
+                // Classes for styling
+                const activeClasses = ['bg-red-600/10', 'text-red-500'];
+                const inactiveClasses = ['text-slate-400', 'hover:bg-slate-800', 'hover:text-white'];
+
+                // Helper to set state
+                const setActive = (el, isActive) => {
+                    if (!el) return;
+                    if (isActive) {
+                        el.classList.add(...activeClasses);
+                        el.classList.remove(...inactiveClasses);
+                    } else {
+                        el.classList.remove(...activeClasses);
+                        el.classList.add(...inactiveClasses);
+                    }
+                };
+
+                if (viewId === 'settings') {
+                    setActive(navDashboard, false);
+                    setActive(navSettings, true);
+                } else {
+                    // Default to dashboard active for any other view (e.g. 'dashboard')
+                    setActive(navDashboard, true);
+                    setActive(navSettings, false);
+                }
+            } catch (e) {
+                console.error("Navigation error:", e);
+                alert("Erro ao navegar: " + e.message);
+            }
+        }
+
+        // --- Integration Logic ---
+        function connectIntegration(type) {
+            if (type === 'fb') {
+                const btn = document.getElementById('btn-connect-fb');
+                const status = document.getElementById('status-fb');
+
+                // Immediate feedback
+                const originalText = btn.innerText;
+
+                // TOGGLE LOGIC: If already connected, disconnect.
+                if (originalText === 'Desconectar') {
+                    // Logic to disconnect
+                    btn.innerText = 'Conectar Conta';
+
+                    // Revert Button Styles
+                    btn.classList.replace('bg-slate-200', 'bg-blue-600');
+                    btn.classList.replace('text-slate-700', 'text-white');
+                    btn.classList.replace('hover:bg-slate-300', 'hover:bg-blue-700');
+
+                    // Revert Status Badge
+                    status.innerText = 'Desconectado';
+                    status.classList.replace('bg-blue-50', 'bg-slate-100');
+                    status.classList.replace('text-blue-600', 'text-slate-500');
+
+                    // Optional: Call FB.logout if using real SDK, but for demo/simulation just UI reset is enough
+                    /* 
+                    if (typeof FB !== 'undefined') { FB.logout(); } 
+                    */
+                    return;
+                }
+
+                btn.innerText = 'Processando...';
+                btn.disabled = true;
+
+                // Dependencies
+                // const isSdkLoaded = typeof FB !== 'undefined'; // Moved inside setTimeout
+                // let responseReceived = false; // No longer needed with simplified logic
+
+                // 1. Safety Timeout: If FB popup is blocked/closed without callback, we ask user manually
+                // const safetyTimer = setTimeout(() => { // No longer needed
+                //     if (!responseReceived) {
+                //         const isLocalFile = window.location.protocol === 'file:';
+                //         if (isLocalFile) {
+                //             if (confirm("O Facebook parece não ter respondido (comum em arquivos locais).\n\nDeseja ativar a SIMULAÇÃO?")) {
+                //                 fallbackSimulation(btn, status);
+                //             } else {
+                //                 resetBtn(btn, originalText);
+                //             }
+                //         } else {
+                //             resetBtn(btn, originalText);
+                //         }
+                //     }
+                // }, 5000); // 5 seconds wait
+
+                setTimeout(() => {
+                    // 1. Pre-check: File Protocol (Always fails with FB)
+                    if (window.location.protocol === 'file:') {
+                        if (confirm("⚠️ Modo Local Detectado\n\nO Login do Facebook exige um servidor seguro (HTTPS) e não funciona direto do arquivo (file://).\n\nPara testar o painel, podemos SIMULAR uma conexão bem-sucedida.\n\nDeseja conectar em modo SIMULAÇÃO?")) {
+                            fallbackSimulation(btn, status);
+                        } else {
+                            resetBtn(btn, originalText);
+                        }
+                        return; // Stop here, don't call FB.login
+                    }
+
+                    // 2. Real FB Login (for Server/HTTPS)
+                    const isSdkLoaded = typeof FB !== 'undefined';
+                    if (isSdkLoaded) {
+                        try {
+                            FB.login(function (response) {
+                                if (response.status === 'connected') {
+                                    handleFbSuccess(btn, status, 'Meta SDK');
+                                } else {
+                                    alert('Login cancelado ou não autorizado.');
+                                    resetBtn(btn, originalText);
+                                }
+                            }, { scope: 'ads_read,read_insights' });
+                        } catch (e) {
+                            console.error("FB Login Error:", e);
+                            alert('Erro ao iniciar o SDK. Verifique o console.');
+                            resetBtn(btn, originalText);
+                        }
+                    } else {
+                        // SDK not loaded
+                        if (confirm('SDK do Facebook não carregou (comum com AdBlockers).\n\nDeseja usar o modo SIMULAÇÃO?')) {
+                            fallbackSimulation(btn, status);
+                        } else {
+                            resetBtn(btn, originalText);
+                        }
+                    }
+                }, 500);
+            }
+
+            if (type === 'go') {
+                const form = document.getElementById('go-connect-form');
+                const msg = document.getElementById('go-connected-msg');
+                const status = document.getElementById('status-go');
+                const btn = form.querySelector('button[onclick*="connectIntegration"]');
+
+                // Simulate Webhook Verification
+                const originalText = btn.innerText;
+                btn.innerText = 'Aguardando evento...';
+                btn.disabled = true;
+                btn.classList.add('animate-pulse');
+
+                setTimeout(() => {
+                    // Success Simulation
+                    localStorage.setItem('go_connected', 'true'); // Persist
+
+                    form.classList.add('hidden');
+                    msg.classList.remove('hidden');
+
+                    // Update Status Badge
+                    status.classList.remove('hidden');
+                    status.innerText = 'Conectado';
+                    status.classList.replace('hidden', 'flex');
+
+                    msg.innerHTML = `
+                        <div class="flex items-center justify-between w-full">
+                            <span class="flex items-center font-medium text-emerald-700">
+                                <i data-lucide="check-circle" class="w-4 h-4 mr-2 text-emerald-500"></i> 
+                                Webhook recebido com sucesso!
+                            </span>
+                            <button onclick="disconnectGo()" class="text-xs text-red-500 hover:text-red-700 font-medium ml-4 underline decoration-red-200">Desconfigurar</button>
+                        </div>
+                        <p class="text-xs text-emerald-600 mt-1 pl-6">Recebemos um evento de teste da GoExplosion.</p>
+                    `;
+                    lucide.createIcons();
+                }, 2000); // 2s delay
+            }
+        }
+
+        function copyWebhookUrl() {
+            const input = document.getElementById('webhook-url');
+            input.select();
+            input.setSelectionRange(0, 99999);
+
+            navigator.clipboard.writeText(input.value).then(() => {
+                // Visual feedback
+                input.classList.add('border-blue-500', 'text-blue-600');
+                setTimeout(() => {
+                    input.classList.remove('border-blue-500', 'text-blue-600');
+                }, 500);
+            }).catch(err => {
+                console.error('Erro ao copiar', err);
+                input.select();
+                document.execCommand('copy');
+            });
+        }
+
+        function disconnectGo() {
+            if (!confirm('Deseja remover a integração? O sistema parará de receber vendas da GoExplosion.')) return;
+
+            localStorage.removeItem('go_connected');
+
+            const form = document.getElementById('go-connect-form');
+            const msg = document.getElementById('go-connected-msg');
+            const status = document.getElementById('status-go');
+            const btn = form.querySelector('button[onclick*="connectIntegration"]');
+
+            // Reset UI
+            btn.innerText = 'Verificar Conexão';
+            btn.disabled = false;
+            btn.classList.remove('animate-pulse');
+
+            form.classList.remove('hidden');
+            msg.classList.add('hidden');
+            status.classList.add('hidden');
+        }
+
+        function handleFbSuccess(btn, status, source) {
+            btn.innerText = 'Desconectar';
+            btn.classList.replace('bg-blue-600', 'bg-slate-200');
+            btn.classList.replace('text-white', 'text-slate-700');
+            btn.classList.replace('hover:bg-blue-700', 'hover:bg-slate-300');
+            btn.disabled = false;
+
+            status.innerText = `Conectado (${source})`;
+            status.classList.replace('bg-slate-100', 'bg-blue-50');
+            status.classList.replace('text-slate-500', 'text-blue-600');
+            status.classList.remove('hidden');
+        }
+
+        function resetBtn(btn, text) {
+            btn.innerText = text;
+            btn.disabled = false;
+        }
+
+        function fallbackSimulation(btn, status) {
+            setTimeout(() => {
+                handleFbSuccess(btn, status, 'Simulação');
+            }, 1000);
+        }
+
+        // --- Sidebar Logic ---
+        let isSidebarCollapsed = false;
+        function toggleSidebar() {
+            isSidebarCollapsed = !isSidebarCollapsed;
+            const sidebar = document.getElementById('sidebar');
+            const header = document.getElementById('sidebar-header');
+            const logo = document.getElementById('sidebar-logo');
+            const texts = document.querySelectorAll('.sidebar-text');
+            const toggleIcon = document.getElementById('sidebar-toggle-icon');
+            const dashboardSubmenu = document.getElementById('dashboard-submenu');
+            const navDashboardParent = document.getElementById('nav-dashboard-parent');
+            const navSettings = document.getElementById('nav-settings');
+            const navVendas = document.getElementById('nav-vendas');
+
+            if (isSidebarCollapsed) {
+                // Collapse
+                sidebar.classList.remove('w-64');
+                sidebar.classList.add('w-20');
+
+                // Force close submenu IMMEDIATELY and hide to prevent ghosts
+                if (dashboardSubmenu) {
+                    toggleDashboardMenu(true); // Retract
+                    dashboardSubmenu.classList.add('hidden'); // Force hide
+                }
+
+                // Adjust Header
+                header.classList.remove('flex-row', 'justify-between', 'px-4');
+                header.classList.add('flex-col', 'justify-center', 'items-center', 'gap-1', 'py-2', 'h-24');
+
+                logo.innerHTML = 'S<span class="text-red-500">M</span>';
+                logo.classList.remove('text-xl');
+                logo.classList.add('text-lg');
+
+                // Text & Chevrons
+                texts.forEach(t => {
+                    t.classList.add('opacity-0', 'w-0', 'hidden');
+                    t.parentElement.classList.remove('ml-3'); // Remove margin to allow center
+                });
+
+                // Fix Dashboard Parent Button Alignment
+                if (navDashboardParent) {
+                    navDashboardParent.classList.remove('justify-between', 'px-3');
+                    navDashboardParent.classList.add('justify-center', 'px-0');
+                }
+
+                // Fix Settings Button Alignment
+                if (navSettings) {
+                    navSettings.classList.remove('px-3'); // Default is flex start
+                    navSettings.classList.add('justify-center', 'px-0');
+                }
+                // Fix Vendas Button Alignment
+                if (navVendas) {
+                    navVendas.classList.remove('px-3');
+                    navVendas.classList.add('justify-center', 'px-0');
+                }
+
+                // Hide chevrons
+                const chevrons = sidebar.querySelectorAll('.lucide-chevron-down');
+                chevrons.forEach(c => c.classList.add('hidden'));
+
+                toggleIcon.style.transform = 'rotate(180deg)';
+
+            } else {
+                // Expand
+                sidebar.classList.remove('w-20');
+                sidebar.classList.add('w-64');
+
+                // Header
+                header.classList.add('flex-row', 'justify-between', 'px-4', 'items-center');
+                header.classList.remove('flex-col', 'justify-center', 'gap-1', 'py-2', 'h-24');
+
+                logo.innerHTML = 'Scale<span class="text-red-500">Marketing</span>';
+                logo.classList.add('text-xl');
+                logo.classList.remove('text-lg');
+
+                texts.forEach(t => {
+                    t.classList.remove('opacity-0', 'w-0', 'hidden');
+                    t.parentElement.classList.add('ml-3'); // Restore margin
+                });
+
+                // Fix Dashboard Parent Button Alignment
+                if (navDashboardParent) {
+                    navDashboardParent.classList.add('justify-between', 'px-3');
+                    navDashboardParent.classList.remove('justify-center', 'px-0');
+                }
+
+                // Fix Settings Button Alignment
+                if (navSettings) {
+                    navSettings.classList.add('px-3');
+                    navSettings.classList.remove('justify-center', 'px-0');
+                }
+                // Fix Vendas Button Alignment
+                if (navVendas) {
+                    navVendas.classList.add('px-3');
+                    navVendas.classList.remove('justify-center', 'px-0');
+                }
+
+                // Show chevrons
+                const chevrons = sidebar.querySelectorAll('.lucide-chevron-down');
+                chevrons.forEach(c => c.classList.remove('hidden'));
+
+                toggleIcon.style.transform = 'rotate(0deg)';
+
+                // Note: We don't auto-open submenu, keeps clean
+            }
+        }
+
+        // --- Dashboard Submenu Logic ---
+        function toggleDashboardMenu(forceClose = false) {
+            if (!forceClose && isSidebarCollapsed) {
+                toggleSidebar();
+            }
+
+            const submenu = document.getElementById('dashboard-submenu');
+            const chevron = document.getElementById('dashboard-chevron');
+
+            // Initial Setup for animation if still using 'hidden' (Legacy fix)
+            if (submenu.classList.contains('hidden')) {
+                submenu.classList.remove('hidden');
+                submenu.classList.add('max-h-0', 'opacity-0', 'overflow-hidden', 'transition-all', 'duration-300', 'ease-in-out');
+                // Force reflow
+                void submenu.offsetWidth;
+            }
+
+            const isClosed = submenu.classList.contains('max-h-0') || forceClose;
+
+            if (forceClose) {
+                submenu.classList.add('max-h-0', 'opacity-0');
+                submenu.classList.remove('max-h-96', 'opacity-100'); // Arbitrary large height
+                chevron.style.transform = 'rotate(0deg)';
+                return;
+            }
+
+            if (isClosed) {
+                // Open
+                submenu.classList.remove('max-h-0', 'opacity-0');
+                submenu.classList.add('max-h-96', 'opacity-100');
+                chevron.style.transform = 'rotate(180deg)';
+            } else {
+                // Close
+                submenu.classList.add('max-h-0', 'opacity-0');
+                submenu.classList.remove('max-h-96', 'opacity-100');
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // --- Navigation Logic ---
+        function navigateTo(viewId) {
+            console.log("Navigating to:", viewId);
+            const overlay = document.getElementById('global-loading-overlay');
+
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+
+                // Simulate delay
+                setTimeout(() => {
+                    executeNavigation(viewId);
+
+                    // Fade out
+                    overlay.classList.add('opacity-0');
+                    setTimeout(() => {
+                        overlay.classList.remove('flex', 'opacity-0');
+                        overlay.classList.add('hidden');
+                    }, 300);
+                }, 600);
+            } else {
+                executeNavigation(viewId);
+            }
+        }
+
+        function executeNavigation(viewId) {
+            try {
+                // Persist state
+                localStorage.setItem('last_active_view', viewId);
+
+                const views = ['dashboard', 'settings', 'vendas'];
+
+                // Hide all views
+                views.forEach(v => {
+                    const el = document.getElementById('view-' + v);
+                    if (el) {
+                        el.classList.add('hidden');
+                        el.classList.remove('fade-in');
+                    }
+                });
+
+                // Show target
+                const target = document.getElementById('view-' + viewId);
+                if (target) {
+                    target.classList.remove('hidden');
+                }
+
+                // Close menus if open
+                const profile = document.getElementById('profile-dropdown');
+                if (profile) profile.classList.add('hidden');
+
+                // --- Toggle Sidebar Active State ---
+                const navDashboardParent = document.getElementById('nav-dashboard-parent');
+                const navSettings = document.getElementById('nav-settings');
+                const navVendas = document.getElementById('nav-vendas');
+
+                // Reset Styling Helper
+                const setInactive = (el) => {
+                    if (!el) return;
+                    el.classList.remove('bg-red-600/10', 'text-red-500');
+                    el.classList.add('text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
+                };
+
+                const setActive = (el) => {
+                    if (!el) return;
+                    el.classList.add('bg-red-600/10', 'text-red-500');
+                    el.classList.remove('text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
+                };
+
+                if (viewId === 'settings') {
+                    // Settings Active
+                    setInactive(navDashboardParent);
+                    setInactive(navVendas);
+                    setActive(navSettings);
+
+                    // Auto-Close Dashboard Submenu with Animation
+                    toggleDashboardMenu(true);
+
+                } else if (viewId === 'vendas') {
+                    // Vendas Active
+                    setInactive(navDashboardParent);
+                    setInactive(navSettings);
+                    setActive(navVendas);
+                    toggleDashboardMenu(true);
+                } else {
+                    // Dashboard Active (default)
+                    setActive(navDashboardParent);
+                    setInactive(navSettings);
+                    setInactive(navVendas);
+                }
+            } catch (e) {
+                console.error("Navigation error:", e);
+                alert("Erro ao navegar: " + e.message);
+            }
+        }
+
+        function setActiveSubItem(el) {
+            // Reset all subitems
+            const subitems = document.querySelectorAll('#dashboard-submenu a');
+            subitems.forEach(item => {
+                item.classList.remove('text-white');
+                item.classList.add('text-slate-400');
+                // Reset dot
+                const dot = item.querySelector('span.w-1.5');
+                if (dot) {
+                    dot.classList.remove('bg-red-500');
+                    dot.classList.add('bg-slate-600');
+                }
+            });
+
+            // Set Active
+            el.classList.remove('text-slate-400');
+            el.classList.add('text-white');
+            const dot = el.querySelector('span.w-1.5');
+            if (dot) {
+                dot.classList.remove('bg-slate-600');
+                dot.classList.add('bg-red-500');
+            }
+
+            // Parent is active by default in this view
+        }
+
+        // --- MOCK SALES DATA GENERATOR ---
+        let ALL_SALES = [];
+        let salesStartDate = new Date(2026, 0, 18);
+        let salesEndDate = new Date(2026, 0, 25); // Include Jan 25
+
+        function generateSalesData() {
+            ALL_SALES = [];
+            DAILY_DATA.forEach(dayData => {
+                const date = new Date(dayData.date);
+                const campaign = dayData.all; // Use ALL data to match Dashboard Total
+
+                // Generate Sales according to counts
+                for (let i = 0; i < campaign.vips; i++) ALL_SALES.push(createMockSale(date, "VIP", "Aprovado", 2997));
+                for (let i = 0; i < campaign.indiv; i++) ALL_SALES.push(createMockSale(date, "Individual", "Aprovado", 997));
+                for (let i = 0; i < campaign.double; i++) ALL_SALES.push(createMockSale(date, "Duplo", "Aprovado", 1597));
+
+                // Noise (Pending/Refused) - Does not affect Revenue/Approved Counts
+                const noiseCount = Math.floor(Math.random() * 3);
+                for (let i = 0; i < noiseCount; i++) {
+                    const status = Math.random() > 0.5 ? "Pendente" : "Recusado";
+                    const product = ["VIP", "Individual", "Duplo"][Math.floor(Math.random() * 3)];
+                    const val = product === "VIP" ? 2997 : (product === "Individual" ? 997 : 1597);
+                    ALL_SALES.push(createMockSale(date, product, status, val));
+                }
+            });
+            ALL_SALES.sort((a, b) => b.rawDate - a.rawDate);
+        }
+
+        function createMockSale(date, product, status, value) {
+            const names = ["João", "Maria", "Carlos", "Ana", "Pedro", "Lucas", "Juliana", "Fernanda", "Roberto", "Camila", "Bruno", "Patricia", "Gustavo", "Leticia", "Rodrigo", "Amanda"];
+            const surnames = ["Silva", "Oliveira", "Souza", "Costa", "Santos", "Ferreira", "Rocha", "Lima", "Alves", "Martins", "Pereira", "Gomes", "Barbosa", "Ribeiro"];
+            const n = names[Math.floor(Math.random() * names.length)];
+            const s = surnames[Math.floor(Math.random() * surnames.length)];
+            const full = `${n} ${s}`;
+            const providers = ["gmail.com", "outlook.com", "yahoo.com", "uol.com.br", "hotmail.com"];
+            const email = `${n.toLowerCase()}.${s.toLowerCase()}@${providers[Math.floor(Math.random() * providers.length)]}`;
+            return { id: Math.random().toString(36).substr(2, 9), rawDate: new Date(date), dateStr: date.toLocaleDateString('pt-BR'), name: full, email: email, product: product, status: status, value: value };
+        }
+
+        // --- SALES DATE PICKER LOGIC (Advanced) ---
+        let salesCurrentMonth = 0; // Jan
+        let salesCurrentYear = 2026;
+
+        function toggleSalesDatePicker() {
+            const d = document.getElementById('salesDatePickerDropdown');
+            if (d) d.classList.toggle('hidden');
+            if (!d.classList.contains('hidden')) {
+                // Initialize view when opening
+                salesCurrentMonth = salesStartDate ? salesStartDate.getMonth() : new Date().getMonth();
+                salesCurrentYear = salesStartDate ? salesStartDate.getFullYear() : new Date().getFullYear();
+                renderSalesCalendars();
+                updateSalesDateInputs();
+            }
+        }
+
+        function renderSalesCalendars() {
+            renderSalesMonth(salesCurrentYear, salesCurrentMonth, 'sales-cal-container-1', 'sales-cal-title-1');
+            let nextMonth = salesCurrentMonth + 1;
+            let nextYear = salesCurrentYear;
+            if (nextMonth > 11) { nextMonth = 0; nextYear++; }
+            renderSalesMonth(nextYear, nextMonth, 'sales-cal-container-2', 'sales-cal-title-2');
+        }
+
+        function renderSalesMonth(year, month, containerId, titleId) {
+            const container = document.getElementById(containerId);
+            const title = document.getElementById(titleId);
+            if (!container || !title) return;
+
+            title.innerText = `${monthNames[month]} ${year}`;
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            let html = '';
+            for (let i = 0; i < firstDay; i++) { html += `<div></div>`; }
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const currentDate = new Date(year, month, d);
+                // Normalize
+                const normCurrentDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+                const normSelectedStartDate = salesStartDate ? new Date(salesStartDate.getFullYear(), salesStartDate.getMonth(), salesStartDate.getDate()) : null;
+                const normSelectedEndDate = salesEndDate ? new Date(salesEndDate.getFullYear(), salesEndDate.getMonth(), salesEndDate.getDate()) : null;
+
+                let classes = "p-1 cursor-pointer rounded-full transition-colors flex items-center justify-center h-8 w-8 mx-auto ";
+                let isStart = normSelectedStartDate && normCurrentDate.getTime() === normSelectedStartDate.getTime();
+                let isEnd = normSelectedEndDate && normCurrentDate.getTime() === normSelectedEndDate.getTime();
+                let isInRange = normSelectedStartDate && normSelectedEndDate && normCurrentDate > normSelectedStartDate && normCurrentDate < normSelectedEndDate;
+
+                if (isStart || isEnd) {
+                    classes += "bg-blue-600 text-white font-medium hover:bg-blue-700";
+                } else if (isInRange) {
+                    classes += "bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-none";
+                } else {
+                    classes += "hover:bg-slate-100 text-slate-700";
+                }
+                html += `<div class="${classes}" onclick="handleSalesDateClick(${d}, ${month}, ${year})">${d}</div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function changeSalesMonth(delta) {
+            salesCurrentMonth += delta;
+            if (salesCurrentMonth > 11) { salesCurrentMonth = 0; salesCurrentYear++; }
+            if (salesCurrentMonth < 0) { salesCurrentMonth = 11; salesCurrentYear--; }
+            renderSalesCalendars();
+        }
+
+        function handleSalesDateClick(d, m, y) {
+            const clickedDate = new Date(y, m, d);
+            if (!salesStartDate || (salesStartDate && salesEndDate)) {
+                salesStartDate = clickedDate;
+                salesEndDate = null;
+            } else {
+                if (clickedDate < salesStartDate) {
+                    salesEndDate = salesStartDate;
+                    salesStartDate = clickedDate;
+                } else {
+                    salesEndDate = clickedDate;
+                }
+            }
+            renderSalesCalendars();
+            updateSalesDateInputs();
+        }
+
+        function updateSalesDateInputs() {
+            const startEl = document.getElementById('sales-input-start');
+            const endEl = document.getElementById('sales-input-end');
+            if (startEl) startEl.innerText = salesStartDate ? salesStartDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+            if (endEl) endEl.innerText = salesEndDate ? salesEndDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+        }
+
+        function applySalesDateSelection() {
+            if (salesStartDate && salesEndDate) {
+                const s = salesStartDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+                const e = salesEndDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+                document.getElementById('salesDateRangeLabel').innerText = `${s} - ${e}`;
+                document.getElementById('salesDatePickerDropdown').classList.add('hidden');
+
+                // Logic to sync radio buttons based on dates
+                // (Skipping detailed radio sync for brevity unless critical, but "Today" functionality relies on dates matching)
+
+                renderSalesTable();
+            }
+        }
+
+        // Initialize Sales Presets Listener
+        setTimeout(() => {
+            const salesPresets = document.querySelectorAll('input[name="salesDatePreset"]');
+            salesPresets.forEach((radio, index) => {
+                radio.addEventListener('change', (e) => {
+                    // 1. Get Dates
+                    const { start, end } = getPresetDates(presetMap[index]); // Reusing presetMap/getPresetDates from global scope
+                    salesStartDate = start;
+                    salesEndDate = end;
+                    // 2. UI
+                    salesCurrentYear = salesStartDate.getFullYear();
+                    salesCurrentMonth = salesStartDate.getMonth();
+                    renderSalesCalendars();
+                    updateSalesDateInputs();
+                    // 3. Label
+                    document.getElementById('salesDateRangeLabel').innerText = labelMap[index]; // reusing labelMap
+                    // 4. Close & Render
+                    document.getElementById('salesDatePickerDropdown').classList.add('hidden');
+                    renderSalesTable();
+
+                    // Visual Selection Logic
+                    salesPresets.forEach(p => p.parentElement.classList.remove('bg-blue-50', 'text-blue-700', 'font-medium'));
+                    radio.parentElement.classList.add('bg-blue-50', 'text-blue-700', 'font-medium');
+                });
+            });
+        }, 500); // Delay to ensure DOM exists or call in initApp
+
+        // --- Sales Table Logic ---
+        let salesPage = 1;
+        let salesPageSize = 10;
+
+        function showMetadataLoading(callback) {
+            const overlay = document.getElementById('table-loading-overlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+            }
+
+            // Simulate network delay
+            setTimeout(() => {
+                callback();
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                    overlay.classList.remove('flex');
+                }
+            }, 600); // 600ms delay
+        }
+
+        function changeSalesPage(delta) {
+            showMetadataLoading(() => {
+                salesPage += delta;
+                renderSalesTable();
+            });
+        }
+
+        function changeSalesPageSize(size) {
+            showMetadataLoading(() => {
+                salesPageSize = parseInt(size);
+                renderSalesTable(true);
+            });
+        }
+
+        function renderSalesTable(resetPage = false) {
+            const tbody = document.getElementById('sales-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const searchInput = document.getElementById('sales-search');
+            const statusFilterInput = document.getElementById('sales-status-filter');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
+            const statusFilter = statusFilterInput ? statusFilterInput.value : 'all';
+
+            // Reset page if searching (heuristic)
+            if (resetPage) salesPage = 1;
+
+            const filtered = ALL_SALES.filter(sale => {
+                if (sale.rawDate < salesStartDate || sale.rawDate > salesEndDate) return false;
+                if (statusFilter !== 'all' && sale.status !== statusFilter) return false;
+                if (search && !sale.name.toLowerCase().includes(search) && !sale.email.toLowerCase().includes(search)) return false;
+                return true;
+            });
+
+            // Pagination Logic
+            const total = filtered.length;
+            const maxPage = Math.ceil(total / salesPageSize) || 1;
+            if (salesPage > maxPage) salesPage = maxPage;
+            if (salesPage < 1) salesPage = 1;
+
+            const startIndex = (salesPage - 1) * salesPageSize;
+            const endIndex = Math.min(startIndex + salesPageSize, total);
+            const paged = filtered.slice(startIndex, startIndex + salesPageSize);
+
+            // Update Info & Buttons
+            const paginationInfo = document.getElementById('sales-pagination-info');
+            const prevBtn = document.getElementById('sales-prev-btn');
+            const nextBtn = document.getElementById('sales-next-btn');
+
+            if (paginationInfo) {
+                if (total === 0) {
+                    paginationInfo.innerText = '0 resultados';
+                } else {
+                    paginationInfo.innerText = `Mostrando ${startIndex + 1} - ${endIndex} de ${total} resultados`;
+                }
+            }
+
+            if (prevBtn) prevBtn.disabled = salesPage <= 1;
+            if (nextBtn) nextBtn.disabled = salesPage >= maxPage;
+
+            if (paged.length === 0 && total === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-slate-500">Nenhuma venda encontrada para este período.</td></tr>`;
+                return;
+            }
+
+            paged.forEach(sale => {
+                let statusBadge = '';
+                if (sale.status === 'Aprovado') statusBadge = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="check-circle" class="w-3 h-3 mr-1"></i> Aprovado</span>`;
+                else if (sale.status === 'Pendente') statusBadge = `<span class="bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="clock" class="w-3 h-3 mr-1"></i> Pendente</span>`;
+                else statusBadge = `<span class="bg-red-50 text-red-700 border border-red-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="x-circle" class="w-3 h-3 mr-1"></i> Recusado</span>`;
+
+                // Define platform for the table row
+                const platform = sale.id.charCodeAt(0) % 2 === 0 ? 'Kiwify' : 'Eduzz';
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition-colors';
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${sale.dateStr}</td>
+                    <td class="px-6 py-4">
+                        <div class="font-medium text-slate-900">${sale.name}</div>
+                        <div class="text-xs text-slate-400">${sale.email}</div>
+                    </td>
+                    <td class="px-6 py-4"><span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs font-medium">${sale.product}</span></td>
+                    <td class="px-6 py-4 text-slate-500">${platform}</td>
+                    <td class="px-6 py-4">${statusBadge}</td>
+                    <td class="px-6 py-4 text-right font-medium text-slate-900">${sale.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                    <td class="px-6 py-4 text-center"><button class="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        // --- Recent Sales Widget Logic ---
+        function renderRecentSalesWidget() {
+            try {
+                const tbody = document.getElementById('recent-sales-body');
+                if (!tbody) {
+                    console.warn("Recent Sales Widget body not found");
+                    return;
+                }
+                tbody.innerHTML = '';
+
+                // Ensure ALL_SALES exists and has data
+                if (!ALL_SALES || ALL_SALES.length === 0) {
+                    // Retry generation if empty (fallback)
+                    console.warn("ALL_SALES empty in widget, regenerating...");
+                    if (typeof generateSalesData === 'function') generateSalesData();
+                }
+
+                // Filter to hide "future" mock sales (beyond Jan 25)
+                const mockToday = new Date(2026, 0, 25, 23, 59, 59);
+                const recent = ALL_SALES
+                    .filter(s => s.rawDate <= mockToday)
+                    .slice(0, 5);
+
+                recent.forEach(sale => {
+                    let statusBadge = '';
+                    if (sale.status === 'Aprovado') {
+                        statusBadge = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="check-circle" class="w-3 h-3 mr-1"></i> Aprovado</span>`;
+                    } else if (sale.status === 'Pendente') {
+                        statusBadge = `<span class="bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="clock" class="w-3 h-3 mr-1"></i> Pendente</span>`;
+                    } else {
+                        statusBadge = `<span class="bg-red-50 text-red-700 border border-red-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="x-circle" class="w-3 h-3 mr-1"></i> Recusado</span>`;
+                    }
+
+                    // MOCK PLATFORM (Deterministic)
+                    const platform = sale.id.charCodeAt(0) % 2 === 0 ? 'Kiwify' : 'Eduzz';
+
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-50 transition-colors';
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">${sale.dateStr}</td>
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-slate-900">${sale.name}</div>
+                            <div class="text-xs text-slate-400">${sale.email}</div>
+                        </td>
+                        <td class="px-6 py-4"><span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs font-medium">${sale.product}</span></td>
+                        <td class="px-6 py-4 text-slate-500">${platform}</td>
+                        <td class="px-6 py-4">${statusBadge}</td>
+                        <td class="px-6 py-4 text-right font-medium text-slate-900">${sale.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                if (window.lucide) window.lucide.createIcons();
+            } catch (e) {
+                console.error("Error rendering Recent Sales Widget:", e);
+            }
+        }
+
+        // --- Init Function ---
+        function initApp() {
+            try {
+                console.log("Initializing App...");
+
+                // Auth Check First
+                if (typeof checkAuth === 'function') checkAuth();
+
+                // Dashboard Date Picker
+                if (typeof initCalendarHTML === 'function') initCalendarHTML();
+
+                // Dashboard Default Dates
+                selectedEndDate = new Date(2026, 0, 24);
+                selectedStartDate = new Date(2026, 0, 18);
+
+                if (typeof renderCalendars === 'function') renderCalendars();
+                if (typeof updateDateInputs === 'function') updateDateInputs();
+
+                // Sales Data Generation
+                console.log("Generating Data...");
+                if (typeof generateSalesData === 'function') generateSalesData();
+                else console.error("generateSalesData not definition");
+
+                // Render Dashboard
+                console.log("Refreshing Dashboard...");
+                if (typeof refreshDashboard === 'function') refreshDashboard();
+
+                // Render Sales Tables
+                console.log("Rendering Sales Tables...");
+                if (typeof renderSalesTable === 'function') renderSalesTable();
+
+                // Render Widget
+                console.log("Rendering Widget...");
+                renderRecentSalesWidget();
+
+                // Restore View
+                const savedView = localStorage.getItem('last_active_view') || 'dashboard';
+                if (typeof navigateTo === 'function') navigateTo(savedView);
+
+                // Restore GoExplosion logic...
+                if (localStorage.getItem('go_connected') === 'true') {
+                    const form = document.getElementById('go-connect-form');
+                    const msg = document.getElementById('go-connected-msg');
+                    const status = document.getElementById('status-go');
+                    if (form && msg && status) {
+                        form.classList.add('hidden');
+                        msg.classList.remove('hidden');
+                        status.classList.remove('hidden');
+                        status.innerText = 'Conectado';
+                        msg.innerHTML = `<div class="flex items-center justify-between w-full"><span class="flex items-center"><i data-lucide="check" class="w-4 h-4 mr-1 text-emerald-500"></i> Sincronizando dados.</span><button onclick="disconnectGo()" class="text-xs text-red-500 hover:text-red-700 font-medium ml-4">Desconectar</button></div>`;
+                        if (window.lucide) lucide.createIcons();
+                    }
+                }
+
+                /* Sales Presets Init (Ensure listeners are attached) */
+                const salesPresets = document.querySelectorAll('input[name="salesDatePreset"]');
+                salesPresets.forEach((radio, index) => {
+                    // Re-attach to be safe or rely on the previous setTimeout block if it exists
+                    // For safety, let's just let the previous timeouts handle it or re-attach here cleanly if needed.
+                    // The previous block (Step 891) had a setTimeout(..., 500). That should still be there.
+                });
+
+            } catch (e) {
+                console.error("Init App Error", e);
+                alert("Erro ao iniciar aplicação: " + e.message);
+            }
+        }
+
+        // Run Init
+        initApp();
+    </script>
+    <!-- Global Transition Overlay -->
+    <div id="global-loading-overlay"
+        class="fixed inset-0 bg-white/90 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center transition-opacity duration-300">
+        <div class="flex flex-col items-center animate-in fade-in zoom-in duration-300">
+            <div class="relative w-16 h-16 mb-4">
+                <i data-lucide="loader-2" class="w-16 h-16 text-red-600 animate-spin absolute inset-0 opacity-20"></i>
+                <i data-lucide="loader-2" class="w-16 h-16 text-red-600 animate-spin absolute inset-0"
+                    style="animation-duration: 1.5s;"></i>
+            </div>
+            <span class="text-lg font-medium text-slate-800">Carregando...</span>
+        </div>
+    </div>
+</body>
+
+</html>
+```
