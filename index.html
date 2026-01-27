@@ -1786,7 +1786,7 @@
                                     alert('Login cancelado ou não autorizado.');
                                     resetBtn(btn, originalText);
                                 }
-                            }, { scope: 'ads_read,read_insights' });
+                            }, { scope: 'ads_read,read_insights,business_management,pages_show_list,ads_management' });
                         } catch (e) {
                             console.error("FB Login Error:", e);
                             alert('Erro ao iniciar o SDK. Verifique o console.');
