@@ -2326,255 +2326,320 @@
                 if (typeof refreshDashboard === 'function') refreshDashboard();
 
             } catch (err) {
-                console.error("[Supabase] Error:", err);
-            }
-        }
+                function recalcDailyDataFromSales() {
+                    // Reset daily counts (keep investment from FB)
+                    DAILY_DATA.forEach(d => {
+                        // Keep d.all.investment
+                        // Reset revenue metrics
+                        const resetMetrics = (obj) => {
+                            obj.revenue = 0; obj.participants = 0; obj.vips = 0; obj.indiv = 0; obj.double = 0;
+                        };
 
-        function recalcDailyDataFromSales() {
-            console.log("Stubbed recalc for syntax check");
-            refreshDashboard();
-        }
+                        resetMetrics(d.all);
+                        d.products = {}; // Reset product map completely
 
-        function updateSelectedProduct(val) {
-            console.log("Stubbed product update");
-            selectedProductName = val;
-            refreshDashboard();
-        }
+                        // Also reset campaign revenue metrics if they exist
+                        Object.keys(d).forEach(key => {
+                            if (key !== 'date' && key !== 'all' && key !== 'products' && typeof d[key] === 'object') {
+                                resetMetrics(d[key]);
+                            }
+                        });
+                    });
 
+                    // Iterate Real Sales
+                    const productsSet = new Set();
 
+                    ALL_SALES.forEach(sale => {
+                        // Collect Product Name
+                        if (sale.product) productsSet.add(sale.product);
 
-        // Removed createMockSale function as it is no longer needed.
+                        // Find Day
+                        // sale.rawDate is Date object
+                        // DAILY_DATA is sorted. Find matching date (ignore exact time)
+                        const saleDate = new Date(sale.rawDate);
+                        saleDate.setHours(0, 0, 0, 0);
 
-        // --- SALES DATE PICKER LOGIC (Advanced) ---
-        let salesCurrentMonth = 0; // Jan
-        let salesCurrentYear = 2026;
+                        const dayData = DAILY_DATA.find(d => d.date.getTime() === saleDate.getTime());
+                        if (dayData) {
+                            // Aggregate Global
+                            dayData.all.revenue += sale.value;
+                            dayData.all.participants += 1;
+                            if (sale.product.toLowerCase().includes('vip')) dayData.all.vips++;
+                            else if (sale.product.toLowerCase().includes('duplo')) dayData.all.double++;
+                            else dayData.all.indiv++;
 
-        function toggleSalesDatePicker() {
-            const d = document.getElementById('salesDatePickerDropdown');
-            if (d) d.classList.toggle('hidden');
-            if (!d.classList.contains('hidden')) {
-                // Initialize view when opening
-                salesCurrentMonth = salesStartDate ? salesStartDate.getMonth() : new Date().getMonth();
-                salesCurrentYear = salesStartDate ? salesStartDate.getFullYear() : new Date().getFullYear();
-                renderSalesCalendars();
-                updateSalesDateInputs();
-            }
-        }
+                            // Aggregate Product Specific
+                            if (!dayData.products[sale.product]) {
+                                dayData.products[sale.product] = { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 };
+                            }
+                            const pData = dayData.products[sale.product];
+                            pData.revenue += sale.value;
+                            pData.participants += 1;
+                            if (sale.product.toLowerCase().includes('vip')) pData.vips++;
+                            else if (sale.product.toLowerCase().includes('duplo')) pData.double++;
+                            else pData.indiv++;
+                        }
+                    });
 
-        function renderSalesCalendars() {
-            renderSalesMonth(salesCurrentYear, salesCurrentMonth, 'sales-cal-container-1', 'sales-cal-title-1');
-            let nextMonth = salesCurrentMonth + 1;
-            let nextYear = salesCurrentYear;
-            if (nextMonth > 11) { nextMonth = 0; nextYear++; }
-            renderSalesMonth(nextYear, nextMonth, 'sales-cal-container-2', 'sales-cal-title-2');
-        }
+                    // Update UI Dropdown
+                    const select = document.getElementById('product-select');
+                    if (select) {
+                        // Keep 'all' option
+                        select.innerHTML = '<option value="all">Todos os produtos</option>';
+                        productsSet.forEach(p => {
+                            const opt = document.createElement('option');
+                            opt.value = p;
+                            opt.innerText = p;
+                            select.appendChild(opt);
+                        });
+                        // Restore selection if needed
+                        select.value = selectedProductName;
+                    }
 
-        function renderSalesMonth(year, month, containerId, titleId) {
-            const container = document.getElementById(containerId);
-            const title = document.getElementById(titleId);
-            if (!container || !title) return;
-
-            title.innerText = `${monthNames[month]} ${year}`;
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-            let html = '';
-            for (let i = 0; i < firstDay; i++) { html += `<div></div>`; }
-
-            for (let d = 1; d <= daysInMonth; d++) {
-                const currentDate = new Date(year, month, d);
-                // Normalize
-                const normCurrentDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-                const normSelectedStartDate = salesStartDate ? new Date(salesStartDate.getFullYear(), salesStartDate.getMonth(), salesStartDate.getDate()) : null;
-                const normSelectedEndDate = salesEndDate ? new Date(salesEndDate.getFullYear(), salesEndDate.getMonth(), salesEndDate.getDate()) : null;
-
-                let classes = "p-1 cursor-pointer rounded-full transition-colors flex items-center justify-center h-8 w-8 mx-auto ";
-                let isStart = normSelectedStartDate && normCurrentDate.getTime() === normSelectedStartDate.getTime();
-                let isEnd = normSelectedEndDate && normCurrentDate.getTime() === normSelectedEndDate.getTime();
-                let isInRange = normSelectedStartDate && normSelectedEndDate && normCurrentDate > normSelectedStartDate && normCurrentDate < normSelectedEndDate;
-
-                if (isStart || isEnd) {
-                    classes += "bg-blue-600 text-white font-medium hover:bg-blue-700";
-                } else if (isInRange) {
-                    classes += "bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-none";
-                } else {
-                    classes += "hover:bg-slate-100 text-slate-700";
+                    console.log("Recalculated Daily Data with Products:", DAILY_DATA);
+                    refreshDashboard();
                 }
-                html += `<div class="${classes}" onclick="handleSalesDateClick(${d}, ${month}, ${year})">${d}</div>`;
-            }
-            container.innerHTML = html;
-        }
 
-        function changeSalesMonth(delta) {
-            salesCurrentMonth += delta;
-            if (salesCurrentMonth > 11) { salesCurrentMonth = 0; salesCurrentYear++; }
-            if (salesCurrentMonth < 0) { salesCurrentMonth = 11; salesCurrentYear--; }
-            renderSalesCalendars();
-        }
-
-        function handleSalesDateClick(d, m, y) {
-            const clickedDate = new Date(y, m, d);
-            if (!salesStartDate || (salesStartDate && salesEndDate)) {
-                salesStartDate = clickedDate;
-                salesEndDate = null;
-            } else {
-                if (clickedDate < salesStartDate) {
-                    salesEndDate = salesStartDate;
-                    salesStartDate = clickedDate;
-                } else {
-                    salesEndDate = clickedDate;
+                function updateSelectedProduct(val) {
+                    console.log("Product Filter Changed:", val);
+                    selectedProductName = val;
+                    refreshDashboard();
                 }
-            }
-            renderSalesCalendars();
-            updateSalesDateInputs();
-        }
 
-        function updateSalesDateInputs() {
-            const startEl = document.getElementById('sales-input-start');
-            const endEl = document.getElementById('sales-input-end');
-            if (startEl) startEl.innerText = salesStartDate ? salesStartDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
-            if (endEl) endEl.innerText = salesEndDate ? salesEndDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
-        }
 
-        function applySalesDateSelection() {
-            if (salesStartDate && salesEndDate) {
-                const s = salesStartDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
-                const e = salesEndDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
-                document.getElementById('salesDateRangeLabel').innerText = `${s} - ${e}`;
-                document.getElementById('salesDatePickerDropdown').classList.add('hidden');
 
-                // Logic to sync radio buttons based on dates
-                // (Skipping detailed radio sync for brevity unless critical, but "Today" functionality relies on dates matching)
+                // Removed createMockSale function as it is no longer needed.
 
-                renderSalesTable();
-            }
-        }
+                // --- SALES DATE PICKER LOGIC (Advanced) ---
+                let salesCurrentMonth = 0; // Jan
+                let salesCurrentYear = 2026;
 
-        // Initialize Sales Presets Listener
-        setTimeout(() => {
-            const salesPresets = document.querySelectorAll('input[name="salesDatePreset"]');
-            salesPresets.forEach((radio, index) => {
-                radio.addEventListener('change', (e) => {
-                    // 1. Get Dates
-                    const { start, end } = getPresetDates(presetMap[index]); // Reusing presetMap/getPresetDates from global scope
-                    salesStartDate = start;
-                    salesEndDate = end;
-                    // 2. UI
-                    salesCurrentYear = salesStartDate.getFullYear();
-                    salesCurrentMonth = salesStartDate.getMonth();
+                function toggleSalesDatePicker() {
+                    const d = document.getElementById('salesDatePickerDropdown');
+                    if (d) d.classList.toggle('hidden');
+                    if (!d.classList.contains('hidden')) {
+                        // Initialize view when opening
+                        salesCurrentMonth = salesStartDate ? salesStartDate.getMonth() : new Date().getMonth();
+                        salesCurrentYear = salesStartDate ? salesStartDate.getFullYear() : new Date().getFullYear();
+                        renderSalesCalendars();
+                        updateSalesDateInputs();
+                    }
+                }
+
+                function renderSalesCalendars() {
+                    renderSalesMonth(salesCurrentYear, salesCurrentMonth, 'sales-cal-container-1', 'sales-cal-title-1');
+                    let nextMonth = salesCurrentMonth + 1;
+                    let nextYear = salesCurrentYear;
+                    if (nextMonth > 11) { nextMonth = 0; nextYear++; }
+                    renderSalesMonth(nextYear, nextMonth, 'sales-cal-container-2', 'sales-cal-title-2');
+                }
+
+                function renderSalesMonth(year, month, containerId, titleId) {
+                    const container = document.getElementById(containerId);
+                    const title = document.getElementById(titleId);
+                    if (!container || !title) return;
+
+                    title.innerText = `${monthNames[month]} ${year}`;
+                    const firstDay = new Date(year, month, 1).getDay();
+                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                    let html = '';
+                    for (let i = 0; i < firstDay; i++) { html += `<div></div>`; }
+
+                    for (let d = 1; d <= daysInMonth; d++) {
+                        const currentDate = new Date(year, month, d);
+                        // Normalize
+                        const normCurrentDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+                        const normSelectedStartDate = salesStartDate ? new Date(salesStartDate.getFullYear(), salesStartDate.getMonth(), salesStartDate.getDate()) : null;
+                        const normSelectedEndDate = salesEndDate ? new Date(salesEndDate.getFullYear(), salesEndDate.getMonth(), salesEndDate.getDate()) : null;
+
+                        let classes = "p-1 cursor-pointer rounded-full transition-colors flex items-center justify-center h-8 w-8 mx-auto ";
+                        let isStart = normSelectedStartDate && normCurrentDate.getTime() === normSelectedStartDate.getTime();
+                        let isEnd = normSelectedEndDate && normCurrentDate.getTime() === normSelectedEndDate.getTime();
+                        let isInRange = normSelectedStartDate && normSelectedEndDate && normCurrentDate > normSelectedStartDate && normCurrentDate < normSelectedEndDate;
+
+                        if (isStart || isEnd) {
+                            classes += "bg-blue-600 text-white font-medium hover:bg-blue-700";
+                        } else if (isInRange) {
+                            classes += "bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-none";
+                        } else {
+                            classes += "hover:bg-slate-100 text-slate-700";
+                        }
+                        html += `<div class="${classes}" onclick="handleSalesDateClick(${d}, ${month}, ${year})">${d}</div>`;
+                    }
+                    container.innerHTML = html;
+                }
+
+                function changeSalesMonth(delta) {
+                    salesCurrentMonth += delta;
+                    if (salesCurrentMonth > 11) { salesCurrentMonth = 0; salesCurrentYear++; }
+                    if (salesCurrentMonth < 0) { salesCurrentMonth = 11; salesCurrentYear--; }
+                    renderSalesCalendars();
+                }
+
+                function handleSalesDateClick(d, m, y) {
+                    const clickedDate = new Date(y, m, d);
+                    if (!salesStartDate || (salesStartDate && salesEndDate)) {
+                        salesStartDate = clickedDate;
+                        salesEndDate = null;
+                    } else {
+                        if (clickedDate < salesStartDate) {
+                            salesEndDate = salesStartDate;
+                            salesStartDate = clickedDate;
+                        } else {
+                            salesEndDate = clickedDate;
+                        }
+                    }
                     renderSalesCalendars();
                     updateSalesDateInputs();
-                    // 3. Label
-                    document.getElementById('salesDateRangeLabel').innerText = labelMap[index]; // reusing labelMap
-                    // 4. Close & Render
-                    document.getElementById('salesDatePickerDropdown').classList.add('hidden');
-                    renderSalesTable();
-
-                    // Visual Selection Logic
-                    salesPresets.forEach(p => p.parentElement.classList.remove('bg-blue-50', 'text-blue-700', 'font-medium'));
-                    radio.parentElement.classList.add('bg-blue-50', 'text-blue-700', 'font-medium');
-                });
-            });
-        }, 500); // Delay to ensure DOM exists or call in initApp
-
-        // --- Sales Table Logic ---
-        let salesPage = 1;
-        let salesPageSize = 10;
-
-        function showMetadataLoading(callback) {
-            const overlay = document.getElementById('table-loading-overlay');
-            if (overlay) {
-                overlay.classList.remove('hidden');
-                overlay.classList.add('flex');
-            }
-
-            // Simulate network delay
-            setTimeout(() => {
-                callback();
-                if (overlay) {
-                    overlay.classList.add('hidden');
-                    overlay.classList.remove('flex');
                 }
-            }, 600); // 600ms delay
-        }
 
-        function changeSalesPage(delta) {
-            showMetadataLoading(() => {
-                salesPage += delta;
-                renderSalesTable();
-            });
-        }
-
-        function changeSalesPageSize(size) {
-            showMetadataLoading(() => {
-                salesPageSize = parseInt(size);
-                renderSalesTable(true);
-            });
-        }
-
-        function renderSalesTable(resetPage = false) {
-            const tbody = document.getElementById('sales-table-body');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-
-            const searchInput = document.getElementById('sales-search');
-            const statusFilterInput = document.getElementById('sales-status-filter');
-            const search = searchInput ? searchInput.value.toLowerCase() : '';
-            const statusFilter = statusFilterInput ? statusFilterInput.value : 'all';
-
-            // Reset page if searching (heuristic)
-            if (resetPage) salesPage = 1;
-
-            const filtered = ALL_SALES.filter(sale => {
-                if (sale.rawDate < salesStartDate || sale.rawDate > salesEndDate) return false;
-                if (statusFilter !== 'all' && sale.status !== statusFilter) return false;
-                if (search && !sale.name.toLowerCase().includes(search) && !sale.email.toLowerCase().includes(search)) return false;
-                return true;
-            });
-
-            // Pagination Logic
-            const total = filtered.length;
-            const maxPage = Math.ceil(total / salesPageSize) || 1;
-            if (salesPage > maxPage) salesPage = maxPage;
-            if (salesPage < 1) salesPage = 1;
-
-            const startIndex = (salesPage - 1) * salesPageSize;
-            const endIndex = Math.min(startIndex + salesPageSize, total);
-            const paged = filtered.slice(startIndex, startIndex + salesPageSize);
-
-            // Update Info & Buttons
-            const paginationInfo = document.getElementById('sales-pagination-info');
-            const prevBtn = document.getElementById('sales-prev-btn');
-            const nextBtn = document.getElementById('sales-next-btn');
-
-            if (paginationInfo) {
-                if (total === 0) {
-                    paginationInfo.innerText = '0 resultados';
-                } else {
-                    paginationInfo.innerText = `Mostrando ${startIndex + 1} - ${endIndex} de ${total} resultados`;
+                function updateSalesDateInputs() {
+                    const startEl = document.getElementById('sales-input-start');
+                    const endEl = document.getElementById('sales-input-end');
+                    if (startEl) startEl.innerText = salesStartDate ? salesStartDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+                    if (endEl) endEl.innerText = salesEndDate ? salesEndDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
                 }
-            }
 
-            if (prevBtn) prevBtn.disabled = salesPage <= 1;
-            if (nextBtn) nextBtn.disabled = salesPage >= maxPage;
+                function applySalesDateSelection() {
+                    if (salesStartDate && salesEndDate) {
+                        const s = salesStartDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+                        const e = salesEndDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+                        document.getElementById('salesDateRangeLabel').innerText = `${s} - ${e}`;
+                        document.getElementById('salesDatePickerDropdown').classList.add('hidden');
 
-            if (paged.length === 0 && total === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-slate-500">Nenhuma venda encontrada para este período.</td></tr>`;
-                return;
-            }
+                        // Logic to sync radio buttons based on dates
+                        // (Skipping detailed radio sync for brevity unless critical, but "Today" functionality relies on dates matching)
 
-            paged.forEach(sale => {
-                let statusBadge = '';
-                if (sale.status === 'Aprovado') statusBadge = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="check-circle" class="w-3 h-3 mr-1"></i> Aprovado</span>`;
-                else if (sale.status === 'Pendente') statusBadge = `<span class="bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="clock" class="w-3 h-3 mr-1"></i> Pendente</span>`;
-                else statusBadge = `<span class="bg-red-50 text-red-700 border border-red-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="x-circle" class="w-3 h-3 mr-1"></i> Recusado</span>`;
+                        renderSalesTable();
+                    }
+                }
 
-                // Define platform for the table row
-                const platform = sale.id.charCodeAt(0) % 2 === 0 ? 'Kiwify' : 'Eduzz';
+                // Initialize Sales Presets Listener
+                setTimeout(() => {
+                    const salesPresets = document.querySelectorAll('input[name="salesDatePreset"]');
+                    salesPresets.forEach((radio, index) => {
+                        radio.addEventListener('change', (e) => {
+                            // 1. Get Dates
+                            const { start, end } = getPresetDates(presetMap[index]); // Reusing presetMap/getPresetDates from global scope
+                            salesStartDate = start;
+                            salesEndDate = end;
+                            // 2. UI
+                            salesCurrentYear = salesStartDate.getFullYear();
+                            salesCurrentMonth = salesStartDate.getMonth();
+                            renderSalesCalendars();
+                            updateSalesDateInputs();
+                            // 3. Label
+                            document.getElementById('salesDateRangeLabel').innerText = labelMap[index]; // reusing labelMap
+                            // 4. Close & Render
+                            document.getElementById('salesDatePickerDropdown').classList.add('hidden');
+                            renderSalesTable();
 
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 transition-colors';
-                tr.innerHTML = `
+                            // Visual Selection Logic
+                            salesPresets.forEach(p => p.parentElement.classList.remove('bg-blue-50', 'text-blue-700', 'font-medium'));
+                            radio.parentElement.classList.add('bg-blue-50', 'text-blue-700', 'font-medium');
+                        });
+                    });
+                }, 500); // Delay to ensure DOM exists or call in initApp
+
+                // --- Sales Table Logic ---
+                let salesPage = 1;
+                let salesPageSize = 10;
+
+                function showMetadataLoading(callback) {
+                    const overlay = document.getElementById('table-loading-overlay');
+                    if (overlay) {
+                        overlay.classList.remove('hidden');
+                        overlay.classList.add('flex');
+                    }
+
+                    // Simulate network delay
+                    setTimeout(() => {
+                        callback();
+                        if (overlay) {
+                            overlay.classList.add('hidden');
+                            overlay.classList.remove('flex');
+                        }
+                    }, 600); // 600ms delay
+                }
+
+                function changeSalesPage(delta) {
+                    showMetadataLoading(() => {
+                        salesPage += delta;
+                        renderSalesTable();
+                    });
+                }
+
+                function changeSalesPageSize(size) {
+                    showMetadataLoading(() => {
+                        salesPageSize = parseInt(size);
+                        renderSalesTable(true);
+                    });
+                }
+
+                function renderSalesTable(resetPage = false) {
+                    const tbody = document.getElementById('sales-table-body');
+                    if (!tbody) return;
+                    tbody.innerHTML = '';
+
+                    const searchInput = document.getElementById('sales-search');
+                    const statusFilterInput = document.getElementById('sales-status-filter');
+                    const search = searchInput ? searchInput.value.toLowerCase() : '';
+                    const statusFilter = statusFilterInput ? statusFilterInput.value : 'all';
+
+                    // Reset page if searching (heuristic)
+                    if (resetPage) salesPage = 1;
+
+                    const filtered = ALL_SALES.filter(sale => {
+                        if (sale.rawDate < salesStartDate || sale.rawDate > salesEndDate) return false;
+                        if (statusFilter !== 'all' && sale.status !== statusFilter) return false;
+                        if (search && !sale.name.toLowerCase().includes(search) && !sale.email.toLowerCase().includes(search)) return false;
+                        return true;
+                    });
+
+                    // Pagination Logic
+                    const total = filtered.length;
+                    const maxPage = Math.ceil(total / salesPageSize) || 1;
+                    if (salesPage > maxPage) salesPage = maxPage;
+                    if (salesPage < 1) salesPage = 1;
+
+                    const startIndex = (salesPage - 1) * salesPageSize;
+                    const endIndex = Math.min(startIndex + salesPageSize, total);
+                    const paged = filtered.slice(startIndex, startIndex + salesPageSize);
+
+                    // Update Info & Buttons
+                    const paginationInfo = document.getElementById('sales-pagination-info');
+                    const prevBtn = document.getElementById('sales-prev-btn');
+                    const nextBtn = document.getElementById('sales-next-btn');
+
+                    if (paginationInfo) {
+                        if (total === 0) {
+                            paginationInfo.innerText = '0 resultados';
+                        } else {
+                            paginationInfo.innerText = `Mostrando ${startIndex + 1} - ${endIndex} de ${total} resultados`;
+                        }
+                    }
+
+                    if (prevBtn) prevBtn.disabled = salesPage <= 1;
+                    if (nextBtn) nextBtn.disabled = salesPage >= maxPage;
+
+                    if (paged.length === 0 && total === 0) {
+                        tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-slate-500">Nenhuma venda encontrada para este período.</td></tr>`;
+                        return;
+                    }
+
+                    paged.forEach(sale => {
+                        let statusBadge = '';
+                        if (sale.status === 'Aprovado') statusBadge = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="check-circle" class="w-3 h-3 mr-1"></i> Aprovado</span>`;
+                        else if (sale.status === 'Pendente') statusBadge = `<span class="bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="clock" class="w-3 h-3 mr-1"></i> Pendente</span>`;
+                        else statusBadge = `<span class="bg-red-50 text-red-700 border border-red-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="x-circle" class="w-3 h-3 mr-1"></i> Recusado</span>`;
+
+                        // Define platform for the table row
+                        const platform = sale.id.charCodeAt(0) % 2 === 0 ? 'Kiwify' : 'Eduzz';
+
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-slate-50 transition-colors';
+                        tr.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap">${sale.dateStr}</td>
                     <td class="px-6 py-4">
                         <div class="font-medium text-slate-900">${sale.name}</div>
@@ -2586,47 +2651,47 @@
                     <td class="px-6 py-4 text-right font-medium text-slate-900">${sale.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                     <td class="px-6 py-4 text-center"><button class="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button></td>
                 `;
-                tbody.appendChild(tr);
-            });
-            if (window.lucide) window.lucide.createIcons();
-        }
-
-        // --- Recent Sales Widget Logic ---
-        function renderRecentSalesWidget() {
-            try {
-                const tbody = document.getElementById('recent-sales-body');
-                if (!tbody) {
-                    console.warn("Recent Sales Widget body not found");
-                    return;
-                }
-                tbody.innerHTML = '';
-
-                // Ensure ALL_SALES exists and has data
-                if (!ALL_SALES || ALL_SALES.length === 0) {
-                    // Retry generation if empty (fallback)
-                    console.warn("ALL_SALES empty in widget, regenerating...");
-                    if (typeof generateSalesData === 'function') generateSalesData();
+                        tbody.appendChild(tr);
+                    });
+                    if (window.lucide) window.lucide.createIcons();
                 }
 
-                // Show top 5 recent sales (regardless of date)
-                const recent = ALL_SALES.slice(0, 5);
+                // --- Recent Sales Widget Logic ---
+                function renderRecentSalesWidget() {
+                    try {
+                        const tbody = document.getElementById('recent-sales-body');
+                        if (!tbody) {
+                            console.warn("Recent Sales Widget body not found");
+                            return;
+                        }
+                        tbody.innerHTML = '';
 
-                recent.forEach(sale => {
-                    let statusBadge = '';
-                    if (sale.status === 'Aprovado') {
-                        statusBadge = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="check-circle" class="w-3 h-3 mr-1"></i> Aprovado</span>`;
-                    } else if (sale.status === 'Pendente') {
-                        statusBadge = `<span class="bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="clock" class="w-3 h-3 mr-1"></i> Pendente</span>`;
-                    } else {
-                        statusBadge = `<span class="bg-red-50 text-red-700 border border-red-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="x-circle" class="w-3 h-3 mr-1"></i> Recusado</span>`;
-                    }
+                        // Ensure ALL_SALES exists and has data
+                        if (!ALL_SALES || ALL_SALES.length === 0) {
+                            // Retry generation if empty (fallback)
+                            console.warn("ALL_SALES empty in widget, regenerating...");
+                            if (typeof generateSalesData === 'function') generateSalesData();
+                        }
 
-                    // MOCK PLATFORM (Deterministic)
-                    const platform = sale.id.charCodeAt(0) % 2 === 0 ? 'Kiwify' : 'Eduzz';
+                        // Show top 5 recent sales (regardless of date)
+                        const recent = ALL_SALES.slice(0, 5);
 
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-50 transition-colors';
-                    tr.innerHTML = `
+                        recent.forEach(sale => {
+                            let statusBadge = '';
+                            if (sale.status === 'Aprovado') {
+                                statusBadge = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="check-circle" class="w-3 h-3 mr-1"></i> Aprovado</span>`;
+                            } else if (sale.status === 'Pendente') {
+                                statusBadge = `<span class="bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="clock" class="w-3 h-3 mr-1"></i> Pendente</span>`;
+                            } else {
+                                statusBadge = `<span class="bg-red-50 text-red-700 border border-red-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center w-max"><i data-lucide="x-circle" class="w-3 h-3 mr-1"></i> Recusado</span>`;
+                            }
+
+                            // MOCK PLATFORM (Deterministic)
+                            const platform = sale.id.charCodeAt(0) % 2 === 0 ? 'Kiwify' : 'Eduzz';
+
+                            const tr = document.createElement('tr');
+                            tr.className = 'hover:bg-slate-50 transition-colors';
+                            tr.innerHTML = `
                         <td class="px-6 py-4 whitespace-nowrap">${sale.dateStr}</td>
                         <td class="px-6 py-4">
                             <div class="font-medium text-slate-900">${sale.name}</div>
@@ -2637,429 +2702,429 @@
                         <td class="px-6 py-4">${statusBadge}</td>
                         <td class="px-6 py-4 text-right font-medium text-slate-900">${sale.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                     `;
-                    tbody.appendChild(tr);
-                });
-                if (window.lucide) window.lucide.createIcons();
-            } catch (e) {
-                console.error("Error rendering Recent Sales Widget:", e);
-            }
-        }
-
-
-        // --- REAL FACEBOOK DATA LOGIC ---
-        // CRITICAL: Declarations moved UP before initApp to avoid TDZ errors
-        let fbAccessToken = null;
-        let selectedAdAccountId = null;
-        let selectedCampaignId = 'all'; // Default
-
-        // Helper: Wait for FB SDK
-        function waitForFb(callback) {
-            if (typeof FB !== 'undefined') {
-                callback();
-            } else {
-                console.log("[Scale] Waiting for FB SDK...");
-                setTimeout(() => waitForFb(callback), 500);
-            }
-        }
-
-
-        // --- Init Function ---
-        function initApp() {
-            try {
-                console.log("Initializing App...");
-
-                // Auth Check First
-                if (typeof checkAuth === 'function') checkAuth();
-
-                // Check for Persistent FB Connection
-                const storedFbToken = localStorage.getItem('fb_access_token');
-                if (storedFbToken) {
-                    console.log("Found stored FB Token, attempting auto-reconnect...");
-
-                    // CRITICAL: Set global token BEFORE calling initRealFbData
-                    fbAccessToken = storedFbToken;
-
-                    // Update UI immediately
-                    const btn = document.getElementById('btn-connect-fb');
-                    const status = document.getElementById('status-fb');
-                    if (btn && status) {
-                        // We use a specific function/logic to update UI without triggering disconnect logic yet
-                        btn.innerText = 'Desconectar';
-                        btn.classList.replace('bg-blue-600', 'bg-slate-200');
-                        btn.classList.replace('text-white', 'text-slate-700');
-                        btn.classList.replace('hover:bg-blue-700', 'hover:bg-slate-300');
-                        btn.disabled = false;
-                        btn.onclick = disconnectFb;
-
-                        status.innerText = `Conectado (Recuperado)`;
-                        status.classList.replace('bg-slate-100', 'bg-blue-50');
-                        status.classList.replace('text-slate-500', 'text-blue-600');
-                        status.classList.remove('hidden');
-                    }
-
-                    // Fetch Data
-                    initRealFbData(storedFbToken);
-                }
-
-                // Dashboard Date Picker
-                if (typeof initCalendarHTML === 'function') initCalendarHTML();
-
-                // Dashboard Default Dates
-                // If not set, default to last 7 days
-                if (!selectedStartDate) {
-                    selectedEndDate = new Date();
-                    selectedStartDate = new Date();
-                    selectedStartDate.setDate(selectedStartDate.getDate() - 6);
-                }
-
-                if (typeof renderCalendars === 'function') renderCalendars();
-                if (typeof updateDateInputs === 'function') updateDateInputs();
-
-                // Sales Data Generation
-                if (typeof generateSalesData === 'function') generateSalesData();
-
-                // Render Dashboard
-                if (typeof refreshDashboard === 'function') refreshDashboard();
-
-                // Render Sales Tables
-                if (typeof renderSalesTable === 'function') renderSalesTable();
-
-                // Render Widget
-                renderRecentSalesWidget();
-
-                // Restore View
-                const savedView = localStorage.getItem('last_active_view') || 'dashboard';
-                if (typeof navigateTo === 'function') navigateTo(savedView);
-
-                // Restore GoExplosion logic...
-                if (localStorage.getItem('go_connected') === 'true') {
-                    const form = document.getElementById('go-connect-form');
-                    const msg = document.getElementById('go-connected-msg');
-                    const status = document.getElementById('status-go');
-                    if (form && msg && status) {
-                        form.classList.add('hidden');
-                        msg.classList.remove('hidden');
-                        status.classList.remove('hidden');
-                        status.innerText = 'Conectado';
-                        msg.innerHTML = `<div class="flex items-center justify-between w-full"><span class="flex items-center"><i data-lucide="check" class="w-4 h-4 mr-1 text-emerald-500"></i> Sincronizando dados.</span><button onclick="disconnectGo()" class="text-xs text-red-500 hover:text-red-700 font-medium ml-4">Desconectar</button></div>`;
-                        if (window.lucide) lucide.createIcons();
+                            tbody.appendChild(tr);
+                        });
+                        if (window.lucide) window.lucide.createIcons();
+                    } catch (e) {
+                        console.error("Error rendering Recent Sales Widget:", e);
                     }
                 }
 
-                /* Sales Presets Init (Ensure listeners are attached) */
-                const salesPresets = document.querySelectorAll('input[name="salesDatePreset"]');
-                salesPresets.forEach((radio, index) => {
-                    // Handled by inline script block above
-                });
 
-            } catch (e) {
-                console.error("Init App Error", e);
-                alert("Erro ao iniciar aplicação: " + e.message);
-            }
-        }
+                // --- REAL FACEBOOK DATA LOGIC ---
+                // CRITICAL: Declarations moved UP before initApp to avoid TDZ errors
+                let fbAccessToken = null;
+                let selectedAdAccountId = null;
+                let selectedCampaignId = 'all'; // Default
 
-        // Run Init
-        initApp();
-
-        // FAILSAFE: Manual Event Listener for Login
-        setTimeout(() => {
-            const btn = document.getElementById('login-btn');
-            if (btn) {
-                btn.onclick = handleLogin; // Direct override
-                console.log("Login button listener attached manually");
-            }
-        }, 1000);
+                // Helper: Wait for FB SDK
+                function waitForFb(callback) {
+                    if (typeof FB !== 'undefined') {
+                        callback();
+                    } else {
+                        console.log("[Scale] Waiting for FB SDK...");
+                        setTimeout(() => waitForFb(callback), 500);
+                    }
+                }
 
 
-        // Helper to toggle Account Dropdown
-        function toggleAccountDropdown(forceClose = false) {
-            const dropdown = document.getElementById('accountDropdown');
-            if (!dropdown) return;
-            if (forceClose) {
-                dropdown.classList.add('hidden');
-            } else {
-                dropdown.classList.toggle('hidden');
-            }
-        }
+                // --- Init Function ---
+                function initApp() {
+                    try {
+                        console.log("Initializing App...");
 
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function (e) {
-            const container = document.getElementById('accountSelectorContainer');
-            if (container && !container.contains(e.target)) {
-                toggleAccountDropdown(true);
-            }
-        });
+                        // Auth Check First
+                        if (typeof checkAuth === 'function') checkAuth();
 
-        function initRealFbData(token) {
-            waitForFb(() => {
-                _initRealFbDataInternal(token);
-            });
-        }
+                        // Check for Persistent FB Connection
+                        const storedFbToken = localStorage.getItem('fb_access_token');
+                        if (storedFbToken) {
+                            console.log("Found stored FB Token, attempting auto-reconnect...");
 
-        function _initRealFbDataInternal(token) {
-            fbAccessToken = token;
-            localStorage.setItem('fb_access_token', token); // Persist Token
-            if (!token) return;
+                            // CRITICAL: Set global token BEFORE calling initRealFbData
+                            fbAccessToken = storedFbToken;
 
-            // Fetch Accounts - Explicitly passing access_token
-            FB.api('/me/adaccounts', { access_token: token, fields: 'name,account_id,currency,account_status,business_name' }, function (response) {
-                if (response.error) {
-                    console.error('Error fetching accounts:', response.error);
+                            // Update UI immediately
+                            const btn = document.getElementById('btn-connect-fb');
+                            const status = document.getElementById('status-fb');
+                            if (btn && status) {
+                                // We use a specific function/logic to update UI without triggering disconnect logic yet
+                                btn.innerText = 'Desconectar';
+                                btn.classList.replace('bg-blue-600', 'bg-slate-200');
+                                btn.classList.replace('text-white', 'text-slate-700');
+                                btn.classList.replace('hover:bg-blue-700', 'hover:bg-slate-300');
+                                btn.disabled = false;
+                                btn.onclick = disconnectFb;
 
-                    // Handle Expired Token Gracefully
-                    const msg = response.error.message || '';
-                    if (msg.includes('Session has expired') || msg.includes('Error validating access token')) {
-                        console.warn('FB Token Expired. Clearing session.');
-                        localStorage.removeItem('fb_access_token');
-                        localStorage.removeItem('fb_selected_account_id');
-                        localStorage.removeItem('fb_selected_account_name');
+                                status.innerText = `Conectado (Recuperado)`;
+                                status.classList.replace('bg-slate-100', 'bg-blue-50');
+                                status.classList.replace('text-slate-500', 'text-blue-600');
+                                status.classList.remove('hidden');
+                            }
 
-                        // Reset UI if needed (though default is disconnected)
-                        const btn = document.getElementById('btn-connect-fb');
-                        const status = document.getElementById('status-fb');
-                        if (btn) btn.innerText = 'Conectar Conta';
-                        if (status) {
-                            status.innerText = 'Desconectado';
-                            status.classList.remove('bg-emerald-50', 'text-emerald-700');
-                            status.classList.add('bg-slate-100', 'text-slate-500');
+                            // Fetch Data
+                            initRealFbData(storedFbToken);
                         }
-                        return; // Stop here, silent fail
-                    }
 
-                    alert('Erro ao buscar contas: ' + response.error.message);
-                    return;
+                        // Dashboard Date Picker
+                        if (typeof initCalendarHTML === 'function') initCalendarHTML();
+
+                        // Dashboard Default Dates
+                        // If not set, default to last 7 days
+                        if (!selectedStartDate) {
+                            selectedEndDate = new Date();
+                            selectedStartDate = new Date();
+                            selectedStartDate.setDate(selectedStartDate.getDate() - 6);
+                        }
+
+                        if (typeof renderCalendars === 'function') renderCalendars();
+                        if (typeof updateDateInputs === 'function') updateDateInputs();
+
+                        // Sales Data Generation
+                        if (typeof generateSalesData === 'function') generateSalesData();
+
+                        // Render Dashboard
+                        if (typeof refreshDashboard === 'function') refreshDashboard();
+
+                        // Render Sales Tables
+                        if (typeof renderSalesTable === 'function') renderSalesTable();
+
+                        // Render Widget
+                        renderRecentSalesWidget();
+
+                        // Restore View
+                        const savedView = localStorage.getItem('last_active_view') || 'dashboard';
+                        if (typeof navigateTo === 'function') navigateTo(savedView);
+
+                        // Restore GoExplosion logic...
+                        if (localStorage.getItem('go_connected') === 'true') {
+                            const form = document.getElementById('go-connect-form');
+                            const msg = document.getElementById('go-connected-msg');
+                            const status = document.getElementById('status-go');
+                            if (form && msg && status) {
+                                form.classList.add('hidden');
+                                msg.classList.remove('hidden');
+                                status.classList.remove('hidden');
+                                status.innerText = 'Conectado';
+                                msg.innerHTML = `<div class="flex items-center justify-between w-full"><span class="flex items-center"><i data-lucide="check" class="w-4 h-4 mr-1 text-emerald-500"></i> Sincronizando dados.</span><button onclick="disconnectGo()" class="text-xs text-red-500 hover:text-red-700 font-medium ml-4">Desconectar</button></div>`;
+                                if (window.lucide) lucide.createIcons();
+                            }
+                        }
+
+                        /* Sales Presets Init (Ensure listeners are attached) */
+                        const salesPresets = document.querySelectorAll('input[name="salesDatePreset"]');
+                        salesPresets.forEach((radio, index) => {
+                            // Handled by inline script block above
+                        });
+
+                    } catch (e) {
+                        console.error("Init App Error", e);
+                        alert("Erro ao iniciar aplicação: " + e.message);
+                    }
                 }
 
-                const accounts = response.data;
-                const list = document.getElementById('accountListContainer');
-                const btn = document.getElementById('accountSelectorBtn');
+                // Run Init
+                initApp();
 
-                if (list && btn) {
-                    // Show the selector button
-                    btn.classList.remove('hidden');
-                    list.innerHTML = '';
+                // FAILSAFE: Manual Event Listener for Login
+                setTimeout(() => {
+                    const btn = document.getElementById('login-btn');
+                    if (btn) {
+                        btn.onclick = handleLogin; // Direct override
+                        console.log("Login button listener attached manually");
+                    }
+                }, 1000);
 
-                    if (accounts && accounts.length === 0) {
-                        list.innerHTML = '<div class="p-3 text-xs text-slate-500 text-center">Nenhuma conta encontrada.</div>';
-                    } else if (accounts) {
-                        // Check for previously selected account
-                        const storedId = localStorage.getItem('fb_selected_account_id');
-                        let matched = false;
 
-                        accounts.forEach(acc => {
-                            const div = document.createElement('div');
-                            div.className = 'px-3 py-2 hover:bg-slate-50 cursor-pointer flex flex-col border-b border-slate-50 last:border-0 transition-colors group';
-                            const isSelected = storedId === acc.account_id;
-                            if (isSelected) matched = true;
+                // Helper to toggle Account Dropdown
+                function toggleAccountDropdown(forceClose = false) {
+                    const dropdown = document.getElementById('accountDropdown');
+                    if (!dropdown) return;
+                    if (forceClose) {
+                        dropdown.classList.add('hidden');
+                    } else {
+                        dropdown.classList.toggle('hidden');
+                    }
+                }
 
-                            // Highlight selected visual (basic)
-                            if (isSelected) div.classList.add('bg-blue-50/50');
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function (e) {
+                    const container = document.getElementById('accountSelectorContainer');
+                    if (container && !container.contains(e.target)) {
+                        toggleAccountDropdown(true);
+                    }
+                });
 
-                            div.innerHTML = `
+                function initRealFbData(token) {
+                    waitForFb(() => {
+                        _initRealFbDataInternal(token);
+                    });
+                }
+
+                function _initRealFbDataInternal(token) {
+                    fbAccessToken = token;
+                    localStorage.setItem('fb_access_token', token); // Persist Token
+                    if (!token) return;
+
+                    // Fetch Accounts - Explicitly passing access_token
+                    FB.api('/me/adaccounts', { access_token: token, fields: 'name,account_id,currency,account_status,business_name' }, function (response) {
+                        if (response.error) {
+                            console.error('Error fetching accounts:', response.error);
+
+                            // Handle Expired Token Gracefully
+                            const msg = response.error.message || '';
+                            if (msg.includes('Session has expired') || msg.includes('Error validating access token')) {
+                                console.warn('FB Token Expired. Clearing session.');
+                                localStorage.removeItem('fb_access_token');
+                                localStorage.removeItem('fb_selected_account_id');
+                                localStorage.removeItem('fb_selected_account_name');
+
+                                // Reset UI if needed (though default is disconnected)
+                                const btn = document.getElementById('btn-connect-fb');
+                                const status = document.getElementById('status-fb');
+                                if (btn) btn.innerText = 'Conectar Conta';
+                                if (status) {
+                                    status.innerText = 'Desconectado';
+                                    status.classList.remove('bg-emerald-50', 'text-emerald-700');
+                                    status.classList.add('bg-slate-100', 'text-slate-500');
+                                }
+                                return; // Stop here, silent fail
+                            }
+
+                            alert('Erro ao buscar contas: ' + response.error.message);
+                            return;
+                        }
+
+                        const accounts = response.data;
+                        const list = document.getElementById('accountListContainer');
+                        const btn = document.getElementById('accountSelectorBtn');
+
+                        if (list && btn) {
+                            // Show the selector button
+                            btn.classList.remove('hidden');
+                            list.innerHTML = '';
+
+                            if (accounts && accounts.length === 0) {
+                                list.innerHTML = '<div class="p-3 text-xs text-slate-500 text-center">Nenhuma conta encontrada.</div>';
+                            } else if (accounts) {
+                                // Check for previously selected account
+                                const storedId = localStorage.getItem('fb_selected_account_id');
+                                let matched = false;
+
+                                accounts.forEach(acc => {
+                                    const div = document.createElement('div');
+                                    div.className = 'px-3 py-2 hover:bg-slate-50 cursor-pointer flex flex-col border-b border-slate-50 last:border-0 transition-colors group';
+                                    const isSelected = storedId === acc.account_id;
+                                    if (isSelected) matched = true;
+
+                                    // Highlight selected visual (basic)
+                                    if (isSelected) div.classList.add('bg-blue-50/50');
+
+                                    div.innerHTML = `
                                 <div class="flex items-center justify-between">
                                     <span class="font-medium text-sm text-slate-700 group-hover:text-blue-700 ${isSelected ? 'text-blue-700' : ''}">${acc.name}</span>
                                     ${isSelected ? '<i data-lucide="check" class="w-3 h-3 text-blue-600"></i>' : ''}
                                 </div>
                                 <span class="text-[10px] text-slate-400">ID: ${acc.account_id} (${acc.currency})</span>
                             `;
-                            div.onclick = () => {
-                                selectAdAccount(acc.account_id, acc.name);
-                                toggleAccountDropdown(true); // Close
-                            };
-                            list.appendChild(div);
-                        });
-                        if (window.lucide) lucide.createIcons();
+                                    div.onclick = () => {
+                                        selectAdAccount(acc.account_id, acc.name);
+                                        toggleAccountDropdown(true); // Close
+                                    };
+                                    list.appendChild(div);
+                                });
+                                if (window.lucide) lucide.createIcons();
 
-                        // Auto-Select logic
-                        if (matched) {
-                            const storedName = localStorage.getItem('fb_selected_account_name');
-                            updateAccountLabel(storedName);
-                            selectAdAccount(storedId, storedName, true); // true = silent/restore mode
+                                // Auto-Select logic
+                                if (matched) {
+                                    const storedName = localStorage.getItem('fb_selected_account_name');
+                                    updateAccountLabel(storedName);
+                                    selectAdAccount(storedId, storedName, true); // true = silent/restore mode
+                                }
+                                // OPTIONAL: Auto-select first if only one? 
+                                // else if (accounts.length === 1) { ... }
+                            }
                         }
-                        // OPTIONAL: Auto-select first if only one? 
-                        // else if (accounts.length === 1) { ... }
+                    });
+                }
+
+                function updateAccountLabel(name) {
+                    const lbl = document.getElementById('selectedAccountLabel');
+                    if (lbl) lbl.innerText = name.length > 20 ? name.substring(0, 18) + '...' : name;
+                }
+
+                function selectAdAccount(accountId, accountName, isRestore = false) {
+                    selectedAdAccountId = accountId;
+                    // Persist Selection
+                    localStorage.setItem('fb_selected_account_id', accountId);
+                    localStorage.setItem('fb_selected_account_name', accountName);
+
+                    updateAccountLabel(accountName);
+
+                    // Re-render list to update checks (lazy way: reload list or toggle classes manually. For now, we leave as is)
+
+                    const overlay = document.getElementById('global-loading-overlay');
+                    if (overlay && !isRestore) {
+                        overlay.classList.remove('hidden');
+                        overlay.classList.remove('opacity-0');
+                        overlay.classList.add('flex');
+                        const msg = overlay.querySelector('span');
+                        if (msg) msg.innerText = 'Atualizando dados...';
                     }
-                }
-            });
-        }
 
-        function updateAccountLabel(name) {
-            const lbl = document.getElementById('selectedAccountLabel');
-            if (lbl) lbl.innerText = name.length > 20 ? name.substring(0, 18) + '...' : name;
-        }
+                    // 1. Fetch Campaigns - Explicitly passing access_token
+                    FB.api(`/act_${accountId}/campaigns`, { access_token: fbAccessToken, fields: 'name,status', limit: 300 }, function (campResponse) {
+                        if (campResponse.data) {
+                            updateCampaignSelector(campResponse.data);
+                        }
+                    });
 
-        function selectAdAccount(accountId, accountName, isRestore = false) {
-            selectedAdAccountId = accountId;
-            // Persist Selection
-            localStorage.setItem('fb_selected_account_id', accountId);
-            localStorage.setItem('fb_selected_account_name', accountName);
-
-            updateAccountLabel(accountName);
-
-            // Re-render list to update checks (lazy way: reload list or toggle classes manually. For now, we leave as is)
-
-            const overlay = document.getElementById('global-loading-overlay');
-            if (overlay && !isRestore) {
-                overlay.classList.remove('hidden');
-                overlay.classList.remove('opacity-0');
-                overlay.classList.add('flex');
-                const msg = overlay.querySelector('span');
-                if (msg) msg.innerText = 'Atualizando dados...';
-            }
-
-            // 1. Fetch Campaigns - Explicitly passing access_token
-            FB.api(`/act_${accountId}/campaigns`, { access_token: fbAccessToken, fields: 'name,status', limit: 300 }, function (campResponse) {
-                if (campResponse.data) {
-                    updateCampaignSelector(campResponse.data);
-                }
-            });
-
-            // 2. Fetch Insights (Async)
-            fetchInsightsForAccount(accountId, isRestore, overlay);
-        }
-
-        function fetchInsightsForAccount(accountId, isRestore, overlay) {
-            // Calculate Range: Last 90 days + Today to avoid pagination issues with 'maximum'
-            // while ensuring we capture the current day's data.
-            const today = new Date();
-            const past = new Date();
-            past.setDate(today.getDate() - 90);
-
-            const formatDate = (d) => {
-                const year = d.getFullYear();
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const day = String(d.getDate()).padStart(2, '0');
-                return `${year}-${month}-${day}`;
-            };
-
-            const params = {
-                access_token: fbAccessToken, // Explicitly passing access_token
-                level: 'campaign',
-                time_increment: 1,
-                time_range: JSON.stringify({ since: formatDate(past), until: formatDate(today) }),
-                limit: 5000,
-                fields: 'campaign_name,campaign_id,spend,impressions,clicks,actions,action_values'
-            };
-
-            FB.api(`/act_${accountId}/insights`, params, function (insightResponse) {
-                if (overlay && !isRestore) { // Fade out if user triggered
-                    overlay.classList.add('opacity-0');
-                    setTimeout(() => {
-                        overlay.classList.remove('flex', 'opacity-0');
-                        overlay.classList.add('hidden');
-                    }, 300);
+                    // 2. Fetch Insights (Async)
+                    fetchInsightsForAccount(accountId, isRestore, overlay);
                 }
 
-                if (insightResponse.error) {
-                    console.error("Insights Error", insightResponse.error);
-                    // Do not alert on restore, just log
-                    if (!isRestore) alert('Erro ao baixar dados: ' + insightResponse.error.message);
-                    return;
-                }
+                function fetchInsightsForAccount(accountId, isRestore, overlay) {
+                    // Calculate Range: Last 90 days + Today to avoid pagination issues with 'maximum'
+                    // while ensuring we capture the current day's data.
+                    const today = new Date();
+                    const past = new Date();
+                    past.setDate(today.getDate() - 90);
 
-                console.log("[Scale] Insights Rows Fetched:", insightResponse.data ? insightResponse.data.length : 0);
-
-                // Process Data
-                processFbInsights(insightResponse.data);
-            });
-        }
-
-        function updateCampaignSelector(campaigns) {
-            const select = document.getElementById('campaign-select');
-            if (!select) return;
-
-            // Keep 'all' option
-            select.innerHTML = '<option value="all">Todas as campanhas</option>';
-
-            campaigns.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.id; // Use ID as value
-                opt.innerText = c.name; // Show Real Name
-                select.appendChild(opt);
-            });
-
-            // Allow re-selection if persisted (optional, but good UX)
-            // select.value = 'all'; 
-        }
-
-        function updateSelectedCampaign(val) {
-            console.log("Campaign Filter Changed:", val);
-            selectedCampaignId = val;
-            refreshDashboard();
-        }
-
-        function processFbInsights(data) {
-            console.log("[Scale] Raw FB Insights Data:", data); // DEBUG
-
-            const dateMap = {};
-
-            if (!data || data.length === 0) {
-                console.warn("[Scale] No data returned from FB Insights API for the last 90 days.");
-                alert("Não há dados de anúncios para esta conta nos últimos 90 dias.");
-                return;
-            }
-
-            data.forEach(row => {
-                const d = row.date_start;
-                if (!dateMap[d]) {
-                    dateMap[d] = {
-                        date: new Date(d + 'T12:00:00'),
-                        all: { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 },
-                        products: {} // Initialize dynamic product map
+                    const formatDate = (d) => {
+                        const year = d.getFullYear();
+                        const month = String(d.getMonth() + 1).padStart(2, '0');
+                        const day = String(d.getDate()).padStart(2, '0');
+                        return `${year}-${month}-${day}`;
                     };
+
+                    const params = {
+                        access_token: fbAccessToken, // Explicitly passing access_token
+                        level: 'campaign',
+                        time_increment: 1,
+                        time_range: JSON.stringify({ since: formatDate(past), until: formatDate(today) }),
+                        limit: 5000,
+                        fields: 'campaign_name,campaign_id,spend,impressions,clicks,actions,action_values'
+                    };
+
+                    FB.api(`/act_${accountId}/insights`, params, function (insightResponse) {
+                        if (overlay && !isRestore) { // Fade out if user triggered
+                            overlay.classList.add('opacity-0');
+                            setTimeout(() => {
+                                overlay.classList.remove('flex', 'opacity-0');
+                                overlay.classList.add('hidden');
+                            }, 300);
+                        }
+
+                        if (insightResponse.error) {
+                            console.error("Insights Error", insightResponse.error);
+                            // Do not alert on restore, just log
+                            if (!isRestore) alert('Erro ao baixar dados: ' + insightResponse.error.message);
+                            return;
+                        }
+
+                        console.log("[Scale] Insights Rows Fetched:", insightResponse.data ? insightResponse.data.length : 0);
+
+                        // Process Data
+                        processFbInsights(insightResponse.data);
+                    });
                 }
 
-                const spend = parseFloat(row.spend || 0);
+                function updateCampaignSelector(campaigns) {
+                    const select = document.getElementById('campaign-select');
+                    if (!select) return;
 
-                let revenue = 0;
-                let sales = 0;
-                let productName = 'unknown'; // Default product name
+                    // Keep 'all' option
+                    select.innerHTML = '<option value="all">Todas as campanhas</option>';
 
-                if (row.action_values) {
-                    const purch = row.action_values.find(a => a.action_type === 'purchase' || a.action_type === 'offsite_conversion.fb_pixel_purchase');
-                    if (purch) revenue = parseFloat(purch.value);
+                    campaigns.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.id; // Use ID as value
+                        opt.innerText = c.name; // Show Real Name
+                        select.appendChild(opt);
+                    });
+
+                    // Allow re-selection if persisted (optional, but good UX)
+                    // select.value = 'all'; 
                 }
 
-                if (row.actions) {
-                    const purchCnt = row.actions.find(a => a.action_type === 'purchase' || a.action_type === 'offsite_conversion.fb_pixel_purchase');
-                    if (purchCnt) sales = parseInt(purchCnt.value);
+                function updateSelectedCampaign(val) {
+                    console.log("Campaign Filter Changed:", val);
+                    selectedCampaignId = val;
+                    refreshDashboard();
                 }
 
-                // Aggregate All
-                dateMap[d].all.investment += spend;
-                dateMap[d].all.revenue += revenue;
-                dateMap[d].all.participants += sales;
+                function processFbInsights(data) {
+                    console.log("[Scale] Raw FB Insights Data:", data); // DEBUG
 
-                // Aggregate Campaign key MUST match filtered ID
-                // row.campaign_id is string, select value is string.
-                const cid = row.campaign_id;
-                if (!dateMap[d][cid]) {
-                    dateMap[d][cid] = { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 };
+                    const dateMap = {};
+
+                    if (!data || data.length === 0) {
+                        console.warn("[Scale] No data returned from FB Insights API for the last 90 days.");
+                        alert("Não há dados de anúncios para esta conta nos últimos 90 dias.");
+                        return;
+                    }
+
+                    data.forEach(row => {
+                        const d = row.date_start;
+                        if (!dateMap[d]) {
+                            dateMap[d] = {
+                                date: new Date(d + 'T12:00:00'),
+                                all: { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 },
+                                products: {} // Initialize dynamic product map
+                            };
+                        }
+
+                        const spend = parseFloat(row.spend || 0);
+
+                        let revenue = 0;
+                        let sales = 0;
+                        let productName = 'unknown'; // Default product name
+
+                        if (row.action_values) {
+                            const purch = row.action_values.find(a => a.action_type === 'purchase' || a.action_type === 'offsite_conversion.fb_pixel_purchase');
+                            if (purch) revenue = parseFloat(purch.value);
+                        }
+
+                        if (row.actions) {
+                            const purchCnt = row.actions.find(a => a.action_type === 'purchase' || a.action_type === 'offsite_conversion.fb_pixel_purchase');
+                            if (purchCnt) sales = parseInt(purchCnt.value);
+                        }
+
+                        // Aggregate All
+                        dateMap[d].all.investment += spend;
+                        dateMap[d].all.revenue += revenue;
+                        dateMap[d].all.participants += sales;
+
+                        // Aggregate Campaign key MUST match filtered ID
+                        // row.campaign_id is string, select value is string.
+                        const cid = row.campaign_id;
+                        if (!dateMap[d][cid]) {
+                            dateMap[d][cid] = { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 };
+                        }
+                        dateMap[d][cid].investment += spend;
+                        dateMap[d][cid].revenue += revenue;
+                        dateMap[d][cid].participants += sales;
+                    });
+
+                    // Convert to array
+                    const newDailyData = Object.values(dateMap).sort((a, b) => a.date - b.date);
+
+                    console.log("[Scale] Processed DAILY_DATA:", newDailyData); // DEBUG
+
+                    DAILY_DATA = newDailyData;
+
+                    // Update Status Feedback
+                    const status = document.getElementById('status-fb');
+                    if (status) {
+                        status.innerText = 'Conectado (API Real)';
+                        status.classList.remove('text-blue-600', 'bg-blue-50');
+                        status.classList.add('bg-emerald-50', 'text-emerald-700');
+                    }
+
+                    // Refresh Dashboard
+                    refreshDashboard();
+                    alert("Dados do Facebook atualizados com sucesso!");
                 }
-                dateMap[d][cid].investment += spend;
-                dateMap[d][cid].revenue += revenue;
-                dateMap[d][cid].participants += sales;
-            });
-
-            // Convert to array
-            const newDailyData = Object.values(dateMap).sort((a, b) => a.date - b.date);
-
-            console.log("[Scale] Processed DAILY_DATA:", newDailyData); // DEBUG
-
-            DAILY_DATA = newDailyData;
-
-            // Update Status Feedback
-            const status = document.getElementById('status-fb');
-            if (status) {
-                status.innerText = 'Conectado (API Real)';
-                status.classList.remove('text-blue-600', 'bg-blue-50');
-                status.classList.add('bg-emerald-50', 'text-emerald-700');
-            }
-
-            // Refresh Dashboard
-            refreshDashboard();
-            alert("Dados do Facebook atualizados com sucesso!");
-        }
     </script>
     <!-- Global Transition Overlay -->
     <!-- Deploy Trigger: 2026-01-27-Persistence-Fix -->
