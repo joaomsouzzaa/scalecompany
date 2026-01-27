@@ -2845,6 +2845,27 @@
             FB.api('/me/adaccounts', { access_token: token, fields: 'name,account_id,currency,account_status,business_name' }, function (response) {
                 if (response.error) {
                     console.error('Error fetching accounts:', response.error);
+
+                    // Handle Expired Token Gracefully
+                    const msg = response.error.message || '';
+                    if (msg.includes('Session has expired') || msg.includes('Error validating access token')) {
+                        console.warn('FB Token Expired. Clearing session.');
+                        localStorage.removeItem('fb_access_token');
+                        localStorage.removeItem('fb_selected_account_id');
+                        localStorage.removeItem('fb_selected_account_name');
+
+                        // Reset UI if needed (though default is disconnected)
+                        const btn = document.getElementById('btn-connect-fb');
+                        const status = document.getElementById('status-fb');
+                        if (btn) btn.innerText = 'Conectar Conta';
+                        if (status) {
+                            status.innerText = 'Desconectado';
+                            status.classList.remove('bg-emerald-50', 'text-emerald-700');
+                            status.classList.add('bg-slate-100', 'text-slate-500');
+                        }
+                        return; // Stop here, silent fail
+                    }
+
                     alert('Erro ao buscar contas: ' + response.error.message);
                     return;
                 }
