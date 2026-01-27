@@ -1002,6 +1002,28 @@
                 </div>
             </div>
         </main>
+        <!-- Facebook Account Selector Modal -->
+        <div id="fb-account-modal"
+            class="fixed inset-0 bg-slate-900/80 hidden items-center justify-center z-50 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+            <div
+                class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 transform scale-95 transition-transform duration-300">
+                <h3 class="text-xl font-bold text-slate-800 mb-4">Selecione a Conta de Anúncios</h3>
+                <p class="text-slate-500 text-sm mb-4">Encontramos as seguintes contas vinculadas ao seu perfil:</p>
+
+                <div id="fb-account-list" class="space-y-2 max-h-60 overflow-y-auto mb-4">
+                    <!-- Accounts will be injected here -->
+                    <div class="animate-pulse flex space-x-4">
+                        <div class="h-10 bg-slate-200 rounded w-full"></div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <button onclick="closeFbModal()"
+                        class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-medium">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
     </div> <!-- End App Container -->
 
     <script>
@@ -1138,7 +1160,7 @@
 
 
         // --- DATA ENGINE ---
-        const DAILY_DATA = (function generateHistory() {
+        let DAILY_DATA = (function generateHistory() {
             const data = [];
             const start = new Date(2025, 10, 1); // Nov 1 2025
             const end = new Date(2026, 0, 31);   // Jan 31 2026
@@ -1756,6 +1778,10 @@
                             FB.login(function (response) {
                                 if (response.status === 'connected') {
                                     handleFbSuccess(btn, status, 'Meta SDK');
+                                    // Init Real Data Fetch
+                                    if (response.authResponse) {
+                                        initRealFbData(response.authResponse.accessToken);
+                                    }
                                 } else {
                                     alert('Login cancelado ou não autorizado.');
                                     resetBtn(btn, originalText);
@@ -2558,6 +2584,201 @@
 
         // Run Init
         initApp();
+
+        // --- REAL FACEBOOK DATA LOGIC ---
+        let fbAccessToken = null;
+        let selectedAdAccountId = null;
+
+        function toggleFbModal(show) {
+            const modal = document.getElementById('fb-account-modal');
+            if (show) {
+                modal.classList.remove('hidden');
+                setTimeout(() => modal.classList.remove('opacity-0'), 10);
+                setTimeout(() => modal.querySelector('div').classList.remove('scale-95'), 10);
+            } else {
+                modal.classList.add('opacity-0');
+                modal.querySelector('div').classList.add('scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+        }
+
+        function closeFbModal() {
+            toggleFbModal(false);
+        }
+
+        function initRealFbData(token) {
+            fbAccessToken = token;
+            if (!token) return;
+
+            const btn = document.getElementById('btn-connect-fb');
+            if (btn) btn.innerText = 'Buscando contas...';
+
+            FB.api('/me/adaccounts', { fields: 'name,account_id,currency,account_status' }, function (response) {
+                if (response.error) {
+                    console.error('Error fetching accounts:', response.error);
+                    alert('Erro ao buscar contas de anúncios: ' + response.error.message);
+                    return;
+                }
+
+                const accounts = response.data;
+                const list = document.getElementById('fb-account-list');
+                list.innerHTML = '';
+
+                if (accounts && accounts.length === 0) {
+                    list.innerHTML = '<div class="p-4 text-center text-slate-500">Nenhuma conta de anúncios encontrada.</div>';
+                } else if (accounts) {
+                    accounts.forEach(acc => {
+                        const div = document.createElement('div');
+                        div.className = 'p-3 border rounded-lg hover:bg-slate-50 cursor-pointer flex justify-between items-center transition-colors mb-2';
+                        div.innerHTML = `
+                            <div>
+                                <div class="font-medium text-slate-800">${acc.name}</div>
+                                <div class="text-xs text-slate-500">ID: ${acc.account_id} (${acc.currency})</div>
+                            </div>
+                            <div class="text-blue-600">
+                                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                            </div>
+                        `;
+                        div.onclick = () => selectAdAccount(acc.account_id, acc.name);
+                        list.appendChild(div);
+                    });
+                    if (window.lucide) lucide.createIcons();
+                }
+
+                toggleFbModal(true);
+            });
+        }
+
+        function selectAdAccount(accountId, accountName) {
+            selectedAdAccountId = accountId;
+            closeFbModal();
+
+            const overlay = document.getElementById('global-loading-overlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                // Force layout reflow
+                void overlay.offsetWidth;
+                overlay.classList.remove('opacity-0');
+
+                const msg = overlay.querySelector('span'); // Assuming standard mock overlay struct
+                if (msg) msg.innerText = 'Baixando dados do Facebook...';
+            }
+
+            // 1. Fetch Campaigns
+            FB.api(`/act_${accountId}/campaigns`, { fields: 'name,status', limit: 100 }, function (campResponse) {
+                if (campResponse.data) {
+                    updateCampaignSelector(campResponse.data);
+                }
+            });
+
+            // 2. Fetch Insights
+            const params = {
+                level: 'campaign',
+                time_increment: 1,
+                date_preset: 'last_90d',
+                limit: 500,
+                fields: 'campaign_name,campaign_id,spend,impressions,clicks,actions,action_values'
+            };
+
+            FB.api(`/act_${accountId}/insights`, params, function (insightResponse) {
+                if (overlay) {
+                    overlay.classList.add('opacity-0');
+                    setTimeout(() => {
+                        overlay.classList.add('hidden');
+                        const msg = overlay.querySelector('span');
+                        if (msg) msg.innerText = 'Carregando...';
+                    }, 300);
+                }
+
+                if (insightResponse.error) {
+                    console.error("Insights Error", insightResponse.error);
+                    alert('Erro ao baixar dados: ' + insightResponse.error.message);
+                    return;
+                }
+
+                processFbInsights(insightResponse.data);
+            });
+        }
+
+        function updateCampaignSelector(campaigns) {
+            const select = document.getElementById('campaign-select');
+            if (!select) return;
+
+            // Keep 'all' option
+            select.innerHTML = '<option value="all">Todas as campanhas</option>';
+
+            campaigns.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id; // Use ID as value
+                opt.innerText = c.name; // Show Real Name
+                select.appendChild(opt);
+            });
+        }
+
+        function processFbInsights(data) {
+            const dateMap = {};
+
+            if (!data || data.length === 0) {
+                alert("Não há dados de anúncios para esta conta nos últimos 90 dias.");
+                return;
+            }
+
+            data.forEach(row => {
+                const d = row.date_start;
+                if (!dateMap[d]) {
+                    dateMap[d] = {
+                        date: new Date(d + 'T12:00:00'),
+                        all: { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 },
+                        // dynamic keys handled below
+                    };
+                }
+
+                const spend = parseFloat(row.spend || 0);
+
+                let revenue = 0;
+                if (row.action_values) {
+                    const purch = row.action_values.find(a => a.action_type === 'purchase' || a.action_type === 'offsite_conversion.fb_pixel_purchase');
+                    if (purch) revenue = parseFloat(purch.value);
+                }
+
+                let sales = 0;
+                if (row.actions) {
+                    const purchCnt = row.actions.find(a => a.action_type === 'purchase' || a.action_type === 'offsite_conversion.fb_pixel_purchase');
+                    if (purchCnt) sales = parseInt(purchCnt.value);
+                }
+
+                // Aggregate All
+                dateMap[d].all.investment += spend;
+                dateMap[d].all.revenue += revenue;
+                dateMap[d].all.participants += sales;
+
+                // Aggregate Campaign
+                const cid = row.campaign_id;
+                if (!dateMap[d][cid]) {
+                    dateMap[d][cid] = { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 };
+                }
+                dateMap[d][cid].investment += spend;
+                dateMap[d][cid].revenue += revenue;
+                dateMap[d][cid].participants += sales;
+            });
+
+            // Convert to array
+            const newDailyData = Object.values(dateMap).sort((a, b) => a.date - b.date);
+
+            DAILY_DATA = newDailyData;
+
+            // Update Status Feedback
+            const status = document.getElementById('status-fb');
+            if (status) {
+                status.innerText = 'Conectado (API Real)';
+                status.classList.remove('text-blue-600', 'bg-blue-50');
+                status.classList.add('bg-emerald-50', 'text-emerald-700');
+            }
+
+            // Refresh Dashboard
+            refreshDashboard();
+            alert("Dados do Facebook atualizados com sucesso!");
+        }
     </script>
     <!-- Global Transition Overlay -->
     <div id="global-loading-overlay"
