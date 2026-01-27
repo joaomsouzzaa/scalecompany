@@ -228,7 +228,7 @@
                                 <!-- Account Selector -->
                                 <div class="relative" id="accountSelectorContainer">
                                     <button onclick="toggleAccountDropdown()" id="accountSelectorBtn"
-                                        class="flex items-center px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 hover:bg-slate-100 transition-colors hidden">
+                                        class="flex items-center px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 hover:bg-slate-100 transition-colors">
                                         <div class="bg-blue-100 p-1 rounded-full mr-2">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -420,26 +420,7 @@
                                 <i data-lucide="rotate-cw" class="w-5 h-5"></i>
                             </button>
 
-                            <div class="flex flex-col items-end gap-1">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Scale
-                                    Club</span>
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="flex items-center px-3 py-2 border border-slate-200 rounded-lg bg-white">
-                                        <i data-lucide="filter" class="w-4 h-4 text-slate-400 mr-2"></i>
-                                        <select id="campaign-select" onchange="filterCampaigns(this.value)"
-                                            class="bg-transparent text-sm text-slate-700 outline-none cursor-pointer">
-                                            <option value="all">Todas as campanhas</option>
-                                            <option value="curso_ia">Curso de IA</option>
-                                            <option value="consultoria">Consultoria</option>
-                                        </select>
-                                    </div>
-                                    <button
-                                        class="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                                        <i data-lucide="refresh-cw" class="w-5 h-5"></i>
-                                    </button>
-                                </div>
-                            </div>
+
                         </div>
 
                         <!-- KPI Cards -->
