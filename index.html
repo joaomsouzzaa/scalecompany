@@ -2817,7 +2817,7 @@
                 access_token: fbAccessToken, // Explicitly passing access_token
                 level: 'campaign',
                 time_increment: 1,
-                date_preset: 'last_90d',
+                date_preset: 'maximum', // Changed to maximum to ensure 'today' is included
                 limit: 5000, // Increased limit to capture more data rows
                 fields: 'campaign_name,campaign_id,spend,impressions,clicks,actions,action_values'
             };
