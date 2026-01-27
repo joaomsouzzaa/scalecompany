@@ -638,7 +638,8 @@
                             </div>
                             <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm h-80 flex flex-col">
                                 <h3 class="font-semibold text-slate-800 mb-4">Investimento Diário</h3>
-                                <div class="flex-1 flex items-end justify-between gap-2 px-2">
+                                <div class="flex-1 flex items-end justify-between gap-2 px-2"
+                                    id="investment-chart-container">
                                     <div class="w-full bg-slate-800 rounded-t transition-all duration-500 h-[40%] group relative hover:opacity-90 cursor-pointer"
                                         id="bar-inv-0">
                                         <div
@@ -1335,11 +1336,14 @@
 
         function renderCharts(data) {
             const revContainer = document.getElementById('revenue-chart-container');
-            const invContainer = document.getElementById('sidebar').nextElementSibling.querySelector('#bar-inv-0').parentElement; // Hacky find or add ID to container
+            // Fixed: Use stable ID instead of fragile querySelector that crashes on empty data
+            const invContainer = document.getElementById('investment-chart-container');
 
-            // We need to add an ID to the Investment Chart Container for easier access
-            // Let's assume I fix the HTML in a separate step or just use the selector above.
-            // Actually, best to clear innerHTML.
+            if (!invContainer) {
+                console.warn("Investment chart container not found");
+                // Try fallback or just return to avoid crash if it's really missing
+            }
+
 
             // Find max for scaling
             const maxRev = Math.max(...data.map(d => d.rev)) || 1;
