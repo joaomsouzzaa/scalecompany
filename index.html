@@ -2813,12 +2813,25 @@
         }
 
         function fetchInsightsForAccount(accountId, isRestore, overlay) {
+            // Calculate Range: Last 90 days + Today to avoid pagination issues with 'maximum'
+            // while ensuring we capture the current day's data.
+            const today = new Date();
+            const past = new Date();
+            past.setDate(today.getDate() - 90);
+
+            const formatDate = (d) => {
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
             const params = {
                 access_token: fbAccessToken, // Explicitly passing access_token
                 level: 'campaign',
                 time_increment: 1,
-                date_preset: 'maximum', // Changed to maximum to ensure 'today' is included
-                limit: 5000, // Increased limit to capture more data rows
+                time_range: JSON.stringify({ since: formatDate(past), until: formatDate(today) }),
+                limit: 5000,
                 fields: 'campaign_name,campaign_id,spend,impressions,clicks,actions,action_values'
             };
 
