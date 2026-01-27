@@ -1090,48 +1090,51 @@
         }
 
         function handleLogin(e) {
-            // DEBUG MODE: Alerting flow
             e.preventDefault();
-
-            const emailField = document.getElementById('login-email');
-            const passField = document.getElementById('login-password');
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-password').value;
             const errorEl = document.getElementById('login-error');
             const btn = document.getElementById('login-btn');
 
-            if (!emailField || !passField) {
-                alert("Erro critico: Campos de login não encontrados no DOM.");
-                return;
-            }
-
-            const email = emailField.value.trim(); // Trim for safety
-            const pass = passField.value;
-
             if (!email || !pass) {
-                alert("Por favor preencha email e senha.");
+                // Should be handled by required attribute, but fallback:
+                if (errorEl) {
+                    errorEl.innerText = "Preencha todos os campos.";
+                    errorEl.classList.remove('hidden');
+                }
                 return;
             }
 
-            btn.innerText = 'Verificando...';
+            // UI Loading State
+            const originalText = btn.innerText;
+            btn.innerText = 'Entrando...';
+            btn.disabled = true;
 
-            // Synchronous Check for Debugging
-            if (USERS[email] && USERS[email].pass === pass) {
-                // Success
-                const userData = { email, name: USERS[email].name, role: USERS[email].role };
-                localStorage.setItem('scale_user', JSON.stringify(userData));
+            setTimeout(() => {
+                if (USERS[email] && USERS[email].pass === pass) {
+                    // Success
+                    const userData = { email, name: USERS[email].name, role: USERS[email].role };
+                    localStorage.setItem('scale_user', JSON.stringify(userData));
 
-                if (errorEl) errorEl.classList.add('hidden');
+                    if (errorEl) errorEl.classList.add('hidden');
 
-                // Force checkAuth immediately
-                checkAuth();
+                    checkAuth();
 
-                // Reset UI
-                btn.innerText = 'Entrar';
-            } else {
-                // Error
-                if (errorEl) errorEl.classList.remove('hidden');
-                btn.innerText = 'Entrar';
-                alert("Login falhou para: " + email + "\nVerifique as credenciais no código.");
-            }
+                    // Reset Button (although view changes, good practice)
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                } else {
+                    // Error
+                    if (errorEl) {
+                        errorEl.innerHTML = '<i data-lucide="alert-circle" class="w-4 h-4 mr-2"></i> Credenciais inválidas';
+                        errorEl.classList.remove('hidden');
+                    }
+                    if (window.lucide) lucide.createIcons();
+
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            }, 600);
         }
 
         function handleLogout() {
