@@ -2255,6 +2255,31 @@
             // Parent is active by default in this view
         }
 
+        // --- DAILY DATA STRUCTURE (RESTORED) ---
+        let DAILY_DATA = [];
+
+        function initDailyData() {
+            DAILY_DATA = [];
+            const today = new Date();
+            // Generate last 90 days backbone
+            for (let i = 0; i < 90; i++) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - i);
+
+                // Base Structure
+                DAILY_DATA.push({
+                    date: d,
+                    // "all" aggregate
+                    all: { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 },
+                    // Campaign specific slots (defaults)
+                    consultoria: { investment: 0, revenue: 0, participants: 0 },
+                    curso_ia: { investment: 0, revenue: 0, participants: 0 }
+                });
+            }
+        }
+        // Run immediately
+        initDailyData();
+
         // --- MOCK SALES DATA GENERATOR ---
         // --- SUPABASE INTEGRATION ---
         const SUPABASE_URL = 'https://bqlhtbzgsmpqqtyihizt.supabase.co';
