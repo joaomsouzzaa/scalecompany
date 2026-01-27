@@ -224,6 +224,34 @@
                         <!-- Filters -->
                         <div
                             class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                            <!-- Account Selector -->
+                            <div class="relative" id="accountSelectorContainer">
+                                <button onclick="toggleAccountDropdown()" id="accountSelectorBtn"
+                                    class="flex items-center px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 hover:bg-slate-100 transition-colors hidden">
+                                    <div class="bg-blue-100 p-1 rounded-full mr-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" class="text-blue-600">
+                                            <path
+                                                d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                                        </svg>
+                                    </div>
+                                    <span id="selectedAccountLabel">Selecionar Conta</span>
+                                    <i data-lucide="chevron-down" class="w-3 h-3 ml-2 text-slate-400"></i>
+                                </button>
+                                <!-- Dropdown -->
+                                <div id="accountDropdown"
+                                    class="hidden absolute top-full left-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-slate-200 z-50 overflow-hidden">
+                                    <div class="p-2 border-b border-slate-50 bg-slate-50/50">
+                                        <span class="text-xs font-medium text-slate-500 uppercase">Contas
+                                            Disponíveis</span>
+                                    </div>
+                                    <div id="accountListContainer" class="max-h-60 overflow-y-auto">
+                                        <!-- Accounts Injected Here -->
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Date Picker Container -->
                             <div class="relative" id="datePickerContainer">
                                 <button onclick="toggleDatePicker()"
@@ -1002,27 +1030,7 @@
                 </div>
             </div>
         </main>
-        <!-- Facebook Account Selector Modal -->
-        <div id="fb-account-modal"
-            class="fixed inset-0 bg-slate-900/80 hidden items-center justify-center z-50 backdrop-blur-sm opacity-0 transition-opacity duration-300">
-            <div
-                class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 transform scale-95 transition-transform duration-300">
-                <h3 class="text-xl font-bold text-slate-800 mb-4">Selecione a Conta de Anúncios</h3>
-                <p class="text-slate-500 text-sm mb-4">Encontramos as seguintes contas vinculadas ao seu perfil:</p>
 
-                <div id="fb-account-list" class="space-y-2 max-h-60 overflow-y-auto mb-4">
-                    <!-- Accounts will be injected here -->
-                    <div class="animate-pulse flex space-x-4">
-                        <div class="h-10 bg-slate-200 rounded w-full"></div>
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-2">
-                    <button onclick="closeFbModal()"
-                        class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-medium">Cancelar</button>
-                </div>
-            </div>
-        </div>
 
     </div> <!-- End App Container -->
 
@@ -2558,48 +2566,56 @@
                 const storedFbToken = localStorage.getItem('fb_access_token');
                 if (storedFbToken) {
                     console.log("Found stored FB Token, attempting auto-reconnect...");
+
+                    // CRITICAL: Set global token BEFORE calling initRealFbData
+                    fbAccessToken = storedFbToken;
+
                     // Update UI immediately
                     const btn = document.getElementById('btn-connect-fb');
                     const status = document.getElementById('status-fb');
                     if (btn && status) {
-                        handleFbSuccess(btn, status, 'Reconectando...');
-                        initRealFbData(storedFbToken); // This will fetch accounts
+                        // We use a specific function/logic to update UI without triggering disconnect logic yet
+                        btn.innerText = 'Desconectar';
+                        btn.classList.replace('bg-blue-600', 'bg-slate-200');
+                        btn.classList.replace('text-white', 'text-slate-700');
+                        btn.classList.replace('hover:bg-blue-700', 'hover:bg-slate-300');
+                        btn.disabled = false;
+                        btn.onclick = disconnectFb;
 
-                        // Check for selected account
-                        const storedAccountId = localStorage.getItem('fb_selected_account_id');
-                        const storedAccountName = localStorage.getItem('fb_selected_account_name');
-                        if (storedAccountId && storedAccountName) {
-                            console.log(`Auto-selecting account: ${storedAccountName} (${storedAccountId})`);
-                            selectAdAccount(storedAccountId, storedAccountName);
-                        }
+                        status.innerText = `Conectado (Recuperado)`;
+                        status.classList.replace('bg-slate-100', 'bg-blue-50');
+                        status.classList.replace('text-slate-500', 'text-blue-600');
+                        status.classList.remove('hidden');
                     }
+
+                    // Fetch Data
+                    initRealFbData(storedFbToken);
                 }
 
                 // Dashboard Date Picker
                 if (typeof initCalendarHTML === 'function') initCalendarHTML();
 
                 // Dashboard Default Dates
-                selectedEndDate = new Date(2026, 0, 24);
-                selectedStartDate = new Date(2026, 0, 18);
+                // If not set, default to last 7 days
+                if (!selectedStartDate) {
+                    selectedEndDate = new Date();
+                    selectedStartDate = new Date();
+                    selectedStartDate.setDate(selectedStartDate.getDate() - 6);
+                }
 
                 if (typeof renderCalendars === 'function') renderCalendars();
                 if (typeof updateDateInputs === 'function') updateDateInputs();
 
                 // Sales Data Generation
-                console.log("Generating Data...");
                 if (typeof generateSalesData === 'function') generateSalesData();
-                else console.error("generateSalesData not definition");
 
                 // Render Dashboard
-                console.log("Refreshing Dashboard...");
                 if (typeof refreshDashboard === 'function') refreshDashboard();
 
                 // Render Sales Tables
-                console.log("Rendering Sales Tables...");
                 if (typeof renderSalesTable === 'function') renderSalesTable();
 
                 // Render Widget
-                console.log("Rendering Widget...");
                 renderRecentSalesWidget();
 
                 // Restore View
@@ -2624,9 +2640,7 @@
                 /* Sales Presets Init (Ensure listeners are attached) */
                 const salesPresets = document.querySelectorAll('input[name="salesDatePreset"]');
                 salesPresets.forEach((radio, index) => {
-                    // Re-attach to be safe or rely on the previous setTimeout block if it exists
-                    // For safety, let's just let the previous timeouts handle it or re-attach here cleanly if needed.
-                    // The previous block (Step 891) had a setTimeout(..., 500). That should still be there.
+                    // Handled by inline script block above
                 });
 
             } catch (e) {
@@ -2642,89 +2656,117 @@
         let fbAccessToken = null;
         let selectedAdAccountId = null;
 
-        function toggleFbModal(show) {
-            const modal = document.getElementById('fb-account-modal');
-            if (show) {
-                modal.classList.remove('hidden');
-                setTimeout(() => modal.classList.remove('opacity-0'), 10);
-                setTimeout(() => modal.querySelector('div').classList.remove('scale-95'), 10);
+        // Helper to toggle Account Dropdown
+        function toggleAccountDropdown(forceClose = false) {
+            const dropdown = document.getElementById('accountDropdown');
+            if (!dropdown) return;
+            if (forceClose) {
+                dropdown.classList.add('hidden');
             } else {
-                modal.classList.add('opacity-0');
-                modal.querySelector('div').classList.add('scale-95');
-                setTimeout(() => modal.classList.add('hidden'), 300);
+                dropdown.classList.toggle('hidden');
             }
         }
 
-        function closeFbModal() {
-            toggleFbModal(false);
-        }
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (e) {
+            const container = document.getElementById('accountSelectorContainer');
+            if (container && !container.contains(e.target)) {
+                toggleAccountDropdown(true);
+            }
+        });
 
         function initRealFbData(token) {
             fbAccessToken = token;
             localStorage.setItem('fb_access_token', token); // Persist Token
-
             if (!token) return;
 
-            const btn = document.getElementById('btn-connect-fb');
-            if (btn) btn.innerText = 'Buscando contas...';
-
-            FB.api('/me/adaccounts', { fields: 'name,account_id,currency,account_status' }, function (response) {
+            // Fetch Accounts
+            FB.api('/me/adaccounts', { fields: 'name,account_id,currency,account_status,business_name' }, function (response) {
                 if (response.error) {
                     console.error('Error fetching accounts:', response.error);
-                    alert('Erro ao buscar contas de anúncios: ' + response.error.message);
+                    alert('Erro ao buscar contas: ' + response.error.message);
                     return;
                 }
 
                 const accounts = response.data;
-                const list = document.getElementById('fb-account-list');
-                list.innerHTML = '';
+                const list = document.getElementById('accountListContainer');
+                const btn = document.getElementById('accountSelectorBtn');
 
-                if (accounts && accounts.length === 0) {
-                    list.innerHTML = '<div class="p-4 text-center text-slate-500">Nenhuma conta de anúncios encontrada.</div>';
-                } else if (accounts) {
-                    accounts.forEach(acc => {
-                        const div = document.createElement('div');
-                        div.className = 'p-3 border rounded-lg hover:bg-slate-50 cursor-pointer flex justify-between items-center transition-colors mb-2';
-                        div.innerHTML = `
-                            <div>
-                                <div class="font-medium text-slate-800">${acc.name}</div>
-                                <div class="text-xs text-slate-500">ID: ${acc.account_id} (${acc.currency})</div>
-                            </div>
-                            <div class="text-blue-600">
-                                <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                            </div>
-                        `;
-                        div.onclick = () => selectAdAccount(acc.account_id, acc.name);
-                        list.appendChild(div);
-                    });
-                    if (window.lucide) lucide.createIcons();
+                if (list && btn) {
+                    // Show the selector button
+                    btn.classList.remove('hidden');
+                    list.innerHTML = '';
+
+                    if (accounts && accounts.length === 0) {
+                        list.innerHTML = '<div class="p-3 text-xs text-slate-500 text-center">Nenhuma conta encontrada.</div>';
+                    } else if (accounts) {
+                        // Check for previously selected account
+                        const storedId = localStorage.getItem('fb_selected_account_id');
+                        let matched = false;
+
+                        accounts.forEach(acc => {
+                            const div = document.createElement('div');
+                            div.className = 'px-3 py-2 hover:bg-slate-50 cursor-pointer flex flex-col border-b border-slate-50 last:border-0 transition-colors group';
+                            const isSelected = storedId === acc.account_id;
+                            if (isSelected) matched = true;
+
+                            // Highlight selected visual (basic)
+                            if (isSelected) div.classList.add('bg-blue-50/50');
+
+                            div.innerHTML = `
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium text-sm text-slate-700 group-hover:text-blue-700 ${isSelected ? 'text-blue-700' : ''}">${acc.name}</span>
+                                    ${isSelected ? '<i data-lucide="check" class="w-3 h-3 text-blue-600"></i>' : ''}
+                                </div>
+                                <span class="text-[10px] text-slate-400">ID: ${acc.account_id} (${acc.currency})</span>
+                            `;
+                            div.onclick = () => {
+                                selectAdAccount(acc.account_id, acc.name);
+                                toggleAccountDropdown(true); // Close
+                            };
+                            list.appendChild(div);
+                        });
+                        if (window.lucide) lucide.createIcons();
+
+                        // Auto-Select logic
+                        if (matched) {
+                            const storedName = localStorage.getItem('fb_selected_account_name');
+                            updateAccountLabel(storedName);
+                            selectAdAccount(storedId, storedName, true); // true = silent/restore mode
+                        }
+                        // OPTIONAL: Auto-select first if only one? 
+                        // else if (accounts.length === 1) { ... }
+                    }
                 }
-
-                toggleFbModal(true);
             });
         }
 
-        function selectAdAccount(accountId, accountName) {
+        function updateAccountLabel(name) {
+            const lbl = document.getElementById('selectedAccountLabel');
+            if (lbl) lbl.innerText = name.length > 20 ? name.substring(0, 18) + '...' : name;
+        }
+
+        function selectAdAccount(accountId, accountName, isRestore = false) {
             selectedAdAccountId = accountId;
             // Persist Selection
             localStorage.setItem('fb_selected_account_id', accountId);
             localStorage.setItem('fb_selected_account_name', accountName);
 
-            closeFbModal();
+            updateAccountLabel(accountName);
+
+            // Re-render list to update checks (lazy way: reload list or toggle classes manually. For now, we leave as is)
 
             const overlay = document.getElementById('global-loading-overlay');
-            if (overlay) {
+            if (overlay && !isRestore) {
                 overlay.classList.remove('hidden');
-                // Force layout reflow
-                void overlay.offsetWidth;
                 overlay.classList.remove('opacity-0');
-
-                const msg = overlay.querySelector('span'); // Assuming standard mock overlay struct
-                if (msg) msg.innerText = 'Baixando dados do Facebook...';
+                overlay.classList.add('flex');
+                const msg = overlay.querySelector('span');
+                if (msg) msg.innerText = 'Atualizando dados...';
             }
 
             // 1. Fetch Campaigns
-            FB.api(`/act_${accountId}/campaigns`, { fields: 'name,status', limit: 100 }, function (campResponse) {
+            FB.api(`/act_${accountId}/campaigns`, { fields: 'name,status', limit: 300 }, function (campResponse) {
                 if (campResponse.data) {
                     updateCampaignSelector(campResponse.data);
                 }
@@ -2740,21 +2782,22 @@
             };
 
             FB.api(`/act_${accountId}/insights`, params, function (insightResponse) {
-                if (overlay) {
+                if (overlay && !isRestore) { // Fade out if user triggered
                     overlay.classList.add('opacity-0');
                     setTimeout(() => {
+                        overlay.classList.remove('flex', 'opacity-0');
                         overlay.classList.add('hidden');
-                        const msg = overlay.querySelector('span');
-                        if (msg) msg.innerText = 'Carregando...';
                     }, 300);
                 }
 
                 if (insightResponse.error) {
                     console.error("Insights Error", insightResponse.error);
-                    alert('Erro ao baixar dados: ' + insightResponse.error.message);
+                    // Do not alert on restore, just log
+                    if (!isRestore) alert('Erro ao baixar dados: ' + insightResponse.error.message);
                     return;
                 }
 
+                // Process Data
                 processFbInsights(insightResponse.data);
             });
         }
@@ -2775,9 +2818,12 @@
         }
 
         function processFbInsights(data) {
+            console.log("[Scale] Raw FB Insights Data:", data); // DEBUG
+
             const dateMap = {};
 
             if (!data || data.length === 0) {
+                console.warn("[Scale] No data returned from FB Insights API for the last 90 days.");
                 alert("Não há dados de anúncios para esta conta nos últimos 90 dias.");
                 return;
             }
@@ -2823,6 +2869,8 @@
 
             // Convert to array
             const newDailyData = Object.values(dateMap).sort((a, b) => a.date - b.date);
+
+            console.log("[Scale] Processed DAILY_DATA:", newDailyData); // DEBUG
 
             DAILY_DATA = newDailyData;
 
