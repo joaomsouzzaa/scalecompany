@@ -1262,26 +1262,23 @@
             let totalDouble = 0;
 
             const chartData = filtered.map(d => {
-                // Linked Filter Logic: Use selectedCampaignId or aggregate 'all'
-                let day = null;
-
+                // --- DECOUPLED LOGIC (Per User Request) ---
+                // 1. Investment Source: Follows Campaign Filter
+                let invSource = d.all;
                 if (selectedCampaignId && selectedCampaignId !== 'all') {
-                    // Specific Campaign
-                    day = d[selectedCampaignId] || { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 };
-                } else {
-                    // All Campaigns
-                    day = d.all;
+                    invSource = d[selectedCampaignId] || { investment: 0 };
                 }
+                const dayInv = invSource.investment || 0;
+                totalInv += dayInv;
 
-                totalInv += day.investment;
-
-                // Revenue/Sales Source Logic: Product Filter takes precedence for Revenue
-                let salesSource = day; // Default to Campaign/All data source
-                if (selectedProductName && selectedProductName !== 'all' && d.products && d.products[selectedProductName]) {
-                    salesSource = d.products[selectedProductName];
-                } else if (selectedProductName && selectedProductName !== 'all') {
-                    // Product selected but no sales for this product on this day
-                    salesSource = { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 };
+                // 2. Sales Source: Follows Product Filter (IGNORES Campaign Filter)
+                let salesSource = d.all;
+                if (selectedProductName && selectedProductName !== 'all') {
+                    if (d.products && d.products[selectedProductName]) {
+                        salesSource = d.products[selectedProductName];
+                    } else {
+                        salesSource = { revenue: 0, participants: 0, salesCount: 0, vips: 0, indiv: 0, double: 0 };
+                    }
                 }
 
                 totalRev += salesSource.revenue;
@@ -1297,8 +1294,8 @@
 
                 return {
                     date: d.date,
-                    inv: day.investment, // Investment always follows Campaign Filter
-                    rev: salesSource.revenue // Revenue follows Product Filter
+                    inv: dayInv,
+                    rev: salesSource.revenue
                 };
             });
 
