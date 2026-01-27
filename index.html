@@ -1286,8 +1286,10 @@
 
                 totalRev += salesSource.revenue;
 
-                const sales = salesSource.participants || 0; // Use direct count from source
-                totalSales += sales;
+                const parts = salesSource.participants || 0;
+                const sCount = salesSource.salesCount || 0;
+                totalParticipants += parts;
+                totalSalesCount += sCount;
 
                 totalVip += salesSource.vips;
                 totalIndiv += salesSource.indiv;
@@ -1301,19 +1303,21 @@
             });
 
             // 4. Calculate KPIs
-            const safeSales = totalSales > 0 ? totalSales : 1;
-            const cpa = totalInv / safeSales;
-            const ticket = totalRev / safeSales;
+            const safeSalesCount = totalSalesCount > 0 ? totalSalesCount : 1;
+            const safeParticipants = totalParticipants > 0 ? totalParticipants : 1; // For CPA/CAC
+
+            const cpa = totalInv / safeParticipants; // CAC = Inv / Participants
+            const ticket = totalRev / safeSalesCount; // Ticket = Rev / Sales Count
 
             // 5. Update UI - Cards
             const fmt = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
             document.getElementById('val-investment').innerText = fmt(totalInv);
             document.getElementById('val-revenue').innerText = fmt(totalRev);
-            document.getElementById('val-cpa').innerText = totalSales > 0 ? fmt(cpa) : 'R$ 0,00';
-            document.getElementById('val-ticket').innerText = totalSales > 0 ? fmt(ticket) : 'R$ 0,00'; // Fixed: Ticket calculated on Revenue/Sales
+            document.getElementById('val-cpa').innerText = totalParticipants > 0 ? fmt(cpa) : 'R$ 0,00';
+            document.getElementById('val-ticket').innerText = totalSalesCount > 0 ? fmt(ticket) : 'R$ 0,00';
 
-            document.getElementById('val-parts').innerText = totalSales; // Participants = Total Sales
+            document.getElementById('val-parts').innerText = totalParticipants;
             document.getElementById('val-vips').innerText = totalVip;
             document.getElementById('val-indiv').innerText = totalIndiv;
             document.getElementById('val-double').innerText = totalDouble;
@@ -2322,6 +2326,8 @@
                 });
 
                 console.log(`[Supabase] Loaded ${ALL_SALES.length} sales.`);
+                // DEBUG: Prove count to user
+                // alert(`DEBUG: Supabase retornou ${ALL_SALES.length} vendas.`);
 
                 // Re-calculate DAILY_DATA for the Charts/KPIs
                 recalcDailyDataFromSales();
@@ -2364,9 +2370,13 @@
                 const pName = sale.product ? sale.product.trim() : 'Produto Padrão';
                 if (pName) productsSet.add(pName);
 
+                // FILTRO DE STATUS: Apenas Aprovado
+                if (!sale.status || sale.status.toLowerCase() !== 'aprovado') {
+                    // console.log(`Skipping sale ${sale.id} status: ${sale.status}`);
+                    return;
+                }
+
                 // Find Day
-                // sale.rawDate is Date object
-                // DAILY_DATA is sorted. Find matching date (ignore exact time)
                 const saleDate = new Date(sale.rawDate);
                 saleDate.setHours(0, 0, 0, 0);
 
@@ -2374,24 +2384,31 @@
                 const dayData = DAILY_DATA.find(d => d.date.toDateString() === checkDateStr);
 
                 if (dayData) {
-                    // console.log(`[Metric] Sale ${sale.id} ($${sale.value}) mapped to ${saleDate.toLocaleDateString()}`);
+                    // Determine Participants Count (Duplo = 2)
+                    let pCount = 1;
+                    if (pName.toLowerCase().includes('duplo')) pCount = 2;
+
                     // Aggregate Global
                     dayData.all.revenue += sale.value;
-                    dayData.all.participants += 1;
-                    if (sale.product.toLowerCase().includes('vip')) dayData.all.vips++;
-                    else if (sale.product.toLowerCase().includes('duplo')) dayData.all.double++;
-                    else dayData.all.indiv++;
+                    dayData.all.participants += pCount;
+                    dayData.all.salesCount = (dayData.all.salesCount || 0) + 1;
+
+                    if (pName.toLowerCase().includes('vip')) dayData.all.vips += pCount;
+                    else if (pName.toLowerCase().includes('duplo')) dayData.all.double += pCount;
+                    else dayData.all.indiv += pCount;
 
                     // Aggregate Product Specific
                     if (!dayData.products[pName]) {
-                        dayData.products[pName] = { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 };
+                        dayData.products[pName] = { investment: 0, revenue: 0, participants: 0, salesCount: 0, vips: 0, indiv: 0, double: 0 };
                     }
                     const pData = dayData.products[pName];
                     pData.revenue += sale.value;
-                    pData.participants += 1;
-                    if (sale.product.toLowerCase().includes('vip')) pData.vips++;
-                    else if (sale.product.toLowerCase().includes('duplo')) pData.double++;
-                    else pData.indiv++;
+                    pData.participants += pCount;
+                    pData.salesCount = (pData.salesCount || 0) + 1;
+
+                    if (pName.toLowerCase().includes('vip')) pData.vips += pCount;
+                    else if (pName.toLowerCase().includes('duplo')) pData.double += pCount;
+                    else pData.indiv += pCount;
                 }
             });
 
