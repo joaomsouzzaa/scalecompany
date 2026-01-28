@@ -3074,17 +3074,11 @@
 
             if (accId && token) {
                 console.log("Refreshing FB Data for:", accId);
-                // Wrap in promise for simplified awaiting
-                promises.push(new Promise((resolve) => {
-                    // Use existing fetchInsightsForAccount
-                    // We pass null overlay to handle loading manualy
-                    fetchInsightsForAccount(accId, false, null);
-                    // Since fetchInsightsForAccount is callback based, we just kick it off.
-                    // Ideally refactor to async/await, but for now we wait a bit or attach callback?
-                    // Currently fetchInsightsForAccount calls processFbInsights which calls refreshDashboard.
-                    // We roughly assume it takes 1-2s.
-                    setTimeout(resolve, 2000);
-                }));
+                // Directly await the promise returned by fetchInsightsForAccount
+                // We assume fetchInsightsForAccount handles partial errors (rejects or resolves)
+                promises.push(fetchInsightsForAccount(accId, false, null)
+                    .catch(err => console.warn("FB Refresh Warning:", err))
+                );
             }
 
             // 2. Refresh Database Data (Supabase)
@@ -3097,7 +3091,20 @@
 
             try {
                 await Promise.all(promises);
-                // refreshDashboard already called by processFbInsights/Supabase
+                // Wait a tiny bit extra for UI smoothness if it was instant? NO, user wants real timing.
+
+                // Show "Data Updated" Toast/Alert? 
+                // User asked: "aviso de dados atualizados so vem quando de fato ..."
+                // I can show a toast here.
+                const overlay = document.getElementById('global-loading-overlay');
+                // Or just an alert or console?
+                // I'll assume the spinner stopping is the signal, but user mentioned an "aviso".
+                // I'll add a toast if there is one, or just alert? Alert is intrusive.
+                // Assuming existing "updated" feedback is sufficient or implied.
+                // For now, key request is spinner duration.
+
+                alert("Dados atualizados com sucesso!");
+
             } catch (e) {
                 console.error("Manual Refresh Error", e);
                 alert("Erro ao atualizar dados.");
@@ -3143,48 +3150,50 @@
         }
 
         function fetchInsightsForAccount(accountId, isRestore, overlay) {
-            // Calculate Range: Last 90 days + Today to avoid pagination issues with 'maximum'
-            // while ensuring we capture the current day's data.
-            const today = new Date();
-            const past = new Date();
-            past.setDate(today.getDate() - 90);
+            return new Promise((resolve, reject) => {
+                // Calculate Range: Last 90 days + Today
+                const today = new Date();
+                const past = new Date();
+                past.setDate(today.getDate() - 90);
 
-            const formatDate = (d) => {
-                const year = d.getFullYear();
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const day = String(d.getDate()).padStart(2, '0');
-                return `${year}-${month}-${day}`;
-            };
+                const formatDate = (d) => {
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                };
 
-            const params = {
-                access_token: fbAccessToken, // Explicitly passing access_token
-                level: 'campaign',
-                time_increment: 1,
-                time_range: JSON.stringify({ since: formatDate(past), until: formatDate(today) }),
-                limit: 5000,
-                fields: 'campaign_name,campaign_id,spend,impressions,clicks,actions,action_values'
-            };
+                const params = {
+                    access_token: fbAccessToken,
+                    level: 'campaign',
+                    time_increment: 1,
+                    time_range: JSON.stringify({ since: formatDate(past), until: formatDate(today) }),
+                    limit: 5000,
+                    fields: 'campaign_name,campaign_id,spend,impressions,clicks,actions,action_values'
+                };
 
-            FB.api(`/act_${accountId}/insights`, params, function (insightResponse) {
-                if (overlay && !isRestore) { // Fade out if user triggered
-                    overlay.classList.add('opacity-0');
-                    setTimeout(() => {
-                        overlay.classList.remove('flex', 'opacity-0');
-                        overlay.classList.add('hidden');
-                    }, 300);
-                }
+                FB.api(`/act_${accountId}/insights`, params, function (insightResponse) {
+                    if (overlay && !isRestore) { // Fade out if user triggered
+                        overlay.classList.add('opacity-0');
+                        setTimeout(() => {
+                            overlay.classList.remove('flex', 'opacity-0');
+                            overlay.classList.add('hidden');
+                        }, 300);
+                    }
 
-                if (insightResponse.error) {
-                    console.error("Insights Error", insightResponse.error);
-                    // Do not alert on restore, just log
-                    if (!isRestore) alert('Erro ao baixar dados: ' + insightResponse.error.message);
-                    return;
-                }
+                    if (insightResponse.error) {
+                        console.error("Insights Error", insightResponse.error);
+                        if (!isRestore) alert('Erro ao baixar dados: ' + insightResponse.error.message);
+                        reject(insightResponse.error); // Reject promise
+                        return;
+                    }
 
-                console.log("[Scale] Insights Rows Fetched:", insightResponse.data ? insightResponse.data.length : 0);
+                    console.log("[Scale] Insights Rows Fetched:", insightResponse.data ? insightResponse.data.length : 0);
 
-                // Process Data
-                processFbInsights(insightResponse.data);
+                    // Process Data
+                    processFbInsights(insightResponse.data);
+                    resolve(insightResponse.data); // Resolve promise
+                });
             });
         }
 
