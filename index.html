@@ -1885,7 +1885,10 @@
                                     alert('Login cancelado ou não autorizado.');
                                     resetBtn(btn, originalText);
                                 }
-                            }, { scope: 'public_profile,email,ads_read,read_insights,business_management,pages_show_list,ads_management,leads_retrieval,pages_read_engagement,pages_manage_metadata,pages_manage_ads' });
+                            }, {
+                                scope: 'public_profile,email,ads_read,read_insights,business_management,pages_show_list,ads_management,leads_retrieval,pages_read_engagement,pages_manage_metadata,pages_manage_ads',
+                                auth_type: 'reauthenticate'
+                            });
                         } catch (e) {
                             console.error("FB Login Error:", e);
                             alert('Erro ao iniciar o SDK. Verifique o console.');
