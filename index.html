@@ -3089,28 +3089,23 @@
                 }));
             }
 
+            let success = false;
             try {
                 await Promise.all(promises);
-                // Wait a tiny bit extra for UI smoothness if it was instant? NO, user wants real timing.
-
-                // Show "Data Updated" Toast/Alert? 
-                // User asked: "aviso de dados atualizados so vem quando de fato ..."
-                // I can show a toast here.
-                const overlay = document.getElementById('global-loading-overlay');
-                // Or just an alert or console?
-                // I'll assume the spinner stopping is the signal, but user mentioned an "aviso".
-                // I'll add a toast if there is one, or just alert? Alert is intrusive.
-                // Assuming existing "updated" feedback is sufficient or implied.
-                // For now, key request is spinner duration.
-
-                alert("Dados atualizados com sucesso!");
-
+                success = true;
             } catch (e) {
                 console.error("Manual Refresh Error", e);
                 alert("Erro ao atualizar dados.");
             } finally {
                 if (btn) btn.classList.remove('animate-spin');
                 refreshDashboard(); // Ensure final render
+
+                if (success) {
+                    // Use timeout to ensure UI updates (spinner stops) before alert blocks thread
+                    setTimeout(() => {
+                        alert("Dados atualizados com sucesso!");
+                    }, 50);
+                }
             }
         }
 
