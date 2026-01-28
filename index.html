@@ -239,7 +239,7 @@
                         <!-- Filters -->
                         <!-- Filters Toolbar -->
                         <div
-                            class="flex flex-nowrap items-center gap-3 bg-white p-4 rounded-xl shadow-sm border border-slate-100 overflow-visible w-full">
+                            class="flex flex-nowrap items-center gap-6 bg-white p-4 rounded-xl shadow-sm border border-slate-100 overflow-visible w-full">
 
                             <!-- 1. Date Picker (First) -->
                             <div class="relative shrink-0" id="datePickerContainer">
@@ -415,7 +415,7 @@
                             </div>
 
                             <!-- 3. Campaign Filter (Third) -->
-                            <div class="relative shrink flex-1 min-w-[150px] max-w-[300px]">
+                            <div class="relative shrink flex-1 min-w-[150px] max-w-md">
                                 <div
                                     class="flex items-center px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer group w-full">
                                     <i data-lucide="filter" class="w-4 h-4 mr-2 text-slate-500 shrink-0"></i>
@@ -429,7 +429,7 @@
                             </div>
 
                             <!-- 4. Product Filter (Fourth) -->
-                            <div class="relative shrink flex-1 min-w-[150px] max-w-[250px]">
+                            <div class="relative shrink flex-1 min-w-[150px] max-w-sm">
                                 <div
                                     class="flex items-center px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer group w-full">
                                     <i data-lucide="tag" class="w-4 h-4 mr-2 text-slate-500 shrink-0"></i>
@@ -2972,12 +2972,14 @@
                         });
                         if (window.lucide) lucide.createIcons();
 
-                        // Auto-Select logic
+                        // Auto-Select logic REMOVED by user request (Force manual selection)
+                        /*
                         if (matched) {
                             const storedName = localStorage.getItem('fb_selected_account_name');
                             updateAccountLabel(storedName);
                             selectAdAccount(storedId, storedName, true); // true = silent/restore mode
                         }
+                        */
                         // OPTIONAL: Auto-select first if only one? 
                         // else if (accounts.length === 1) { ... }
                     }
