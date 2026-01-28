@@ -3082,11 +3082,9 @@
             }
 
             // 2. Refresh Database Data (Supabase)
-            if (typeof _initRealSupabaseData === 'function') {
+            if (typeof generateSalesData === 'function') {
                 console.log("Refreshing Supabase Data...");
-                promises.push(new Promise(resolve => {
-                    _initRealSupabaseData().then(resolve).catch(resolve);
-                }));
+                promises.push(generateSalesData().catch(console.error));
             }
 
             let success = false;
