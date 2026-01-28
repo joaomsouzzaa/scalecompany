@@ -202,6 +202,31 @@
                         breve</span>
                 </a>
 
+                <!-- Time Parent -->
+                <div>
+                    <button onclick="toggleTimeMenu()"
+                        class="w-full flex items-center justify-between px-3 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors group overflow-hidden whitespace-nowrap min-h-[44px]"
+                        id="nav-time-parent">
+                        <div class="flex items-center">
+                            <i data-lucide="users" class="w-5 h-5 min-w-[20px]"></i>
+                            <span
+                                class="font-medium text-sm ml-3 transition-opacity duration-300 opacity-100 sidebar-text">Time</span>
+                        </div>
+                        <i data-lucide="chevron-down" id="time-chevron"
+                            class="w-4 h-4 transition-transform sidebar-text"></i>
+                    </button>
+
+                    <!-- Submenu -->
+                    <div id="time-submenu" class="ml-4 mt-1 space-y-1 hidden border-l border-slate-700 pl-2">
+                        <a href="#" onclick="navigateTo('agents'); setActiveSubItem(this)"
+                            class="flex items-center px-3 py-2 rounded-lg text-slate-500 hover:text-white text-sm transition-colors group">
+                            <span
+                                class="w-1.5 h-1.5 rounded-full bg-slate-700 mr-2 transition-colors group-hover:bg-red-500"></span>
+                            <span class="sidebar-text">Agentes</span>
+                        </a>
+                    </div>
+                </div>
+
                 <a href="#" id="nav-settings" onclick="navigateTo('settings')"
                     class="flex items-center px-3 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors group overflow-hidden whitespace-nowrap min-h-[44px]"
                     title="Configurações">
@@ -784,6 +809,294 @@
                     </div>
 
 
+
+                    <!-- VIEW: AGENTS (Restored) -->
+                    <div id="view-agents" class="space-y-8 hidden transition-opacity duration-300">
+                        <!-- Header -->
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <div class="flex items-center gap-3 mb-1">
+                                    <i data-lucide="bot" class="w-8 h-8 text-slate-800"></i>
+                                    <h1 class="text-2xl font-bold text-slate-800">Organograma de Agentes</h1>
+                                </div>
+                                <p class="text-slate-500">Gerencie a hierarquia e fluxo de trabalho entre agentes de IA
+                                </p>
+                            </div>
+                            <button
+                                class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors flex items-center shadow-lg shadow-orange-500/20">
+                                <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                                Novo Agente
+                            </button>
+                        </div>
+
+                        <!-- Stats Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+                                <div class="text-3xl font-bold text-slate-800 mb-1">6</div>
+                                <div class="text-sm text-slate-500 font-medium">Total de Agentes</div>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+                                <div class="text-3xl font-bold text-green-600 mb-1">6</div>
+                                <div class="text-sm text-slate-500 font-medium">Agentes Ativos</div>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+                                <div class="text-3xl font-bold text-orange-500 mb-1">0</div>
+                                <div class="text-sm text-slate-500 font-medium">Agentes Inativos</div>
+                            </div>
+                        </div>
+
+                        <!-- Organogram Canvas -->
+                        <div
+                            class="relative bg-slate-50 border border-slate-200 rounded-xl h-[600px] overflow-hidden group select-none">
+                            <!-- Dot Pattern Background -->
+                            <div class="absolute inset-0 opacity-40 pointer-events-none"
+                                style="background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 24px 24px;">
+                            </div>
+
+                            <!-- Flow Container (Centering Wrapper) -->
+                            <div class="w-full h-full overflow-auto flex items-center justify-center p-10">
+                                <div class="relative min-w-[1000px] min-h-[500px] flex flex-col items-center">
+
+                                    <!-- Level 1: CEO -->
+                                    <div class="relative z-10 mb-20">
+                                        <div
+                                            class="bg-white p-5 rounded-lg shadow-lg border border-slate-100 w-80 relative group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-orange-200">
+                                            <!-- Connectors (Bottom) -->
+                                            <div
+                                                class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                            </div>
+
+                                            <div class="flex items-start gap-4">
+                                                <div
+                                                    class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
+                                                    <i data-lucide="bot" class="w-6 h-6 text-orange-600"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="flex items-center gap-2 mb-1">
+                                                        <h3 class="font-bold text-slate-800">CEO</h3>
+                                                        <span
+                                                            class="px-2 py-0.5 rounded-full bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wide">Ativo</span>
+                                                    </div>
+                                                    <p class="text-xs text-slate-500 leading-relaxed mb-3">Assistente
+                                                        executivo que gerencia estratégia, metas, projetos e equipe</p>
+                                                    <!-- Tags -->
+                                                    <div class="flex gap-2 mb-4">
+                                                        <span
+                                                            class="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded">anthropic</span>
+                                                        <span
+                                                            class="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded">claude</span>
+                                                    </div>
+                                                    <!-- Actions -->
+                                                    <div
+                                                        class="flex gap-3 text-slate-400 group-hover:text-slate-600 transition-colors">
+                                                        <button class="hover:text-orange-500"><i data-lucide="eye"
+                                                                class="w-4 h-4"></i></button>
+                                                        <button class="hover:text-orange-500"><i data-lucide="settings"
+                                                                class="w-4 h-4"></i></button>
+                                                        <button class="hover:text-red-500"><i data-lucide="trash-2"
+                                                                class="w-4 h-4"></i></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- SVG Lines Layer -->
+                                    <svg class="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
+                                        style="z-index: 0;">
+                                        <!-- Path from CEO to Traffic -->
+                                        <path d="M 500 135 C 500 180, 160 180, 160 230" fill="none" stroke="#e2e8f0"
+                                            stroke-width="2" />
+                                        <!-- Path from CEO to Copy -->
+                                        <path d="M 500 135 C 500 180, 390 180, 390 230" fill="none" stroke="#e2e8f0"
+                                            stroke-width="2" />
+                                        <!-- Path from CEO to Content -->
+                                        <path d="M 500 135 C 500 180, 610 180, 610 230" fill="none" stroke="#e2e8f0"
+                                            stroke-width="2" />
+                                        <!-- Path from CEO to Sales -->
+                                        <path d="M 500 135 C 500 180, 840 180, 840 230" fill="none" stroke="#e2e8f0"
+                                            stroke-width="2" />
+                                    </svg>
+
+                                    <!-- Level 2: Subordinates -->
+                                    <div class="grid grid-cols-4 gap-8">
+                                        <!-- Agent 1: Traffic -->
+                                        <div class="relative z-10 w-64">
+                                            <div
+                                                class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                            </div>
+                                            <div
+                                                class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:-translate-y-1 hover:border-orange-200">
+                                                <div class="flex items-start gap-3">
+                                                    <div
+                                                        class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
+                                                        <i data-lucide="bar-chart-3"
+                                                            class="w-4 h-4 text-orange-600"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                            <h3 class="font-bold text-slate-800 text-sm">Gestor de
+                                                                Tráfego</h3>
+                                                            <span
+                                                                class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
+                                                        </div>
+                                                        <p class="text-[10px] text-slate-500 leading-snug mb-2">
+                                                            Especialista em Meta Ads com acesso direto à API</p>
+                                                        <div class="flex gap-1 mb-2 flex-wrap">
+                                                            <span
+                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">anthropic</span>
+                                                            <span
+                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">claude</span>
+                                                        </div>
+                                                        <div class="flex gap-2 text-slate-400">
+                                                            <button class="hover:text-orange-500"><i data-lucide="eye"
+                                                                    class="w-3 h-3"></i></button>
+                                                            <button class="hover:text-orange-500"><i
+                                                                    data-lucide="settings" class="w-3 h-3"></i></button>
+                                                            <button class="hover:text-red-500"><i data-lucide="trash-2"
+                                                                    class="w-3 h-3"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Agent 2: Copy -->
+                                        <div class="relative z-10 w-64">
+                                            <div
+                                                class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                            </div>
+                                            <div
+                                                class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:-translate-y-1 hover:border-orange-200">
+                                                <div class="flex items-start gap-3">
+                                                    <div
+                                                        class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
+                                                        <i data-lucide="pen-tool" class="w-4 h-4 text-orange-600"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                            <h3 class="font-bold text-slate-800 text-sm">Agente Copy
+                                                            </h3>
+                                                            <span
+                                                                class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
+                                                        </div>
+                                                        <p class="text-[10px] text-slate-500 leading-snug mb-2">Criação
+                                                            de textos persuasivos e scripts de vendas</p>
+                                                        <div class="flex gap-1 mb-2 flex-wrap">
+                                                            <span
+                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">anthropic</span>
+                                                            <span
+                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">claude</span>
+                                                        </div>
+                                                        <div class="flex gap-2 text-slate-400">
+                                                            <button class="hover:text-orange-500"><i data-lucide="eye"
+                                                                    class="w-3 h-3"></i></button>
+                                                            <button class="hover:text-orange-500"><i
+                                                                    data-lucide="settings" class="w-3 h-3"></i></button>
+                                                            <button class="hover:text-red-500"><i data-lucide="trash-2"
+                                                                    class="w-3 h-3"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Agent 3: Content -->
+                                        <div class="relative z-10 w-64">
+                                            <div
+                                                class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                            </div>
+                                            <div
+                                                class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:-translate-y-1 hover:border-orange-200">
+                                                <div class="flex items-start gap-3">
+                                                    <div
+                                                        class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
+                                                        <i data-lucide="file-text" class="w-4 h-4 text-orange-600"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                            <h3 class="font-bold text-slate-800 text-sm">Agente de
+                                                                Conteúdo</h3>
+                                                            <span
+                                                                class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
+                                                        </div>
+                                                        <p class="text-[10px] text-slate-500 leading-snug mb-2">Gera
+                                                            conteúdo para redes sociais e blog</p>
+                                                        <div class="flex gap-1 mb-2 flex-wrap">
+                                                            <span
+                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">anthropic</span>
+                                                            <span
+                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">claude</span>
+                                                        </div>
+                                                        <div class="flex gap-2 text-slate-400">
+                                                            <button class="hover:text-orange-500"><i data-lucide="eye"
+                                                                    class="w-3 h-3"></i></button>
+                                                            <button class="hover:text-orange-500"><i
+                                                                    data-lucide="settings" class="w-3 h-3"></i></button>
+                                                            <button class="hover:text-red-500"><i data-lucide="trash-2"
+                                                                    class="w-3 h-3"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Agent 4: Sales -->
+                                        <div class="relative z-10 w-64">
+                                            <div
+                                                class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                            </div>
+                                            <div
+                                                class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:-translate-y-1 hover:border-orange-200">
+                                                <div class="flex items-start gap-3">
+                                                    <div
+                                                        class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
+                                                        <i data-lucide="message-circle"
+                                                            class="w-4 h-4 text-orange-600"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                            <h3 class="font-bold text-slate-800 text-sm">Agente de
+                                                                Vendas</h3>
+                                                            <span
+                                                                class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
+                                                        </div>
+                                                        <p class="text-[10px] text-slate-500 leading-snug mb-2">Realiza
+                                                            atendimento humano e fechamento</p>
+                                                        <div class="flex gap-1 mb-2 flex-wrap">
+                                                            <span
+                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">anthropic</span>
+                                                            <span
+                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">claude</span>
+                                                        </div>
+                                                        <div class="flex gap-2 text-slate-400">
+                                                            <button class="hover:text-orange-500"><i data-lucide="eye"
+                                                                    class="w-3 h-3"></i></button>
+                                                            <button class="hover:text-orange-500"><i
+                                                                    data-lucide="settings" class="w-3 h-3"></i></button>
+                                                            <button class="hover:text-red-500"><i data-lucide="trash-2"
+                                                                    class="w-3 h-3"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Zoom Controls -->
+                            <div
+                                class="absolute bottom-4 left-4 bg-white rounded-lg shadow border border-slate-200 flex flex-col p-1 z-20">
+                                <button class="p-2 hover:bg-slate-100 text-slate-500 rounded"><i data-lucide="plus"
+                                        class="w-4 h-4"></i></button>
+                                <button class="p-2 hover:bg-slate-100 text-slate-500 rounded"><i data-lucide="minus"
+                                        class="w-4 h-4"></i></button>
+                                <button class="p-2 hover:bg-slate-100 text-slate-500 rounded"><i data-lucide="maximize"
+                                        class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- VIEW: VENDAS (New) -->
                     <div id="view-vendas" class="space-y-8 hidden transition-opacity duration-300">
@@ -2121,6 +2434,8 @@
             const navDashboardParent = document.getElementById('nav-dashboard-parent');
             const navSettings = document.getElementById('nav-settings');
             const navVendas = document.getElementById('nav-vendas');
+            const navTimeParent = document.getElementById('nav-time-parent');
+            const timeSubmenu = document.getElementById('time-submenu');
 
             if (isSidebarCollapsed) {
                 // Collapse
@@ -2131,6 +2446,10 @@
                 if (dashboardSubmenu) {
                     toggleDashboardMenu(true); // Retract
                     dashboardSubmenu.classList.add('hidden'); // Force hide
+                }
+                if (timeSubmenu) {
+                    toggleTimeMenu(true);
+                    timeSubmenu.classList.add('hidden');
                 }
 
                 // Adjust Header
@@ -2162,6 +2481,10 @@
                 if (navVendas) {
                     navVendas.classList.remove('px-3');
                     navVendas.classList.add('justify-center', 'px-0');
+                }
+                if (navTimeParent) {
+                    navTimeParent.classList.remove('justify-between', 'px-3');
+                    navTimeParent.classList.add('justify-center', 'px-0');
                 }
 
                 // Hide chevrons
@@ -2203,6 +2526,10 @@
                 if (navVendas) {
                     navVendas.classList.add('px-3');
                     navVendas.classList.remove('justify-center', 'px-0');
+                }
+                if (navTimeParent) {
+                    navTimeParent.classList.add('justify-between', 'px-3');
+                    navTimeParent.classList.remove('justify-center', 'px-0');
                 }
 
                 // Show chevrons
@@ -2272,6 +2599,46 @@
             }
         }
 
+        function toggleTimeMenu(forceClose = false) {
+            if (!forceClose && isSidebarCollapsed) {
+                toggleSidebar();
+            }
+
+            const submenu = document.getElementById('time-submenu');
+            const chevron = document.getElementById('time-chevron');
+
+            if (!submenu || !chevron) return;
+
+            // Initial Setup for animation if still using 'hidden' (Legacy fix)
+            if (submenu.classList.contains('hidden')) {
+                submenu.classList.remove('hidden');
+                submenu.classList.add('max-h-0', 'opacity-0', 'overflow-hidden', 'transition-all', 'duration-300', 'ease-in-out');
+                // Force reflow
+                void submenu.offsetWidth;
+            }
+
+            const isClosed = submenu.classList.contains('max-h-0') || forceClose;
+
+            if (forceClose) {
+                submenu.classList.add('max-h-0', 'opacity-0');
+                submenu.classList.remove('max-h-96', 'opacity-100'); // Arbitrary large height
+                chevron.style.transform = 'rotate(0deg)';
+                return;
+            }
+
+            if (isClosed) {
+                // Open
+                submenu.classList.remove('max-h-0', 'opacity-0');
+                submenu.classList.add('max-h-96', 'opacity-100');
+                chevron.style.transform = 'rotate(180deg)';
+            } else {
+                // Close
+                submenu.classList.add('max-h-0', 'opacity-0');
+                submenu.classList.remove('max-h-96', 'opacity-100');
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+
         // --- Navigation Logic ---
         function navigateTo(viewId) {
             console.log("Navigating to:", viewId);
@@ -2302,7 +2669,7 @@
                 // Persist state
                 localStorage.setItem('last_active_view', viewId);
 
-                const views = ['dashboard', 'settings', 'vendas'];
+                const views = ['dashboard', 'settings', 'vendas', 'agents'];
 
                 // Hide all views
                 views.forEach(v => {
@@ -2327,6 +2694,7 @@
                 const navDashboardParent = document.getElementById('nav-dashboard-parent');
                 const navSettings = document.getElementById('nav-settings');
                 const navVendas = document.getElementById('nav-vendas');
+                const navTimeParent = document.getElementById('nav-time-parent');
 
                 // Reset Styling Helper
                 const setInactive = (el) => {
@@ -2341,26 +2709,35 @@
                     el.classList.remove('text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
                 };
 
+                // Reset all first
+                setInactive(navDashboardParent);
+                setInactive(navSettings);
+                setInactive(navVendas);
+                if (navTimeParent) setInactive(navTimeParent);
+
                 if (viewId === 'settings') {
-                    // Settings Active
-                    setInactive(navDashboardParent);
-                    setInactive(navVendas);
                     setActive(navSettings);
-
-                    // Auto-Close Dashboard Submenu with Animation
                     toggleDashboardMenu(true);
-
+                    toggleTimeMenu(true);
                 } else if (viewId === 'vendas') {
-                    // Vendas Active
-                    setInactive(navDashboardParent);
-                    setInactive(navSettings);
                     setActive(navVendas);
                     toggleDashboardMenu(true);
+                    toggleTimeMenu(true);
+                } else if (viewId === 'agents') {
+                    setActive(navTimeParent);
+                    toggleDashboardMenu(true);
+                    // Ensure Time menu is open
+                    const timeSubmenu = document.getElementById('time-submenu');
+                    if (timeSubmenu && timeSubmenu.classList.contains('hidden')) {
+                        // Only toggle if closed, to avoid closing if already open
+                        toggleTimeMenu();
+                    } else if (timeSubmenu && timeSubmenu.classList.contains('max-h-0')) {
+                        toggleTimeMenu();
+                    }
                 } else {
                     // Dashboard Active (default)
                     setActive(navDashboardParent);
-                    setInactive(navSettings);
-                    setInactive(navVendas);
+                    toggleTimeMenu(true);
                 }
             } catch (e) {
                 console.error("Navigation error:", e);
@@ -2370,7 +2747,7 @@
 
         function setActiveSubItem(el) {
             // Reset all subitems
-            const subitems = document.querySelectorAll('#dashboard-submenu a');
+            const subitems = document.querySelectorAll('#dashboard-submenu a, #time-submenu a');
             subitems.forEach(item => {
                 item.classList.remove('text-white');
                 item.classList.add('text-slate-400');
