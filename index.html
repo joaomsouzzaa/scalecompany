@@ -3223,8 +3223,9 @@
 
         function triggerTextSearch() {
             const val = document.getElementById('textFilterInput').value;
-            // Also update the icon or give feedback?
-            updateTextFilter(val);
+            textFilterValue = val;
+            // Now trigger full refresh (with animation)
+            handleManualRefresh();
         }
 
         function processFbInsights(data) {
