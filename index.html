@@ -2975,6 +2975,13 @@
         function _initRealFbDataInternal(token) {
             fbAccessToken = token;
             localStorage.setItem('fb_access_token', token); // Persist Token
+
+            // RESET State on Reload (User Request):
+            // Clear selected account so UI matches Logic
+            localStorage.removeItem('fb_selected_account_id');
+            localStorage.removeItem('fb_selected_account_name');
+            selectedAdAccountId = null; // Clear memory variable
+
             if (!token) return;
 
             // Fetch Accounts - Explicitly passing access_token
