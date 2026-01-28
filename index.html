@@ -746,6 +746,7 @@
                                             <th class="px-6 py-4">Data</th>
                                             <th class="px-6 py-4">Cliente</th>
                                             <th class="px-6 py-4">Produto</th>
+                                            <th class="px-6 py-4">Pagamento</th>
                                             <th class="px-6 py-4">Plataforma</th>
                                             <th class="px-6 py-4">Status</th>
                                             <th class="px-6 py-4 text-right">Valor</th>
@@ -933,6 +934,7 @@
                                             <th class="px-6 py-4">Data</th>
                                             <th class="px-6 py-4">Cliente</th>
                                             <th class="px-6 py-4">Produto</th>
+                                            <th class="px-6 py-4">Pagamento</th>
                                             <th class="px-6 py-4">Status</th>
                                             <th class="px-6 py-4 text-right">Valor</th>
                                             <th class="px-6 py-4 text-center">Ações</th>
@@ -2390,6 +2392,7 @@
                         name: s.customer_name || 'Cliente Desconhecido',
                         email: s.customer_email || 'nao_informado',
                         product: s.product_name || 'Produto Padrão',
+                        paymentMethod: s.payment_method || '-',
                         status: s.status || 'Pendente',
                         value: parseFloat(s.value || 0)
                     };
@@ -2757,6 +2760,7 @@
                         <div class="text-xs text-slate-400">${sale.email}</div>
                     </td>
                     <td class="px-6 py-4"><span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs font-medium">${sale.product}</span></td>
+                    <td class="px-6 py-4 text-slate-500">${sale.paymentMethod}</td>
                     <td class="px-6 py-4 text-slate-500">${platform}</td>
                     <td class="px-6 py-4">${statusBadge}</td>
                     <td class="px-6 py-4 text-right font-medium text-slate-900">${sale.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
@@ -2809,6 +2813,7 @@
                             <div class="text-xs text-slate-400">${sale.email}</div>
                         </td>
                         <td class="px-6 py-4"><span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs font-medium">${sale.product}</span></td>
+                        <td class="px-6 py-4 text-slate-500">${sale.paymentMethod}</td>
                         <td class="px-6 py-4 text-slate-500">${platform}</td>
                         <td class="px-6 py-4">${statusBadge}</td>
                         <td class="px-6 py-4 text-right font-medium text-slate-900">${sale.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
