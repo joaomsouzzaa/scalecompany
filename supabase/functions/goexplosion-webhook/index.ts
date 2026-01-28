@@ -27,6 +27,9 @@ serve(async (req) => {
     // Example mapping - adapt this to the actual JSON structure you receive
     // Defensive mapping for GoExplosion payload
     // Log specific fields for debugging
+    // Log specific fields for debugging
+    console.log('Buyer FullName:', payload.data?.Buyer?.FullName)
+    console.log('Buyer Email:', payload.data?.Buyer?.Email)
     console.log('Product Name:', payload.data?.Product?.Name)
     console.log('Payment Method:', payload.data?.Purchase?.PaymentMethod?.metodoPagamento)
     console.log('Status Description:', payload.data?.Purchase?.StatusDescription)
