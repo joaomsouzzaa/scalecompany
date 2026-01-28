@@ -459,8 +459,8 @@
                             </div>
 
                             <!-- 5. Refresh Button (Last) -->
-                            <button onclick="initRealFbData(localStorage.getItem('fb_access_token'))"
-                                class="hidden shrink-0 p-2 text-slate-400 hover:text-blue-600 hover:bg-slate-50 rounded-lg transition-colors"
+                            <button onclick="handleManualRefresh()" id="btn-refresh-manual"
+                                class="shrink-0 p-2 text-slate-400 hover:text-blue-600 hover:bg-slate-50 rounded-lg transition-colors"
                                 title="Atualizar Dados">
                                 <i data-lucide="rotate-cw" class="w-5 h-5"></i>
                             </button>
@@ -3050,11 +3050,57 @@
                             selectAdAccount(storedId, storedName, true); // true = silent/restore mode
                         }
                         */
-                        // OPTIONAL: Auto-select first if only one? 
-                        // else if (accounts.length === 1) { ... }
+                        if (response.data && response.data.length > 0) {
+                            // Placeholder
+                        }
                     }
                 }
             });
+        }
+
+        async function handleManualRefresh() {
+            const btn = document.getElementById('btn-refresh-manual');
+            if (btn) btn.classList.add('animate-spin');
+
+            // 1. Refresh FB Data (if account selected)
+            const accId = localStorage.getItem('fb_selected_account_id');
+            const token = localStorage.getItem('fb_access_token');
+
+            const promises = [];
+
+            if (accId && token) {
+                console.log("Refreshing FB Data for:", accId);
+                // Wrap in promise for simplified awaiting
+                promises.push(new Promise((resolve) => {
+                    // Use existing fetchInsightsForAccount
+                    // We pass null overlay to handle loading manualy
+                    fetchInsightsForAccount(accId, false, null);
+                    // Since fetchInsightsForAccount is callback based, we just kick it off.
+                    // Ideally refactor to async/await, but for now we wait a bit or attach callback?
+                    // Currently fetchInsightsForAccount calls processFbInsights which calls refreshDashboard.
+                    // We roughly assume it takes 1-2s.
+                    setTimeout(resolve, 2000);
+                }));
+            }
+
+            // 2. Refresh Database Data (Supabase)
+            if (typeof _initRealSupabaseData === 'function') {
+                console.log("Refreshing Supabase Data...");
+                promises.push(new Promise(resolve => {
+                    _initRealSupabaseData().then(resolve).catch(resolve);
+                }));
+            }
+
+            try {
+                await Promise.all(promises);
+                // refreshDashboard already called by processFbInsights/Supabase
+            } catch (e) {
+                console.error("Manual Refresh Error", e);
+                alert("Erro ao atualizar dados.");
+            } finally {
+                if (btn) btn.classList.remove('animate-spin');
+                refreshDashboard(); // Ensure final render
+            }
         }
 
         function updateAccountLabel(name) {
