@@ -783,333 +783,630 @@
                         </div>
                     </div>
 
-                    <!-- VIEW: VENDAS (New) -->
-                    <div id="view-vendas" class="space-y-8 hidden transition-opacity duration-300">
-                        <div class="flex items-center justify-between">
-                            <h1 class="text-2xl font-bold text-slate-800">Vendas</h1>
-                            <div class="flex gap-4">
-                                <!-- Sales Date Picker Container -->
-                                <div class="relative" id="salesDatePickerContainer">
-                                    <button onclick="toggleSalesDatePicker()"
-                                        class="flex items-center px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 hover:bg-slate-100 transition-colors">
-                                        <i data-lucide="calendar" class="w-4 h-4 mr-2 text-slate-500"></i>
-                                        <span id="salesDateRangeLabel">Últimos 30 dias</span>
-                                        <i data-lucide="chevron-down" class="w-3 h-3 ml-2 text-slate-400"></i>
-                                    </button>
+                    <!-- VIEW: AGENTS (New) -->
+                    <div id="view-agents" class="space-y-8 hidden transition-opacity duration-300">
+                        <!-- Header -->
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <div class="flex items-center gap-3 mb-1">
+                                    <i data-lucide="bot" class="w-8 h-8 text-slate-800"></i>
+                                    <h1 class="text-2xl font-bold text-slate-800">Organograma de Agentes</h1>
+                                </div>
+                                <p class="text-slate-500">Gerencie a hierarquia e fluxo de trabalho entre agentes de IA
+                                </p>
+                            </div>
+                            <button
+                                class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors flex items-center shadow-lg shadow-orange-500/20">
+                                <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                                Novo Agente
+                            </button>
+                        </div>
 
-                                    <!-- Meta-style Date Picker Dropdown -->
-                                    <div id="salesDatePickerDropdown"
-                                        class="hidden absolute top-full right-0 mt-2 bg-white rounded-lg shadow-xl border border-slate-200 z-50 flex flex-col md:flex-row w-[90vw] md:w-[800px] max-h-[80vh] overflow-y-auto md:overflow-visible">
+                        <!-- Stats Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+                                <div class="text-3xl font-bold text-slate-800 mb-1">6</div>
+                                <div class="text-sm text-slate-500 font-medium">Total de Agentes</div>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+                                <div class="text-3xl font-bold text-green-600 mb-1">6</div>
+                                <div class="text-sm text-slate-500 font-medium">Agentes Ativos</div>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+                                <div class="text-3xl font-bold text-orange-500 mb-1">0</div>
+                                <div class="text-sm text-slate-500 font-medium">Agentes Inativos</div>
+                            </div>
+                        </div>
 
-                                        <!-- Sidebar: Presets -->
+                        <!-- Organogram Canvas -->
+                        <div
+                            class="relative bg-slate-50 border border-slate-200 rounded-xl h-[600px] overflow-hidden group select-none">
+                            <!-- Dot Pattern Background -->
+                            <div class="absolute inset-0 opacity-40 pointer-events-none"
+                                style="background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 24px 24px;">
+                            </div>
+
+                            <!-- Flow Container (Centering Wrapper) -->
+                            <div class="w-full h-full overflow-auto flex items-center justify-center p-10">
+                                <div class="relative min-w-[1000px] min-h-[500px] flex flex-col items-center">
+
+                                    <!-- Level 1: CEO -->
+                                    <div class="relative z-10 mb-20">
                                         <div
-                                            class="w-full md:w-64 border-b md:border-b-0 md:border-r border-slate-100 p-4 bg-slate-50/50 flex flex-row md:flex-col gap-2 md:gap-1 overflow-x-auto md:overflow-x-visible shrink-0">
-
-                                            <!-- Mobile only title/helper -->
-                                            <h4
-                                                class="md:hidden text-xs font-semibold text-slate-500 mr-2 flex items-center shrink-0">
-                                                PERÍODO:</h4>
-
-                                            <h4
-                                                class="hidden md:block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">
-                                                Predefinições</h4>
-                                            <label
-                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 whitespace-nowrap">
-                                                <input type="radio" name="salesDatePreset"
-                                                    class="text-blue-600 focus:ring-blue-500" /> Hoje
-                                            </label>
-                                            <label
-                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 whitespace-nowrap">
-                                                <input type="radio" name="salesDatePreset"
-                                                    class="text-blue-600 focus:ring-blue-500" /> Ontem
-                                            </label>
-                                            <label
-                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 whitespace-nowrap">
-                                                <input type="radio" name="salesDatePreset"
-                                                    class="text-blue-600 focus:ring-blue-500" /> Últimos 7 dias
-                                            </label>
-                                            <label
-                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 whitespace-nowrap">
-                                                <input type="radio" name="salesDatePreset"
-                                                    class="text-blue-600 focus:ring-blue-500" /> Últimos 14 dias
-                                            </label>
-                                            <label
-                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 bg-blue-50 font-medium text-blue-700 whitespace-nowrap">
-                                                <input type="radio" name="salesDatePreset"
-                                                    class="text-blue-600 focus:ring-blue-500" checked /> Últimos 30 dias
-                                            </label>
-                                            <label
-                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 whitespace-nowrap">
-                                                <input type="radio" name="salesDatePreset"
-                                                    class="text-blue-600 focus:ring-blue-500" /> Este mês
-                                            </label>
-                                            <label
-                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 whitespace-nowrap">
-                                                <input type="radio" name="salesDatePreset"
-                                                    class="text-blue-600 focus:ring-blue-500" /> Mês passado
-                                            </label>
-                                            <label
-                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 whitespace-nowrap">
-                                                <input type="radio" name="salesDatePreset"
-                                                    class="text-blue-600 focus:ring-blue-500" /> Vitalício
-                                            </label>
-                                            <label
-                                                class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 whitespace-nowrap"
-                                                id="sales-preset-custom-container">
-                                                <input type="radio" name="salesDatePreset" id="sales-preset-custom"
-                                                    class="text-blue-600 focus:ring-blue-500" disabled /> Personalizado
-                                            </label>
-                                        </div>
-
-                                        <!-- Main Area: Calendars -->
-                                        <div class="flex-1 p-4 md:p-6">
+                                            class="bg-white p-5 rounded-lg shadow-lg border border-slate-100 w-80 relative group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-orange-200">
+                                            <!-- Connectors (Bottom) -->
                                             <div
-                                                class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                                                <div class="flex items-center gap-4">
-                                                    <div class="border rounded px-3 py-1.5 text-sm w-32 text-center bg-slate-50"
-                                                        id="sales-input-start">-</div>
-                                                    <span class="text-slate-400">-</span>
-                                                    <div class="border rounded px-3 py-1.5 text-sm w-32 text-center bg-slate-50"
-                                                        id="sales-input-end">-</div>
-                                                </div>
+                                                class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
                                             </div>
 
-                                            <div class="flex flex-col md:flex-row gap-8">
-                                                <!-- Calendar 1 -->
-                                                <div class="flex-1">
-                                                    <div
-                                                        class="flex justify-between font-medium text-slate-700 mb-4 px-2">
-                                                        <button onclick="changeSalesMonth(-1)"
-                                                            class="p-1 hover:bg-slate-100 rounded">
-                                                            << /button>
-                                                                <span id="sales-cal-title-1"></span>
-                                                                <span></span>
+                                            <div class="flex items-start gap-4">
+                                                <div
+                                                    class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
+                                                    <i data-lucide="bot" class="w-6 h-6 text-orange-600"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="flex items-center gap-2 mb-1">
+                                                        <h3 class="font-bold text-slate-800">CEO</h3>
+                                                        <span
+                                                            class="px-2 py-0.5 rounded-full bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wide">Ativo</span>
                                                     </div>
-                                                    <div
-                                                        class="grid grid-cols-7 gap-1 text-center text-xs text-slate-400 mb-2">
-                                                        <div>D</div>
-                                                        <div>S</div>
-                                                        <div>T</div>
-                                                        <div>Q</div>
-                                                        <div>Q</div>
-                                                        <div>S</div>
-                                                        <div>S</div>
+                                                    <p class="text-xs text-slate-500 leading-relaxed mb-3">Assistente
+                                                        executivo que gerencia estratégia, metas, projetos e equipe</p>
+
+                                                    <!-- Tags -->
+                                                    <div class="flex gap-2 mb-4">
+                                                        <span
+                                                            class="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded">anthropic</span>
+                                                        <span
+                                                            class="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded">claude</span>
                                                     </div>
-                                                    <div class="grid grid-cols-7 gap-1 text-sm"
-                                                        id="sales-cal-container-1">
+
+                                                    <!-- Actions -->
+                                                    <div
+                                                        class="flex gap-3 text-slate-400 group-hover:text-slate-600 transition-colors">
+                                                        <button class="hover:text-orange-500"><i data-lucide="eye"
+                                                                class="w-4 h-4"></i></button>
+                                                        <button class="hover:text-orange-500"><i data-lucide="settings"
+                                                                class="w-4 h-4"></i></button>
+                                                        <button class="hover:text-red-500"><i data-lucide="trash-2"
+                                                                class="w-4 h-4"></i></button>
                                                     </div>
                                                 </div>
-
-                                                <!-- Calendar 2 -->
-                                                <div class="flex-1">
-                                                    <div
-                                                        class="flex justify-between font-medium text-slate-700 mb-4 px-2">
-                                                        <span id="sales-cal-title-2"></span>
-                                                        <button onclick="changeSalesMonth(1)"
-                                                            class="p-1 hover:bg-slate-100 rounded">></button>
-                                                    </div>
-                                                    <div
-                                                        class="grid grid-cols-7 gap-1 text-center text-xs text-slate-400 mb-2">
-                                                        <div>D</div>
-                                                        <div>S</div>
-                                                        <div>T</div>
-                                                        <div>Q</div>
-                                                        <div>Q</div>
-                                                        <div>S</div>
-                                                        <div>S</div>
-                                                    </div>
-                                                    <div class="grid grid-cols-7 gap-1 text-sm"
-                                                        id="sales-cal-container-2">
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div
-                                                class="flex justify-end items-center gap-3 mt-8 pt-4 border-t border-slate-100">
-                                                <button onclick="toggleSalesDatePicker()"
-                                                    class="px-4 py-2 text-slate-600 hover:bg-slate-50 text-sm font-medium rounded">Cancelar</button>
-                                                <button onclick="applySalesDateSelection()"
-                                                    class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded shadow-sm transition-colors">Atualizar</button>
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- SVG Lines Layer -->
+                                    <svg class="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
+                                        style="z-index: 0;">
+                                        <!-- Path from CEO to Traffic -->
+                                        <path d="M 500 135 C 500 180, 160 180, 160 230" fill="none" stroke="#e2e8f0"
+                                            stroke-width="2" />
+                                        <!-- Path from CEO to Copy -->
+                                        <path d="M 500 135 C 500 180, 390 180, 390 230" fill="none" stroke="#e2e8f0"
+                                            stroke-width="2" />
+                                        <!-- Path from CEO to Content -->
+                                        <path d="M 500 135 C 500 180, 610 180, 610 230" fill="none" stroke="#e2e8f0"
+                                            stroke-width="2" />
+                                        <!-- Path from CEO to Sales -->
+                                        <path d="M 500 135 C 500 180, 840 180, 840 230" fill="none" stroke="#e2e8f0"
+                                            stroke-width="2" />
+                                    </svg>
+
+                                    <!-- Level 2: Subordinates -->
+                                    <div class="grid grid-cols-4 gap-8">
+
+                                        <!-- Agent 1: Traffic -->
+                                        <div class="relative z-10 w-64">
+                                            <!-- Connectors (Top) -->
+                                            <div
+                                                class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                            </div>
+
+                                            <div
+                                                class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:-translate-y-1 hover:border-orange-200">
+                                                <div class="flex items-start gap-3">
+                                                    <div
+                                                        class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
+                                                        <i data-lucide="bar-chart-3"
+                                                            class="w-4 h-4 text-orange-600"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                            <h3 class="font-bold text-slate-800 text-sm">Gestor de
+                                                                Tráfego</h3>
+                                                            <span
+                                                                class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
+                                                        </div>
+                                                        <p class="text-[10px] text-slate-500 leading-snug mb-2">
+                                                            Especialista em Meta Ads com acesso direto à API</p>
+                                                        <div class="flex gap-1 mb-2 flex-wrap">
+                                                            <span
+                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">anthropic</span>
+                                                            <span
+                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">claude</span>
+                                                        </div>
+                                                        <div class="flex gap-2 text-slate-400">
+                                                            <button class="hover:text-orange-500"><i data-lucide="eye"
+                                                                    class="w-3 h-3"></i></button>
+                                                            <button class="hover:text-orange-500"><i
+                                                                    data-lucide="settings" class="w-3 h-3"></i></button>
+                                                            <button class="hover:text-red-500"><i data-lucide="trash-2"
+                                                                    class="w-3 h-3"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Agent 2: Copy -->
+                                        <div class="relative z-10 w-64">
+                                            <div
+                                                class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                            </div>
+                                            <div
+                                                class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:-translate-y-1 hover:border-orange-200">
+                                                <div class="flex items-start gap-3">
+                                                    <div
+                                                        class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
+                                                        <i data-lucide="pen-tool" class="w-4 h-4 text-orange-600"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                            <h3 class="font-bold text-slate-800 text-sm">Agente Copy
+                                                            </h3>
+                                                            <span
+                                                                class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
+                                                        </div>
+                                                        <p class="text-[10px] text-slate-500 leading-snug mb-2">Criação
+                                                            de textos persuasivos e scripts de vendas</p>
+                                                        <div class="flex gap-1 mb-2 flex-wrap">
+                                                            <span
+                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">anthropic</span>
+                                                            <span
+                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">claude</span>
+                                                        </div>
+                                                        <div class="flex gap-2 text-slate-400">
+                                                            <button class="hover:text-orange-500"><i data-lucide="eye"
+                                                                    class="w-3 h-3"></i></button>
+                                                            <button class="hover:text-orange-500"><i
+                                                                    data-lucide="settings" class="w-3 h-3"></i></button>
+                                                            <button class="hover:text-red-500"><i data-lucide="trash-2"
+                                                                    class="w-3 h-3"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Agent 3: Content -->
+                                        <div class="relative z-10 w-64">
+                                            <div
+                                                class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                            </div>
+                                            <div
+                                                class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:-translate-y-1 hover:border-orange-200">
+                                                <div class="flex items-start gap-3">
+                                                    <div
+                                                        class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
+                                                        <i data-lucide="file-text" class="w-4 h-4 text-orange-600"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                            <h3 class="font-bold text-slate-800 text-sm">Agente de
+                                                                Conteúdo</h3>
+                                                            <span
+                                                                class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
+                                                        </div>
+                                                        <p class="text-[10px] text-slate-500 leading-snug mb-2">Gera
+                                                            conteúdo para redes sociais e blog</p>
+                                                        <div class="flex gap-1 mb-2 flex-wrap">
+                                                            <span
+                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">anthropic</span>
+                                                            <span
+                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">claude</span>
+                                                        </div>
+                                                        <div class="flex gap-2 text-slate-400">
+                                                            <button class="hover:text-orange-500"><i data-lucide="eye"
+                                                                    class="w-3 h-3"></i></button>
+                                                            <button class="hover:text-orange-500"><i
+                                                                    data-lucide="settings" class="w-3 h-3"></i></button>
+                                                            <button class="hover:text-red-500"><i data-lucide="trash-2"
+                                                                    class="w-3 h-3"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Agent 4: Sales -->
+                                        <div class="relative z-10 w-64">
+                                            <div
+                                                class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                            </div>
+                                            <div
+                                                class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:-translate-y-1 hover:border-orange-200">
+                                                <div class="flex items-start gap-3">
+                                                    <div
+                                                        class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
+                                                        <i data-lucide="message-circle"
+                                                            class="w-4 h-4 text-orange-600"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                            <h3 class="font-bold text-slate-800 text-sm">Agente de
+                                                                Vendas</h3>
+                                                            <span
+                                                                class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
+                                                        </div>
+                                                        <p class="text-[10px] text-slate-500 leading-snug mb-2">Realiza
+                                                            atendimento humano e fechamento</p>
+                                                        <div class="flex gap-1 mb-2 flex-wrap">
+                                                            <span
+                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">anthropic</span>
+                                                            <span
+                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">claude</span>
+                                                        </div>
+                                                        <div class="flex gap-2 text-slate-400">
+                                                            <button class="hover:text-orange-500"><i data-lucide="eye"
+                                                                    class="w-3 h-3"></i></button>
+                                                            <button class="hover:text-orange-500"><i
+                                                                    data-lucide="settings" class="w-3 h-3"></i></button>
+                                                            <button class="hover:text-red-500"><i data-lucide="trash-2"
+                                                                    class="w-3 h-3"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
                                 </div>
+                            </div>
+
+                            <!-- Zoom Controls -->
+                            <div
+                                class="absolute bottom-4 left-4 bg-white rounded-lg shadow border border-slate-200 flex flex-col p-1 z-20">
+                                <button class="p-2 hover:bg-slate-100 text-slate-500 rounded"><i data-lucide="plus"
+                                        class="w-4 h-4"></i></button>
+                                <button class="p-2 hover:bg-slate-100 text-slate-500 rounded"><i data-lucide="minus"
+                                        class="w-4 h-4"></i></button>
+                                <button class="p-2 hover:bg-slate-100 text-slate-500 rounded"><i data-lucide="maximize"
+                                        class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- VIEW: VENDAS (New) -->
+                        <div id="view-vendas" class="space-y-8 hidden transition-opacity duration-300">
+                            <div class="flex items-center justify-between">
+                                <h1 class="text-2xl font-bold text-slate-800">Vendas</h1>
+                                <div class="flex gap-4">
+                                    <!-- Sales Date Picker Container -->
+                                    <div class="relative" id="salesDatePickerContainer">
+                                        <button onclick="toggleSalesDatePicker()"
+                                            class="flex items-center px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 hover:bg-slate-100 transition-colors">
+                                            <i data-lucide="calendar" class="w-4 h-4 mr-2 text-slate-500"></i>
+                                            <span id="salesDateRangeLabel">Últimos 30 dias</span>
+                                            <i data-lucide="chevron-down" class="w-3 h-3 ml-2 text-slate-400"></i>
+                                        </button>
+
+                                        <!-- Meta-style Date Picker Dropdown -->
+                                        <div id="salesDatePickerDropdown"
+                                            class="hidden absolute top-full right-0 mt-2 bg-white rounded-lg shadow-xl border border-slate-200 z-50 flex flex-col md:flex-row w-[90vw] md:w-[800px] max-h-[80vh] overflow-y-auto md:overflow-visible">
+
+                                            <!-- Sidebar: Presets -->
+                                            <div
+                                                class="w-full md:w-64 border-b md:border-b-0 md:border-r border-slate-100 p-4 bg-slate-50/50 flex flex-row md:flex-col gap-2 md:gap-1 overflow-x-auto md:overflow-x-visible shrink-0">
+
+                                                <!-- Mobile only title/helper -->
+                                                <h4
+                                                    class="md:hidden text-xs font-semibold text-slate-500 mr-2 flex items-center shrink-0">
+                                                    PERÍODO:</h4>
+
+                                                <h4
+                                                    class="hidden md:block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">
+                                                    Predefinições</h4>
+                                                <label
+                                                    class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 whitespace-nowrap">
+                                                    <input type="radio" name="salesDatePreset"
+                                                        class="text-blue-600 focus:ring-blue-500" /> Hoje
+                                                </label>
+                                                <label
+                                                    class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 whitespace-nowrap">
+                                                    <input type="radio" name="salesDatePreset"
+                                                        class="text-blue-600 focus:ring-blue-500" /> Ontem
+                                                </label>
+                                                <label
+                                                    class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 whitespace-nowrap">
+                                                    <input type="radio" name="salesDatePreset"
+                                                        class="text-blue-600 focus:ring-blue-500" /> Últimos 7 dias
+                                                </label>
+                                                <label
+                                                    class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 whitespace-nowrap">
+                                                    <input type="radio" name="salesDatePreset"
+                                                        class="text-blue-600 focus:ring-blue-500" /> Últimos 14 dias
+                                                </label>
+                                                <label
+                                                    class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 bg-blue-50 font-medium text-blue-700 whitespace-nowrap">
+                                                    <input type="radio" name="salesDatePreset"
+                                                        class="text-blue-600 focus:ring-blue-500" checked /> Últimos 30
+                                                    dias
+                                                </label>
+                                                <label
+                                                    class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 whitespace-nowrap">
+                                                    <input type="radio" name="salesDatePreset"
+                                                        class="text-blue-600 focus:ring-blue-500" /> Este mês
+                                                </label>
+                                                <label
+                                                    class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 whitespace-nowrap">
+                                                    <input type="radio" name="salesDatePreset"
+                                                        class="text-blue-600 focus:ring-blue-500" /> Mês passado
+                                                </label>
+                                                <label
+                                                    class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 whitespace-nowrap">
+                                                    <input type="radio" name="salesDatePreset"
+                                                        class="text-blue-600 focus:ring-blue-500" /> Vitalício
+                                                </label>
+                                                <label
+                                                    class="flex items-center gap-3 p-2 rounded hover:bg-slate-100 cursor-pointer text-sm text-slate-700 whitespace-nowrap"
+                                                    id="sales-preset-custom-container">
+                                                    <input type="radio" name="salesDatePreset" id="sales-preset-custom"
+                                                        class="text-blue-600 focus:ring-blue-500" disabled />
+                                                    Personalizado
+                                                </label>
+                                            </div>
+
+                                            <!-- Main Area: Calendars -->
+                                            <div class="flex-1 p-4 md:p-6">
+                                                <div
+                                                    class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                                                    <div class="flex items-center gap-4">
+                                                        <div class="border rounded px-3 py-1.5 text-sm w-32 text-center bg-slate-50"
+                                                            id="sales-input-start">-</div>
+                                                        <span class="text-slate-400">-</span>
+                                                        <div class="border rounded px-3 py-1.5 text-sm w-32 text-center bg-slate-50"
+                                                            id="sales-input-end">-</div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="flex flex-col md:flex-row gap-8">
+                                                    <!-- Calendar 1 -->
+                                                    <div class="flex-1">
+                                                        <div
+                                                            class="flex justify-between font-medium text-slate-700 mb-4 px-2">
+                                                            <button onclick="changeSalesMonth(-1)"
+                                                                class="p-1 hover:bg-slate-100 rounded">
+                                                                << /button>
+                                                                    <span id="sales-cal-title-1"></span>
+                                                                    <span></span>
+                                                        </div>
+                                                        <div
+                                                            class="grid grid-cols-7 gap-1 text-center text-xs text-slate-400 mb-2">
+                                                            <div>D</div>
+                                                            <div>S</div>
+                                                            <div>T</div>
+                                                            <div>Q</div>
+                                                            <div>Q</div>
+                                                            <div>S</div>
+                                                            <div>S</div>
+                                                        </div>
+                                                        <div class="grid grid-cols-7 gap-1 text-sm"
+                                                            id="sales-cal-container-1">
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Calendar 2 -->
+                                                    <div class="flex-1">
+                                                        <div
+                                                            class="flex justify-between font-medium text-slate-700 mb-4 px-2">
+                                                            <span id="sales-cal-title-2"></span>
+                                                            <button onclick="changeSalesMonth(1)"
+                                                                class="p-1 hover:bg-slate-100 rounded">></button>
+                                                        </div>
+                                                        <div
+                                                            class="grid grid-cols-7 gap-1 text-center text-xs text-slate-400 mb-2">
+                                                            <div>D</div>
+                                                            <div>S</div>
+                                                            <div>T</div>
+                                                            <div>Q</div>
+                                                            <div>Q</div>
+                                                            <div>S</div>
+                                                            <div>S</div>
+                                                        </div>
+                                                        <div class="grid grid-cols-7 gap-1 text-sm"
+                                                            id="sales-cal-container-2">
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div
+                                                    class="flex justify-end items-center gap-3 mt-8 pt-4 border-t border-slate-100">
+                                                    <button onclick="toggleSalesDatePicker()"
+                                                        class="px-4 py-2 text-slate-600 hover:bg-slate-50 text-sm font-medium rounded">Cancelar</button>
+                                                    <button onclick="applySalesDateSelection()"
+                                                        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded shadow-sm transition-colors">Atualizar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button onclick="navigateTo('dashboard')"
+                                        class="text-sm text-slate-500 hover:text-slate-900 border border-slate-200 px-3 py-2 rounded-lg bg-white">Voltar</button>
+                                </div>
+                            </div>
+
+                            <!-- Full Sales Table -->
+                            <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden relative">
+                                <div class="p-6 border-b border-slate-100 flex gap-4 flex-wrap">
+                                    <div class="relative">
+                                        <i data-lucide="search"
+                                            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                                        <input type="text" id="sales-search" onkeyup="renderSalesTable()"
+                                            placeholder="Buscar por cliente, email..."
+                                            class="pl-10 bg-slate-50 border border-slate-200 text-sm rounded-lg pr-4 py-2 w-64 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-200 transition-all">
+                                    </div>
+                                    <select id="sales-status-filter" onchange="renderSalesTable()"
+                                        class="bg-slate-50 border border-slate-200 text-sm rounded-lg px-4 py-2 outline-none cursor-pointer focus:border-red-500 focus:ring-1 focus:ring-red-200 transition-all">
+                                        <option value="all">Status: Todos</option>
+                                        <option value="Aprovado">Aprovado</option>
+                                        <option value="Pendente">Pendente</option>
+                                        <option value="Recusado">Recusado</option>
+                                    </select>
+                                </div>
+                                <div class="overflow-x-auto relative">
+                                    <table class="w-full text-left text-sm text-slate-600">
+                                        <thead class="bg-slate-50 text-slate-700 font-semibold uppercase text-xs">
+                                            <tr>
+                                                <th class="px-6 py-4">Data</th>
+                                                <th class="px-6 py-4">Cliente</th>
+                                                <th class="px-6 py-4">Produto</th>
+                                                <th class="px-6 py-4">Pagamento</th>
+                                                <th class="px-6 py-4">Status</th>
+                                                <th class="px-6 py-4 text-right">Valor</th>
+                                                <th class="px-6 py-4 text-center">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="sales-table-body" class="divide-y divide-slate-100">
+                                            <!-- JS Injected -->
+                                        </tbody>
+                                    </table>
+                                    </table>
+                                </div>
+                                <!-- Pagination -->
+                                <div
+                                    class="p-4 border-t border-slate-100 flex justify-between items-center text-sm text-slate-500">
+                                    <span id="sales-pagination-info">Mostrando 0 de 0 resultados</span>
+                                    <div class="flex items-center gap-6">
+                                        <div class="flex items-center gap-2 text-xs">
+                                            <span>Linhas por página:</span>
+                                            <select id="sales-page-size" onchange="changeSalesPageSize(this.value)"
+                                                class="border border-slate-200 rounded px-2 py-1 bg-white outline-none focus:ring-1 focus:ring-red-200 cursor-pointer">
+                                                <option value="10">10</option>
+                                                <option value="20">20</option>
+                                                <option value="50">50</option>
+                                                <option value="100">100</option>
+                                            </select>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button id="sales-prev-btn" onclick="changeSalesPage(-1)"
+                                                class="px-3 py-1 border rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                                disabled>Anterior</button>
+                                            <button id="sales-next-btn" onclick="changeSalesPage(1)"
+                                                class="px-3 py-1 border rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                                disabled>Próxima</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Loading Overlay -->
+                            <div id="table-loading-overlay"
+                                class="absolute inset-0 bg-white/80 backdrop-blur-[1px] hidden flex-col items-center justify-center z-50 transition-all duration-300 rounded-xl">
+                                <div
+                                    class="bg-white p-4 rounded-xl shadow-lg border border-slate-100 flex flex-col items-center animate-in fade-in zoom-in duration-300">
+                                    <i data-lucide="loader-2" class="w-8 h-8 text-indigo-600 animate-spin mb-3"></i>
+                                    <span class="text-sm font-medium text-slate-700">Carregando...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- VIEW: SETTINGS (Initially Hidden) -->
+                        <div id="view-settings" class="space-y-8 hidden transition-opacity duration-300">
+                            <div class="flex items-center justify-between">
+                                <h1 class="text-2xl font-bold text-slate-800">Configurações</h1>
                                 <button onclick="navigateTo('dashboard')"
-                                    class="text-sm text-slate-500 hover:text-slate-900 border border-slate-200 px-3 py-2 rounded-lg bg-white">Voltar</button>
+                                    class="text-sm text-slate-500 hover:text-slate-900">Voltar para Dashboard</button>
                             </div>
-                        </div>
 
-                        <!-- Full Sales Table -->
-                        <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden relative">
-                            <div class="p-6 border-b border-slate-100 flex gap-4 flex-wrap">
-                                <div class="relative">
-                                    <i data-lucide="search"
-                                        class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                                    <input type="text" id="sales-search" onkeyup="renderSalesTable()"
-                                        placeholder="Buscar por cliente, email..."
-                                        class="pl-10 bg-slate-50 border border-slate-200 text-sm rounded-lg pr-4 py-2 w-64 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-200 transition-all">
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                                <div class="p-6 border-b border-slate-100">
+                                    <h2 class="text-lg font-semibold text-slate-800">Integrações</h2>
+                                    <p class="text-sm text-slate-500 mt-1">Conecte suas contas para sincronizar dados
+                                        automaticamente.</p>
                                 </div>
-                                <select id="sales-status-filter" onchange="renderSalesTable()"
-                                    class="bg-slate-50 border border-slate-200 text-sm rounded-lg px-4 py-2 outline-none cursor-pointer focus:border-red-500 focus:ring-1 focus:ring-red-200 transition-all">
-                                    <option value="all">Status: Todos</option>
-                                    <option value="Aprovado">Aprovado</option>
-                                    <option value="Pendente">Pendente</option>
-                                    <option value="Recusado">Recusado</option>
-                                </select>
-                            </div>
-                            <div class="overflow-x-auto relative">
-                                <table class="w-full text-left text-sm text-slate-600">
-                                    <thead class="bg-slate-50 text-slate-700 font-semibold uppercase text-xs">
-                                        <tr>
-                                            <th class="px-6 py-4">Data</th>
-                                            <th class="px-6 py-4">Cliente</th>
-                                            <th class="px-6 py-4">Produto</th>
-                                            <th class="px-6 py-4">Pagamento</th>
-                                            <th class="px-6 py-4">Status</th>
-                                            <th class="px-6 py-4 text-right">Valor</th>
-                                            <th class="px-6 py-4 text-center">Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="sales-table-body" class="divide-y divide-slate-100">
-                                        <!-- JS Injected -->
-                                    </tbody>
-                                </table>
-                                </table>
-                            </div>
-                            <!-- Pagination -->
-                            <div
-                                class="p-4 border-t border-slate-100 flex justify-between items-center text-sm text-slate-500">
-                                <span id="sales-pagination-info">Mostrando 0 de 0 resultados</span>
-                                <div class="flex items-center gap-6">
-                                    <div class="flex items-center gap-2 text-xs">
-                                        <span>Linhas por página:</span>
-                                        <select id="sales-page-size" onchange="changeSalesPageSize(this.value)"
-                                            class="border border-slate-200 rounded px-2 py-1 bg-white outline-none focus:ring-1 focus:ring-red-200 cursor-pointer">
-                                            <option value="10">10</option>
-                                            <option value="20">20</option>
-                                            <option value="50">50</option>
-                                            <option value="100">100</option>
-                                        </select>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button id="sales-prev-btn" onclick="changeSalesPage(-1)"
-                                            class="px-3 py-1 border rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                                            disabled>Anterior</button>
-                                        <button id="sales-next-btn" onclick="changeSalesPage(1)"
-                                            class="px-3 py-1 border rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                                            disabled>Próxima</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Loading Overlay -->
-                        <div id="table-loading-overlay"
-                            class="absolute inset-0 bg-white/80 backdrop-blur-[1px] hidden flex-col items-center justify-center z-50 transition-all duration-300 rounded-xl">
-                            <div
-                                class="bg-white p-4 rounded-xl shadow-lg border border-slate-100 flex flex-col items-center animate-in fade-in zoom-in duration-300">
-                                <i data-lucide="loader-2" class="w-8 h-8 text-indigo-600 animate-spin mb-3"></i>
-                                <span class="text-sm font-medium text-slate-700">Carregando...</span>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- VIEW: SETTINGS (Initially Hidden) -->
-                    <div id="view-settings" class="space-y-8 hidden transition-opacity duration-300">
-                        <div class="flex items-center justify-between">
-                            <h1 class="text-2xl font-bold text-slate-800">Configurações</h1>
-                            <button onclick="navigateTo('dashboard')"
-                                class="text-sm text-slate-500 hover:text-slate-900">Voltar para Dashboard</button>
-                        </div>
-
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                            <div class="p-6 border-b border-slate-100">
-                                <h2 class="text-lg font-semibold text-slate-800">Integrações</h2>
-                                <p class="text-sm text-slate-500 mt-1">Conecte suas contas para sincronizar dados
-                                    automaticamente.</p>
-                            </div>
-
-                            <div class="p-6 space-y-6">
-                                <!-- Facebook Ads -->
-                                <div
-                                    class="flex items-start gap-4 p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
+                                <div class="p-6 space-y-6">
+                                    <!-- Facebook Ads -->
                                     <div
-                                        class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 shrink-0">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round"
-                                            class="lucide lucide-facebook">
-                                            <path
-                                                d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1">
-                                        <div class="flex items-center justify-between mb-1">
-                                            <h3 class="font-medium text-slate-900">Facebook & Instagram Ads</h3>
-                                            <span
-                                                class="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full"
-                                                id="status-fb">Desconectado</span>
+                                        class="flex items-start gap-4 p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
+                                        <div
+                                            class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 shrink-0">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round"
+                                                class="lucide lucide-facebook">
+                                                <path
+                                                    d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                                            </svg>
                                         </div>
-                                        <p class="text-sm text-slate-500 mb-3">Conecte sua conta de anúncios para
-                                            importar
-                                            dados de impressões, cliques e custos (CPA/CPC).</p>
-                                        <button id="btn-connect-fb" onclick="connectIntegration('fb')"
-                                            class="text-sm font-medium px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Conectar
-                                            Conta</button>
+                                        <div class="flex-1">
+                                            <div class="flex items-center justify-between mb-1">
+                                                <h3 class="font-medium text-slate-900">Facebook & Instagram Ads</h3>
+                                                <span
+                                                    class="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full"
+                                                    id="status-fb">Desconectado</span>
+                                            </div>
+                                            <p class="text-sm text-slate-500 mb-3">Conecte sua conta de anúncios para
+                                                importar
+                                                dados de impressões, cliques e custos (CPA/CPC).</p>
+                                            <button id="btn-connect-fb" onclick="connectIntegration('fb')"
+                                                class="text-sm font-medium px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Conectar
+                                                Conta</button>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <!-- GoExplosion (Mock Platform) -->
-                                <div
-                                    class="flex items-start gap-4 p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
+                                    <!-- GoExplosion (Mock Platform) -->
                                     <div
-                                        class="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center text-purple-600 shrink-0">
-                                        <i data-lucide="zap" class="w-6 h-6"></i>
-                                    </div>
-                                    <div class="flex-1">
-                                        <div class="flex items-center justify-between mb-1">
-                                            <h3 class="font-medium text-slate-900">Webhook de Integração</h3>
-                                            <span
-                                                class="text-xs font-medium bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full hidden"
-                                                id="status-go">Ativo</span>
+                                        class="flex items-start gap-4 p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
+                                        <div
+                                            class="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center text-purple-600 shrink-0">
+                                            <i data-lucide="zap" class="w-6 h-6"></i>
                                         </div>
-                                        <p class="text-sm text-slate-500 mb-3">Integre com sua plataforma de pagamentos
-                                            para
-                                            receber seus dados de vendas em tempo real via Webhook.</p>
+                                        <div class="flex-1">
+                                            <div class="flex items-center justify-between mb-1">
+                                                <h3 class="font-medium text-slate-900">Webhook de Integração</h3>
+                                                <span
+                                                    class="text-xs font-medium bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full hidden"
+                                                    id="status-go">Ativo</span>
+                                            </div>
+                                            <p class="text-sm text-slate-500 mb-3">Integre com sua plataforma de
+                                                pagamentos
+                                                para
+                                                receber seus dados de vendas em tempo real via Webhook.</p>
 
-                                        <div id="go-connect-form" class="space-y-3">
-                                            <div class="flex flex-col gap-1">
-                                                <span class="text-xs font-medium text-slate-500">Sua URL de
-                                                    Webhook:</span>
-                                                <div class="flex gap-2">
-                                                    <div class="relative flex-1 group">
-                                                        <input type="text" id="webhook-url"
-                                                            value="https://bqlhtbzgsmpqqtyihizt.supabase.co/functions/v1/goexplosion-webhook"
-                                                            readonly
-                                                            class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-600 focus:outline-none font-mono cursor-pointer selection:bg-blue-100"
-                                                            onclick="copyWebhookUrl()">
+                                            <div id="go-connect-form" class="space-y-3">
+                                                <div class="flex flex-col gap-1">
+                                                    <span class="text-xs font-medium text-slate-500">Sua URL de
+                                                        Webhook:</span>
+                                                    <div class="flex gap-2">
+                                                        <div class="relative flex-1 group">
+                                                            <input type="text" id="webhook-url"
+                                                                value="https://bqlhtbzgsmpqqtyihizt.supabase.co/functions/v1/goexplosion-webhook"
+                                                                readonly
+                                                                class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-600 focus:outline-none font-mono cursor-pointer selection:bg-blue-100"
+                                                                onclick="copyWebhookUrl()">
+                                                        </div>
+                                                        <button onclick="copyWebhookUrl()"
+                                                            class="text-sm font-medium px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors whitespace-nowrap shadow-sm flex items-center gap-2">
+                                                            <i data-lucide="copy" class="w-4 h-4"></i> Copiar Link
+                                                        </button>
                                                     </div>
-                                                    <button onclick="copyWebhookUrl()"
-                                                        class="text-sm font-medium px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors whitespace-nowrap shadow-sm flex items-center gap-2">
-                                                        <i data-lucide="copy" class="w-4 h-4"></i> Copiar Link
-                                                    </button>
+                                                    <p class="text-xs text-slate-400">Configure esta URL nas
+                                                        configurações
+                                                        de Webhook da sua plataforma (GoExplosion, Kiwify, Etc).</p>
                                                 </div>
-                                                <p class="text-xs text-slate-400">Configure esta URL nas configurações
-                                                    de Webhook da sua plataforma (GoExplosion, Kiwify, Etc).</p>
+                                            </div>
+
+                                            <div id="go-connected-msg"
+                                                class="hidden text-sm text-slate-600 bg-emerald-50 border border-emerald-100 rounded-lg p-3">
+                                                <!-- Injected via JS -->
                                             </div>
                                         </div>
-
-                                        <div id="go-connected-msg"
-                                            class="hidden text-sm text-slate-600 bg-emerald-50 border border-emerald-100 rounded-lg p-3">
-                                            <!-- Injected via JS -->
-                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
+                    </div>
                 </div>
-            </div>
         </main>
 
 
