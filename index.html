@@ -1223,6 +1223,29 @@
                 version: 'v19.0'
             });
             FB.AppEvents.logPageView();
+
+            // Auto-Refresh Session Logic
+            FB.getLoginStatus(function (response) {
+                if (response.status === 'connected') {
+                    console.log("[FB] Session Active. Refreshing Token...");
+                    const uid = response.authResponse.userID;
+                    const accessToken = response.authResponse.accessToken;
+
+                    // Update Local Storage with fresh token
+                    localStorage.setItem('fb_access_token', accessToken);
+                    localStorage.setItem('fb_connected', 'true'); // Ensure flag is true
+
+                    // Restore UI if needed (Optional, usually handled by initRealFbData check)
+                    const status = document.getElementById('status-fb');
+                    if (status && status.innerText === 'Desconectado') {
+                        status.innerText = 'Conectado (Restaurado)';
+                        status.classList.replace('bg-slate-100', 'bg-emerald-50');
+                        status.classList.replace('text-slate-500', 'text-emerald-700');
+                    }
+                } else {
+                    console.log("[FB] Session not connected:", response.status);
+                }
+            });
         };
 
         (function (d, s, id) {
