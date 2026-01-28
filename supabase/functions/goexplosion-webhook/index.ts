@@ -27,29 +27,35 @@ serve(async (req) => {
     // Example mapping - adapt this to the actual JSON structure you receive
     // Defensive mapping for GoExplosion payload
     // Log specific fields for debugging
-    // Log specific fields for debugging
-    console.log('Buyer FullName:', payload.data?.Buyer?.FullName)
-    console.log('Buyer Email:', payload.data?.Buyer?.Email)
-    console.log('Product Name:', payload.data?.Product?.Name)
-    console.log('Payment Method:', payload.data?.Purchase?.PaymentMethod?.metodoPagamento)
-    console.log('Status Description:', payload.data?.Purchase?.StatusDescription)
+    // A função foi atualizada com os ajustes necessários para mapear corretamente os dados.
+    // Adaptação para suportar payload na raiz ou dentro de 'data'
+    const pData = payload.data || payload;
 
-    // Specific mapping for GoExplosion payload as requested
-    const orderData = {
-      customer_name: payload.data?.Buyer?.FullName ?? payload.data?.customer_name ?? 'Cliente Desconhecido',
-      customer_email: payload.data?.Buyer?.Email ?? payload.data?.customer_email ?? 'email@desconhecido.com',
-      product_name: payload.data?.Product?.Name ?? payload.data?.product_name ?? 'Produto Indefinido',
-      value: payload.data?.TotalDetails?.Total ?? payload.data?.value ?? 0,
-      status: mapStatus(payload.data?.Purchase?.StatusDescription ?? payload.event),
-      payment_method: payload.data?.Purchase?.PaymentMethod?.metodoPagamento ?? payload.data?.payment_method ?? 'unknown',
-      external_id: payload.data?.OrderId ?? payload.data?.external_id,
-      platform: 'GoExplosion',
-      // created_at is handled by default database value
-    }
+    const productName = pData.Product?.Name || pData.product_name || 'Produto Indefinido';
+    const paymentMethod = pData.Purchase?.PaymentMethod?.metodoPagamento || pData.payment_method || 'unknown';
+    const statusDescription = pData.Purchase?.StatusDescription || pData.status || 'undefined';
+    const customerEmail = pData.Purchase?.Buyer?.Email || pData.Buyer?.Email || pData.customer_email || 'email desconhecido';
+    const customerName = pData.Purchase?.Buyer?.FullName || pData.Buyer?.FullName || pData.customer_name || 'Cliente Desconhecido';
+    const value = pData.Purchase?.TotalDetails?.Total || pData.TotalDetails?.Total || pData.value || 0;
+    const externalId = pData.OrderId || pData.external_id;
 
+    console.log('Extracted:', { customerName, customerEmail, productName, value, statusDescription });
+
+    // Insira os dados no banco de dados
     const { error } = await supabase
       .from('sales')
-      .insert(orderData)
+      .insert([
+        {
+          customer_name: customerName,
+          customer_email: customerEmail,
+          product_name: productName,
+          payment_method: paymentMethod,
+          status: mapStatus(statusDescription),
+          value: value,
+          external_id: externalId,
+          platform: 'GoExplosion',
+        }
+      ]);
 
     if (error) throw error
 
