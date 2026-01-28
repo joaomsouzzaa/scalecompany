@@ -2363,16 +2363,23 @@
             // Iterate Real Sales
             const productsSet = new Set();
 
+            let debugTotal = 0;
+            let debugApproved = 0;
+            // let debugMappedToday = 0;
+
             ALL_SALES.forEach(sale => {
+                debugTotal++;
                 // Collect Product Name (Trimmed)
                 const pName = sale.product ? sale.product.trim() : 'Produto Padrão';
                 if (pName) productsSet.add(pName);
 
-                // FILTRO DE STATUS: Apenas Aprovado
-                if (!sale.status || sale.status.toLowerCase() !== 'aprovado') {
-                    // console.log(`Skipping sale ${sale.id} status: ${sale.status}`);
+                const cleanStatus = sale.status ? sale.status.trim().toLowerCase() : '';
+
+                // FILTRO DE STATUS: Apenas Aprovado (Robust Match)
+                if (!cleanStatus.includes('aprovado')) {
                     return;
                 }
+                debugApproved++;
 
                 // Find Day
                 const saleDate = new Date(sale.rawDate);
@@ -2409,6 +2416,9 @@
                     else pData.indiv += pCount;
                 }
             });
+
+            // DEBUG ALERT (Temporary)
+            // alert(`DEBUG VENDAS:\nTotal Encontradas: ${debugTotal}\nTotal Aprovadas (Filtro): ${debugApproved}\n\nVerifique se o número de Aprovadas bate com o esperado.`);
 
             // Update UI Dropdown
             const select = document.getElementById('product-select');
