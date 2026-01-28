@@ -3095,62 +3095,62 @@
         function processFbInsights(data) {
             console.log("[Scale] Raw FB Insights Data:", data); // DEBUG
 
-            const dateMap = {};
-
             if (!data || data.length === 0) {
                 console.warn("[Scale] No data returned from FB Insights API for the last 90 days.");
                 alert("Não há dados de anúncios para esta conta nos últimos 90 dias.");
                 return;
             }
 
-            data.forEach(row => {
-                const d = row.date_start;
-                if (!dateMap[d]) {
-                    dateMap[d] = {
-                        date: new Date(d + 'T12:00:00'),
-                        all: { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 },
-                        products: {} // Initialize dynamic product map
-                    };
-                }
-
-                const spend = parseFloat(row.spend || 0);
-
-                let revenue = 0;
-                let sales = 0;
-                let productName = 'unknown'; // Default product name
-
-                if (row.action_values) {
-                    const purch = row.action_values.find(a => a.action_type === 'purchase' || a.action_type === 'offsite_conversion.fb_pixel_purchase');
-                    if (purch) revenue = parseFloat(purch.value);
-                }
-
-                if (row.actions) {
-                    const purchCnt = row.actions.find(a => a.action_type === 'purchase' || a.action_type === 'offsite_conversion.fb_pixel_purchase');
-                    if (purchCnt) sales = parseInt(purchCnt.value);
-                }
-
-                // Aggregate All
-                dateMap[d].all.investment += spend;
-                dateMap[d].all.revenue += revenue;
-                dateMap[d].all.participants += sales;
-
-                // Aggregate Campaign key MUST match filtered ID
-                // row.campaign_id is string, select value is string.
-                const cid = row.campaign_id;
-                if (!dateMap[d][cid]) {
-                    dateMap[d][cid] = { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 };
-                }
-                dateMap[d][cid].investment += spend;
-                dateMap[d][cid].revenue += revenue;
-                dateMap[d][cid].participants += sales;
+            // 1. Reset Investment Data in DAILY_DATA (to clear previous account data)
+            DAILY_DATA.forEach(d => {
+                d.all.investment = 0;
+                // Remove old campaign keys if we want to be strict, but keeping them harmlessly with 0 inv is fine.
+                // Better: iterate keys and zero them if they look like campaign IDs? 
+                // For simplicity/safety: we just zero the 'all' aggregate for now. 
+                // Ideally we should wipe the dynamic keys too to avoid mixing accounts.
+                Object.keys(d).forEach(k => {
+                    if (d[k] && typeof d[k] === 'object' && d[k].investment !== undefined) {
+                        d[k].investment = 0;
+                    }
+                });
             });
 
-            // Convert to array
-            const newDailyData = Object.values(dateMap).sort((a, b) => a.date - b.date);
+            // 2. Merge FB Investment Data
+            data.forEach(row => {
+                const dStr = row.date_start;
+                // Find matching day in DAILY_DATA (ignoring time)
+                // dStr is YYYY-MM-DD
+                const dayData = DAILY_DATA.find(d => {
+                    const year = d.date.getFullYear();
+                    const month = String(d.date.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.date.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}` === dStr;
+                });
 
-            console.log("[Scale] Processed DAILY_DATA:", newDailyData); // DEBUG
+                if (dayData) {
+                    const spend = parseFloat(row.spend || 0);
 
-            DAILY_DATA = newDailyData;
+                    // Aggregate Global Investment
+                    dayData.all.investment += spend;
+
+                    // NOTE: We intentionally DO NOT update revenue/participants from FB Pixel
+                    // because Supabase is the Single Source of Truth for Sales.
+                    // This fixes the "fictitious numbers" issue.
+
+                    // Aggregate Campaign Specific
+                    const cid = row.campaign_id;
+                    if (!dayData[cid]) {
+                        // Init campaign slot if missing
+                        dayData[cid] = { investment: 0, revenue: 0, participants: 0, vips: 0, indiv: 0, double: 0 };
+                    }
+                    dayData[cid].investment += spend;
+
+                    // If we wanted Pixel ROI matching later, we'd add logic here, 
+                    // but user specifically wants Database matching.
+                }
+            });
+
+            console.log("[Scale] Merged FB Investment into DAILY_DATA.");
 
             // Update Status Feedback
             const status = document.getElementById('status-fb');
