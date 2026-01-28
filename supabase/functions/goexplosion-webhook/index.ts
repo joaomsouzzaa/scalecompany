@@ -26,14 +26,15 @@ serve(async (req) => {
 
     // Example mapping - adapt this to the actual JSON structure you receive
     // Defensive mapping for GoExplosion payload
+    // Specific mapping for GoExplosion payload as requested
     const orderData = {
-      customer_name: payload.data?.customer_name ?? payload.data?.customerName ?? payload.data?.buyer?.name ?? payload.data?.customer?.name ?? 'Cliente Desconhecido',
-      customer_email: payload.data?.customer_email ?? payload.data?.customerEmail ?? payload.data?.buyer?.email ?? payload.data?.customer?.email ?? 'email@desconhecido.com',
-      product_name: payload.data?.product_name ?? payload.data?.product?.name ?? 'Produto Indefinido',
-      value: payload.data?.value ?? payload.data?.amount ?? payload.data?.total ?? 0,
-      status: mapStatus(payload.event ?? payload.data?.status),
-      payment_method: payload.data?.payment_method ?? payload.data?.payment?.method ?? payload.data?.payment_type ?? 'unknown',
-      external_id: payload.data?.external_id ?? payload.data?.id ?? payload.data?.order_id ?? payload.id,
+      customer_name: payload.data?.Buyer?.FullName ?? payload.data?.customer_name ?? 'Cliente Desconhecido',
+      customer_email: payload.data?.Buyer?.Email ?? payload.data?.customer_email ?? 'email@desconhecido.com',
+      product_name: payload.data?.Product?.Name ?? payload.data?.product_name ?? 'Produto Indefinido',
+      value: payload.data?.TotalDetails?.Total ?? payload.data?.value ?? 0,
+      status: mapStatus(payload.data?.Purchase?.StatusDescription ?? payload.event),
+      payment_method: payload.data?.Purchase?.PaymentMethod?.metodoPagamento ?? payload.data?.payment_method ?? 'unknown',
+      external_id: payload.data?.OrderId ?? payload.data?.external_id,
       platform: 'GoExplosion',
       // created_at is handled by default database value
     }
