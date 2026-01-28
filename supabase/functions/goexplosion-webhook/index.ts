@@ -25,16 +25,17 @@ serve(async (req) => {
     // Adjust based on actual GoExplosion webhook documentation if available
 
     // Example mapping - adapt this to the actual JSON structure you receive
+    // Defensive mapping for GoExplosion payload
     const orderData = {
-      date: new Date().toISOString(),
-      customerName: payload.data?.customer?.name || 'Unknown',
-      customerEmail: payload.data?.customer?.email || 'unknown@example.com',
-      product: mapProduct(payload.data?.product_name),
-      status: mapStatus(payload.event),
-      value: payload.data?.value ?? payload.data?.amount ?? 0,
+      customer_name: payload.data?.customer_name ?? payload.data?.customerName ?? payload.data?.buyer?.name ?? payload.data?.customer?.name ?? 'Cliente Desconhecido',
+      customer_email: payload.data?.customer_email ?? payload.data?.customerEmail ?? payload.data?.buyer?.email ?? payload.data?.customer?.email ?? 'email@desconhecido.com',
+      product_name: payload.data?.product_name ?? payload.data?.product?.name ?? 'Produto Indefinido',
+      value: payload.data?.value ?? payload.data?.amount ?? payload.data?.total ?? 0,
+      status: mapStatus(payload.event ?? payload.data?.status),
+      payment_method: payload.data?.payment_method ?? payload.data?.payment?.method ?? payload.data?.payment_type ?? 'unknown',
+      external_id: payload.data?.external_id ?? payload.data?.id ?? payload.data?.order_id ?? payload.id,
       platform: 'GoExplosion',
-      // Store raw payload for debugging if needed
-      // raw_data: payload 
+      // created_at is handled by default database value
     }
 
     const { error } = await supabase
@@ -55,18 +56,10 @@ serve(async (req) => {
   }
 })
 
-function mapProduct(productName: string): string {
-  if (!productName) return 'Individual'
-  const lower = productName.toLowerCase()
-  if (lower.includes('vip')) return 'VIP'
-  if (lower.includes('duplo') || lower.includes('double')) return 'Duplo'
-  return 'Individual'
-}
-
 function mapStatus(event: string): string {
-  if (!event) return 'Pending'
+  if (!event) return 'Pendente'
   const lower = event.toLowerCase()
-  if (lower.includes('approved') || lower.includes('paid')) return 'Approved'
-  if (lower.includes('refund')) return 'Refunded'
-  return 'Pending'
+  if (lower.includes('approved') || lower.includes('paid') || lower.includes('aprovado')) return 'Aprovado'
+  if (lower.includes('refund') || lower.includes('reembolsado')) return 'Reembolsado'
+  return 'Pendente'
 }
