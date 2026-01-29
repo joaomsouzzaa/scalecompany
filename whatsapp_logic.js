@@ -126,13 +126,7 @@ function renderInstances() {
 
 // --- NEW INSTANCE MODAL LOGIC ---
 function openNewInstanceModal() {
-    console.log("Opening Modal...");
-    // alert("Debug: Abrindo modal..."); // Uncomment for hard debug if needed
     const modal = document.getElementById('instance-modal');
-    if (!modal) {
-        alert("Erro: Modal não encontrado no DOM.");
-        return;
-    }
     const content = document.getElementById('instance-modal-content');
 
     modal.classList.remove('hidden');
