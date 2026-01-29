@@ -5759,11 +5759,9 @@
                 instances.push(newInstance);
                 localStorage.setItem('wa_instances', JSON.stringify(instances));
 
-                setTimeout(() => {
-                    window.closeNewInstanceModal();
-                    loadWaInstances();
-                    updateWaCounters();
-                }, 2000);
+                // Removed auto-close timeout. User must close manually.
+                loadWaInstances();
+                updateWaCounters();
 
             } catch (e) {
                 console.error("Finalize error", e);
