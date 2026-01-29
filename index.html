@@ -846,238 +846,254 @@
                         </div>
 
                         <!-- Organogram Canvas -->
-                        <div
-                            class="relative bg-slate-50 border border-slate-200 rounded-xl h-[600px] overflow-hidden group select-none">
+                        <div id="organogram-container"
+                            class="relative bg-slate-50 border border-slate-200 rounded-xl h-[600px] overflow-hidden group select-none cursor-grab active:cursor-grabbing">
+
                             <!-- Dot Pattern Background -->
                             <div class="absolute inset-0 opacity-40 pointer-events-none"
                                 style="background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 24px 24px;">
                             </div>
 
-                            <!-- Flow Container (Centering Wrapper) -->
-                            <div class="w-full h-full overflow-auto flex items-center justify-center p-10">
-                                <div class="relative min-w-[1000px] min-h-[500px] flex flex-col items-center">
+                            <!-- Content Container (Zoom/Pan Target) -->
+                            <div id="organogram-content"
+                                class="absolute inset-0 origin-center transition-transform duration-75 ease-out"
+                                style="transform: translate(0px, 0px) scale(1);">
 
-                                    <!-- Level 1: CEO -->
-                                    <div class="relative z-10 mb-20">
+                                <!-- SVG Lines Layer -->
+                                <svg id="connections-layer"
+                                    class="absolute top-0 left-0 w-[5000px] h-[5000px] pointer-events-none overflow-visible"
+                                    style="z-index: 0; transform: translate(-2500px, -2500px);">
+                                    <!-- Dynamic Lines Injected via JS -->
+                                </svg>
+
+                                <!-- Level 1: CEO -->
+                                <div id="card-ceo" class="absolute z-10 w-80" style="left: 0px; top: -200px;">
+                                    <!-- Centered relative to 0,0 center of content -->
+                                    <div
+                                        class="bg-white p-5 rounded-lg shadow-lg border border-slate-100 relative group hover:shadow-xl transition-all duration-300 hover:border-orange-200">
+                                        <!-- Connectors (Bottom) -->
                                         <div
-                                            class="bg-white p-5 rounded-lg shadow-lg border border-slate-100 w-80 relative group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-orange-200">
-                                            <!-- Connectors (Bottom) -->
-                                            <div
-                                                class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
-                                            </div>
+                                            class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                        </div>
 
-                                            <div class="flex items-start gap-4">
-                                                <div
-                                                    class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
-                                                    <i data-lucide="bot" class="w-6 h-6 text-orange-600"></i>
+                                        <div class="flex items-start gap-4">
+                                            <div
+                                                class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
+                                                <i data-lucide="bot" class="w-6 h-6 text-orange-600"></i>
+                                            </div>
+                                            <div>
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <h3 class="font-bold text-slate-800" data-field="name">CEO</h3>
+                                                    <span
+                                                        class="px-2 py-0.5 rounded-full bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wide">Ativo</span>
                                                 </div>
-                                                <div>
-                                                    <div class="flex items-center gap-2 mb-1">
-                                                        <h3 class="font-bold text-slate-800">CEO</h3>
-                                                        <span
-                                                            class="px-2 py-0.5 rounded-full bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wide">Ativo</span>
-                                                    </div>
-                                                    <p class="text-xs text-slate-500 leading-relaxed mb-3">Assistente
-                                                        executivo que gerencia estratégia, metas, projetos e equipe</p>
-                                                    <!-- Tags -->
-                                                    <div class="flex gap-2 mb-4">
-                                                        <span
-                                                            class="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded">anthropic</span>
-                                                        <span
-                                                            class="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded">claude</span>
-                                                    </div>
-                                                    <!-- Actions -->
-                                                    <div
-                                                        class="flex gap-3 text-slate-400 group-hover:text-slate-600 transition-colors">
-                                                        <button class="hover:text-orange-500"><i data-lucide="eye"
-                                                                class="w-4 h-4"></i></button>
-                                                        <button class="hover:text-orange-500"><i data-lucide="settings"
-                                                                class="w-4 h-4"></i></button>
-                                                        <button class="hover:text-red-500"><i data-lucide="trash-2"
-                                                                class="w-4 h-4"></i></button>
-                                                    </div>
+                                                <p class="text-xs text-slate-500 leading-relaxed mb-3"
+                                                    data-field="desc">Assistente executivo que gerencia estratégia,
+                                                    metas, projetos e equipe</p>
+                                                <!-- Tags -->
+                                                <div class="flex gap-2 mb-4">
+                                                    <span
+                                                        class="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded"
+                                                        data-field="provider">anthropic</span>
+                                                    <span
+                                                        class="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded"
+                                                        data-field="model">claude</span>
+                                                </div>
+                                                <!-- Actions -->
+                                                <div
+                                                    class="flex gap-3 text-slate-400 group-hover:text-slate-600 transition-colors">
+                                                    <button class="hover:text-orange-500"
+                                                        onclick="previewAgent('card-ceo')" title="Visualizar"><i
+                                                            data-lucide="eye" class="w-4 h-4"></i></button>
+                                                    <button class="hover:text-orange-500"
+                                                        onclick="editAgent('card-ceo')" title="Editar"><i
+                                                            data-lucide="settings" class="w-4 h-4"></i></button>
+                                                    <button class="hover:text-red-500" onclick="deleteAgent('card-ceo')"
+                                                        title="Excluir"><i data-lucide="trash-2"
+                                                            class="w-4 h-4"></i></button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
 
-                                    <!-- SVG Lines Layer -->
-                                    <svg class="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
-                                        style="z-index: 0;">
-                                        <!-- Path from CEO to Traffic -->
-                                        <path d="M 500 135 C 500 180, 160 180, 160 230" fill="none" stroke="#e2e8f0"
-                                            stroke-width="2" />
-                                        <!-- Path from CEO to Copy -->
-                                        <path d="M 500 135 C 500 180, 390 180, 390 230" fill="none" stroke="#e2e8f0"
-                                            stroke-width="2" />
-                                        <!-- Path from CEO to Content -->
-                                        <path d="M 500 135 C 500 180, 610 180, 610 230" fill="none" stroke="#e2e8f0"
-                                            stroke-width="2" />
-                                        <!-- Path from CEO to Sales -->
-                                        <path d="M 500 135 C 500 180, 840 180, 840 230" fill="none" stroke="#e2e8f0"
-                                            stroke-width="2" />
-                                    </svg>
-
-                                    <!-- Level 2: Subordinates -->
-                                    <div class="grid grid-cols-4 gap-8">
-                                        <!-- Agent 1: Traffic -->
-                                        <div class="relative z-10 w-64">
+                                <!-- Level 2: Subordinates -->
+                                <!-- Agent 1: Traffic -->
+                                <div id="card-traffic" class="absolute z-10 w-64" style="left: -350px; top: 100px;">
+                                    <div
+                                        class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                    </div>
+                                    <div
+                                        class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:border-orange-200">
+                                        <div class="flex items-start gap-3">
                                             <div
-                                                class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                                class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
+                                                <i data-lucide="bar-chart-3" class="w-4 h-4 text-orange-600"></i>
                                             </div>
-                                            <div
-                                                class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:-translate-y-1 hover:border-orange-200">
-                                                <div class="flex items-start gap-3">
-                                                    <div
-                                                        class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
-                                                        <i data-lucide="bar-chart-3"
-                                                            class="w-4 h-4 text-orange-600"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                                            <h3 class="font-bold text-slate-800 text-sm">Gestor de
-                                                                Tráfego</h3>
-                                                            <span
-                                                                class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
-                                                        </div>
-                                                        <p class="text-[10px] text-slate-500 leading-snug mb-2">
-                                                            Especialista em Meta Ads com acesso direto à API</p>
-                                                        <div class="flex gap-1 mb-2 flex-wrap">
-                                                            <span
-                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">anthropic</span>
-                                                            <span
-                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">claude</span>
-                                                        </div>
-                                                        <div class="flex gap-2 text-slate-400">
-                                                            <button class="hover:text-orange-500"><i data-lucide="eye"
-                                                                    class="w-3 h-3"></i></button>
-                                                            <button class="hover:text-orange-500"><i
-                                                                    data-lucide="settings" class="w-3 h-3"></i></button>
-                                                            <button class="hover:text-red-500"><i data-lucide="trash-2"
-                                                                    class="w-3 h-3"></i></button>
-                                                        </div>
-                                                    </div>
+                                            <div>
+                                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                    <h3 class="font-bold text-slate-800 text-sm" data-field="name">
+                                                        Gestor de Tráfego</h3>
+                                                    <span
+                                                        class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
+                                                </div>
+                                                <p class="text-[10px] text-slate-500 leading-snug mb-2"
+                                                    data-field="desc">Especialista em Meta Ads com acesso direto à API
+                                                </p>
+                                                <div class="flex gap-1 mb-2 flex-wrap">
+                                                    <span
+                                                        class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded"
+                                                        data-field="provider">anthropic</span>
+                                                    <span
+                                                        class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded"
+                                                        data-field="model">claude</span>
+                                                </div>
+                                                <div class="flex gap-2 text-slate-400">
+                                                    <button class="hover:text-orange-500"
+                                                        onclick="previewAgent('card-traffic')"><i data-lucide="eye"
+                                                            class="w-3 h-3"></i></button>
+                                                    <button class="hover:text-orange-500"
+                                                        onclick="editAgent('card-traffic')"><i data-lucide="settings"
+                                                            class="w-3 h-3"></i></button>
+                                                    <button class="hover:text-red-500"
+                                                        onclick="deleteAgent('card-traffic')"><i data-lucide="trash-2"
+                                                            class="w-3 h-3"></i></button>
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
 
-                                        <!-- Agent 2: Copy -->
-                                        <div class="relative z-10 w-64">
+                                <!-- Agent 2: Copy -->
+                                <div id="card-copy" class="absolute z-10 w-64" style="left: -110px; top: 100px;">
+                                    <div
+                                        class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                    </div>
+                                    <div
+                                        class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:border-orange-200">
+                                        <div class="flex items-start gap-3">
                                             <div
-                                                class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                                class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
+                                                <i data-lucide="pen-tool" class="w-4 h-4 text-orange-600"></i>
                                             </div>
-                                            <div
-                                                class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:-translate-y-1 hover:border-orange-200">
-                                                <div class="flex items-start gap-3">
-                                                    <div
-                                                        class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
-                                                        <i data-lucide="pen-tool" class="w-4 h-4 text-orange-600"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                                            <h3 class="font-bold text-slate-800 text-sm">Agente Copy
-                                                            </h3>
-                                                            <span
-                                                                class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
-                                                        </div>
-                                                        <p class="text-[10px] text-slate-500 leading-snug mb-2">Criação
-                                                            de textos persuasivos e scripts de vendas</p>
-                                                        <div class="flex gap-1 mb-2 flex-wrap">
-                                                            <span
-                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">anthropic</span>
-                                                            <span
-                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">claude</span>
-                                                        </div>
-                                                        <div class="flex gap-2 text-slate-400">
-                                                            <button class="hover:text-orange-500"><i data-lucide="eye"
-                                                                    class="w-3 h-3"></i></button>
-                                                            <button class="hover:text-orange-500"><i
-                                                                    data-lucide="settings" class="w-3 h-3"></i></button>
-                                                            <button class="hover:text-red-500"><i data-lucide="trash-2"
-                                                                    class="w-3 h-3"></i></button>
-                                                        </div>
-                                                    </div>
+                                            <div>
+                                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                    <h3 class="font-bold text-slate-800 text-sm" data-field="name">
+                                                        Agente Copy</h3>
+                                                    <span
+                                                        class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
+                                                </div>
+                                                <p class="text-[10px] text-slate-500 leading-snug mb-2"
+                                                    data-field="desc">Criação de textos persuasivos e scripts de vendas
+                                                </p>
+                                                <div class="flex gap-1 mb-2 flex-wrap">
+                                                    <span
+                                                        class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded"
+                                                        data-field="provider">anthropic</span>
+                                                    <span
+                                                        class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded"
+                                                        data-field="model">claude</span>
+                                                </div>
+                                                <div class="flex gap-2 text-slate-400">
+                                                    <button class="hover:text-orange-500"
+                                                        onclick="previewAgent('card-copy')"><i data-lucide="eye"
+                                                            class="w-3 h-3"></i></button>
+                                                    <button class="hover:text-orange-500"
+                                                        onclick="editAgent('card-copy')"><i data-lucide="settings"
+                                                            class="w-3 h-3"></i></button>
+                                                    <button class="hover:text-red-500"
+                                                        onclick="deleteAgent('card-copy')"><i data-lucide="trash-2"
+                                                            class="w-3 h-3"></i></button>
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
 
-                                        <!-- Agent 3: Content -->
-                                        <div class="relative z-10 w-64">
+                                <!-- Agent 3: Content -->
+                                <div id="card-content" class="absolute z-10 w-64" style="left: 170px; top: 100px;">
+                                    <div
+                                        class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                    </div>
+                                    <div
+                                        class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:border-orange-200">
+                                        <div class="flex items-start gap-3">
                                             <div
-                                                class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                                class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
+                                                <i data-lucide="file-text" class="w-4 h-4 text-orange-600"></i>
                                             </div>
-                                            <div
-                                                class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:-translate-y-1 hover:border-orange-200">
-                                                <div class="flex items-start gap-3">
-                                                    <div
-                                                        class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
-                                                        <i data-lucide="file-text" class="w-4 h-4 text-orange-600"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                                            <h3 class="font-bold text-slate-800 text-sm">Agente de
-                                                                Conteúdo</h3>
-                                                            <span
-                                                                class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
-                                                        </div>
-                                                        <p class="text-[10px] text-slate-500 leading-snug mb-2">Gera
-                                                            conteúdo para redes sociais e blog</p>
-                                                        <div class="flex gap-1 mb-2 flex-wrap">
-                                                            <span
-                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">anthropic</span>
-                                                            <span
-                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">claude</span>
-                                                        </div>
-                                                        <div class="flex gap-2 text-slate-400">
-                                                            <button class="hover:text-orange-500"><i data-lucide="eye"
-                                                                    class="w-3 h-3"></i></button>
-                                                            <button class="hover:text-orange-500"><i
-                                                                    data-lucide="settings" class="w-3 h-3"></i></button>
-                                                            <button class="hover:text-red-500"><i data-lucide="trash-2"
-                                                                    class="w-3 h-3"></i></button>
-                                                        </div>
-                                                    </div>
+                                            <div>
+                                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                    <h3 class="font-bold text-slate-800 text-sm" data-field="name">
+                                                        Agente de Conteúdo</h3>
+                                                    <span
+                                                        class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
+                                                </div>
+                                                <p class="text-[10px] text-slate-500 leading-snug mb-2"
+                                                    data-field="desc">Gera conteúdo para redes sociais e blog</p>
+                                                <div class="flex gap-1 mb-2 flex-wrap">
+                                                    <span
+                                                        class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded"
+                                                        data-field="provider">anthropic</span>
+                                                    <span
+                                                        class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded"
+                                                        data-field="model">claude</span>
+                                                </div>
+                                                <div class="flex gap-2 text-slate-400">
+                                                    <button class="hover:text-orange-500"
+                                                        onclick="previewAgent('card-content')"><i data-lucide="eye"
+                                                            class="w-3 h-3"></i></button>
+                                                    <button class="hover:text-orange-500"
+                                                        onclick="editAgent('card-content')"><i data-lucide="settings"
+                                                            class="w-3 h-3"></i></button>
+                                                    <button class="hover:text-red-500"
+                                                        onclick="deleteAgent('card-content')"><i data-lucide="trash-2"
+                                                            class="w-3 h-3"></i></button>
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
 
-                                        <!-- Agent 4: Sales -->
-                                        <div class="relative z-10 w-64">
+                                <!-- Agent 4: Sales -->
+                                <div id="card-sales" class="absolute z-10 w-64" style="left: 450px; top: 100px;">
+                                    <div
+                                        class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                    </div>
+                                    <div
+                                        class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:border-orange-200">
+                                        <div class="flex items-start gap-3">
                                             <div
-                                                class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                                class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
+                                                <i data-lucide="message-circle" class="w-4 h-4 text-orange-600"></i>
                                             </div>
-                                            <div
-                                                class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:-translate-y-1 hover:border-orange-200">
-                                                <div class="flex items-start gap-3">
-                                                    <div
-                                                        class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
-                                                        <i data-lucide="message-circle"
-                                                            class="w-4 h-4 text-orange-600"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                                            <h3 class="font-bold text-slate-800 text-sm">Agente de
-                                                                Vendas</h3>
-                                                            <span
-                                                                class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
-                                                        </div>
-                                                        <p class="text-[10px] text-slate-500 leading-snug mb-2">Realiza
-                                                            atendimento humano e fechamento</p>
-                                                        <div class="flex gap-1 mb-2 flex-wrap">
-                                                            <span
-                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">anthropic</span>
-                                                            <span
-                                                                class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">claude</span>
-                                                        </div>
-                                                        <div class="flex gap-2 text-slate-400">
-                                                            <button class="hover:text-orange-500"><i data-lucide="eye"
-                                                                    class="w-3 h-3"></i></button>
-                                                            <button class="hover:text-orange-500"><i
-                                                                    data-lucide="settings" class="w-3 h-3"></i></button>
-                                                            <button class="hover:text-red-500"><i data-lucide="trash-2"
-                                                                    class="w-3 h-3"></i></button>
-                                                        </div>
-                                                    </div>
+                                            <div>
+                                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                    <h3 class="font-bold text-slate-800 text-sm" data-field="name">
+                                                        Agente de Vendas</h3>
+                                                    <span
+                                                        class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
+                                                </div>
+                                                <p class="text-[10px] text-slate-500 leading-snug mb-2"
+                                                    data-field="desc">Realiza atendimento humano e fechamento</p>
+                                                <div class="flex gap-1 mb-2 flex-wrap">
+                                                    <span
+                                                        class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded"
+                                                        data-field="provider">anthropic</span>
+                                                    <span
+                                                        class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded"
+                                                        data-field="model">claude</span>
+                                                </div>
+                                                <div class="flex gap-2 text-slate-400">
+                                                    <button class="hover:text-orange-500"
+                                                        onclick="previewAgent('card-sales')"><i data-lucide="eye"
+                                                            class="w-3 h-3"></i></button>
+                                                    <button class="hover:text-orange-500"
+                                                        onclick="editAgent('card-sales')"><i data-lucide="settings"
+                                                            class="w-3 h-3"></i></button>
+                                                    <button class="hover:text-red-500"
+                                                        onclick="deleteAgent('card-sales')"><i data-lucide="trash-2"
+                                                            class="w-3 h-3"></i></button>
                                                 </div>
                                             </div>
                                         </div>
@@ -1087,13 +1103,16 @@
 
                             <!-- Zoom Controls -->
                             <div
-                                class="absolute bottom-4 left-4 bg-white rounded-lg shadow border border-slate-200 flex flex-col p-1 z-20">
-                                <button class="p-2 hover:bg-slate-100 text-slate-500 rounded"><i data-lucide="plus"
-                                        class="w-4 h-4"></i></button>
-                                <button class="p-2 hover:bg-slate-100 text-slate-500 rounded"><i data-lucide="minus"
-                                        class="w-4 h-4"></i></button>
-                                <button class="p-2 hover:bg-slate-100 text-slate-500 rounded"><i data-lucide="maximize"
-                                        class="w-4 h-4"></i></button>
+                                class="absolute bottom-4 left-4 bg-white rounded-lg shadow border border-slate-200 flex flex-col p-1 z-50">
+                                <button onclick="zoomOrganogram(0.1)"
+                                    class="p-2 hover:bg-slate-100 text-slate-500 rounded tooltip"
+                                    title="Aumentar Zoom"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                                <button onclick="zoomOrganogram(-0.1)"
+                                    class="p-2 hover:bg-slate-100 text-slate-500 rounded tooltip"
+                                    title="Diminuir Zoom"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                                <button onclick="fitOrganogram()"
+                                    class="p-2 hover:bg-slate-100 text-slate-500 rounded tooltip"
+                                    title="Centralizar Tudoz"><i data-lucide="maximize" class="w-4 h-4"></i></button>
                             </div>
                         </div>
                     </div>
@@ -2790,6 +2809,278 @@
             ]
         };
 
+        // --- INTERACTIVE ORGANOGRAM LOGIC ---
+        let organogramState = {
+            scale: 1,
+            pan: { x: 0, y: 0 },
+            isDraggingCanvas: false,
+            isDraggingCard: false,
+            dragStart: { x: 0, y: 0 },
+            activeCardId: null,
+            connections: [
+                { id: 'conn-1', from: 'card-ceo', to: 'card-traffic' },
+                { id: 'conn-2', from: 'card-ceo', to: 'card-copy' },
+                { id: 'conn-3', from: 'card-ceo', to: 'card-content' },
+                { id: 'conn-4', from: 'card-ceo', to: 'card-sales' }
+            ]
+        };
+
+        // Initialize listeners
+        setTimeout(() => {
+            const container = document.getElementById('organogram-container');
+            const content = document.getElementById('organogram-content');
+
+            if (container && content) {
+                // Canvas Drag (Pan)
+                container.addEventListener('mousedown', handleCanvasMouseDown);
+                window.addEventListener('mousemove', handleGlobalMouseMove);
+                window.addEventListener('mouseup', handleGlobalMouseUp);
+
+                // Card Drag
+                document.querySelectorAll('#organogram-content > div[id^="card-"]').forEach(card => {
+                    card.addEventListener('mousedown', handleCardMouseDown);
+                });
+
+                // Initial Draw
+                drawConnections();
+            }
+        }, 1000);
+
+        function handleCanvasMouseDown(e) {
+            if (e.target.closest('[id^="card-"]')) return; // Ignore if clicking a card
+            // Ignore zoom buttons
+            if (e.target.closest('button')) return;
+
+            organogramState.isDraggingCanvas = true;
+            organogramState.dragStart = { x: e.clientX - organogramState.pan.x, y: e.clientY - organogramState.pan.y };
+            document.getElementById('organogram-container').classList.add('cursor-grabbing');
+        }
+
+        function handleCardMouseDown(e) {
+            e.stopPropagation(); // Prevent canvas drag
+            // Ignore buttons inside card
+            if (e.target.closest('button')) return;
+
+            organogramState.isDraggingCard = true;
+            organogramState.activeCardId = e.currentTarget.id;
+
+            const card = e.currentTarget;
+            // Get current transform/left/top
+            // We are using absolute positioning with left/top style
+            const rect = card.getBoundingClientRect();
+            const contentRect = document.getElementById('organogram-content').getBoundingClientRect();
+
+            // Calculate offset relative to mouse inside the card
+            // Logic: Relative Position = (Mouse Client - Container Client) / Scale
+            // Easier: just store initial mouse and initial card position
+            organogramState.dragStart = {
+                mouseX: e.clientX,
+                mouseY: e.clientY,
+                cardLeft: parseFloat(card.style.left) || 0,
+                cardTop: parseFloat(card.style.top) || 0
+            };
+
+            card.classList.add('z-50'); // Bring to front
+        }
+
+        function handleGlobalMouseMove(e) {
+            if (organogramState.isDraggingCanvas) {
+                organogramState.pan.x = e.clientX - organogramState.dragStart.x;
+                organogramState.pan.y = e.clientY - organogramState.dragStart.y;
+                updateOrganogramTransform();
+            } else if (organogramState.isDraggingCard && organogramState.activeCardId) {
+                const card = document.getElementById(organogramState.activeCardId);
+                const dx = (e.clientX - organogramState.dragStart.mouseX) / organogramState.scale;
+                const dy = (e.clientY - organogramState.dragStart.mouseY) / organogramState.scale;
+
+                card.style.left = `${organogramState.dragStart.cardLeft + dx}px`;
+                card.style.top = `${organogramState.dragStart.cardTop + dy}px`;
+
+                drawConnections(); // Redraw lines real-time
+            }
+        }
+
+        function handleGlobalMouseUp() {
+            if (organogramState.isDraggingCard && organogramState.activeCardId) {
+                const card = document.getElementById(organogramState.activeCardId);
+                card.classList.remove('z-50');
+            }
+            organogramState.isDraggingCanvas = false;
+            organogramState.isDraggingCard = false;
+            organogramState.activeCardId = null;
+            document.getElementById('organogram-container').classList.remove('cursor-grabbing');
+        }
+
+        function updateOrganogramTransform() {
+            const content = document.getElementById('organogram-content');
+            if (content) {
+                content.style.transform = `translate(${organogramState.pan.x}px, ${organogramState.pan.y}px) scale(${organogramState.scale})`;
+            }
+        }
+
+        function zoomOrganogram(delta) {
+            organogramState.scale += delta;
+            if (organogramState.scale < 0.2) organogramState.scale = 0.2;
+            if (organogramState.scale > 3) organogramState.scale = 3;
+            updateOrganogramTransform();
+        }
+
+        function fitOrganogram() {
+            // Simple reset for now (could be bounding box calc)
+            organogramState.scale = 1;
+            organogramState.pan = { x: 0, y: 0 };
+            updateOrganogramTransform();
+
+            // Reset individual card positions to default "Tree" layout
+            // This is "Centralizar" logic - resetting the view
+            const positions = {
+                'card-ceo': { l: 0, t: -200 },
+                'card-traffic': { l: -350, t: 100 },
+                'card-copy': { l: -110, t: 100 },
+                'card-content': { l: 170, t: 100 },
+                'card-sales': { l: 450, t: 100 }
+            };
+
+            Object.keys(positions).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.left = positions[id].l + 'px';
+                    el.style.top = positions[id].t + 'px';
+                }
+            });
+            drawConnections();
+        }
+
+        function drawConnections() {
+            const svg = document.getElementById('connections-layer');
+            if (!svg) return;
+
+            // Clear current lines
+            svg.innerHTML = '';
+
+            // We need coordinates relative to the content container (0,0 center)
+            const contentRect = document.getElementById('organogram-content').getBoundingClientRect();
+            // Actually, since cards are children of content, their left/top in style are already relative to content origin logic
+            // But we need to account that left/top are top-left corners.
+            // Anchor points: 
+            // CEO (Source): Bottom Middle
+            // Agents (Target): Top Middle
+
+            organogramState.connections.forEach(conn => {
+                const c1 = document.getElementById(conn.from);
+                const c2 = document.getElementById(conn.to);
+                if (!c1 || !c2) return;
+
+                // Parse positions from style (more reliable than collision with scale)
+                const x1 = (parseFloat(c1.style.left) || 0) + (c1.offsetWidth / 2);
+                const y1 = (parseFloat(c1.style.top) || 0) + c1.offsetHeight; // Bottom
+                const x2 = (parseFloat(c2.style.left) || 0) + (c2.offsetWidth / 2);
+                const y2 = (parseFloat(c2.style.top) || 0); // Top
+
+                // Bezier Curve
+                // Control points: vertical drop from source, vertical rise from target
+                const cp1x = x1;
+                const cp1y = y1 + 50;
+                const cp2x = x2;
+                const cp2y = y2 - 50;
+
+                const pathData = `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`;
+
+                // Group
+                const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                group.setAttribute("class", "connection-group cursor-pointer group");
+                group.onclick = (e) => confirmDeleteConnection(e, conn.id);
+
+                // Visible Path
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", pathData);
+                path.setAttribute("fill", "none");
+                path.setAttribute("stroke", "#cbd5e1"); // slate-300
+                path.setAttribute("stroke-width", "2");
+                path.setAttribute("class", "transition-colors group-hover:stroke-red-400");
+
+                // Hit Area (thicker, invisible)
+                const hitPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                hitPath.setAttribute("d", pathData);
+                hitPath.setAttribute("fill", "none");
+                hitPath.setAttribute("stroke", "transparent");
+                hitPath.setAttribute("stroke-width", "20");
+
+                // Trash Icon (at midpoint)
+                // Calculate midpoint (approximate bezier mid)
+                // P(0.5) = (1-t)^3 P0 + ... simplified for quadratic-ish visual
+                const t = 0.5;
+                const midX = (1 - t) * (1 - t) * (1 - t) * x1 + 3 * (1 - t) * (1 - t) * t * cp1x + 3 * (1 - t) * t * t * cp2x + t * t * t * x2;
+                const midY = (1 - t) * (1 - t) * (1 - t) * y1 + 3 * (1 - t) * (1 - t) * t * cp1y + 3 * (1 - t) * t * t * cp2y + t * t * t * y2;
+
+                const deleteIcon = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+                deleteIcon.setAttribute("x", midX - 12);
+                deleteIcon.setAttribute("y", midY - 12);
+                deleteIcon.setAttribute("width", "24");
+                deleteIcon.setAttribute("height", "24");
+                deleteIcon.setAttribute("class", "opacity-0 group-hover:opacity-100 transition-opacity duration-200");
+                deleteIcon.innerHTML = `<div class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center border border-red-200 shadow-sm"><i data-lucide="trash-2" class="w-3 h-3 text-red-600"></i></div>`;
+
+                group.appendChild(path);
+                group.appendChild(hitPath);
+                group.appendChild(deleteIcon);
+                svg.appendChild(group);
+            });
+
+            // Re-render SVG icons inside foreignObject
+            if (window.lucide) activeIcons = lucide.createIcons();
+        }
+
+        function confirmDeleteConnection(e, connId) {
+            e.stopPropagation();
+            if (confirm('Remover esta conexão?')) {
+                organogramState.connections = organogramState.connections.filter(c => c.id !== connId);
+                drawConnections();
+            }
+        }
+
+        // --- Card Actions ---
+        function previewAgent(cardId) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+
+            // Extract data from logic (or simulation)
+            const name = card.querySelector('[data-field="name"]').innerText;
+            const desc = card.querySelector('[data-field="desc"]').innerText;
+            const provider = card.querySelector('[data-field="provider"]').innerText;
+            const model = card.querySelector('[data-field="model"]').innerText;
+
+            alert(`PREVIEW AGENTE:\n\nNome: ${name}\nProvider: ${provider}\nModelo: ${model}\n\n${desc}`);
+        }
+
+        function editAgent(cardId) {
+            // Reuse Agent Modal but populate fields
+            const card = document.getElementById(cardId);
+            if (!card) return;
+
+            const name = card.querySelector('[data-field="name"]').innerText;
+            const desc = card.querySelector('[data-field="desc"]').innerText;
+
+            // Populate Modal
+            document.getElementById('agent-name').value = name;
+            document.getElementById('agent-desc').value = desc;
+            document.getElementById('agent-slug').value = cardId.replace('card-', '');
+
+            // Open
+            openAgentModal();
+        }
+
+        function deleteAgent(cardId) {
+            if (confirm('Tem certeza que deseja excluir este agente e suas conexões?')) {
+                const el = document.getElementById(cardId);
+                if (el) el.remove();
+
+                // Remove connections
+                organogramState.connections = organogramState.connections.filter(c => c.from !== cardId && c.to !== cardId);
+                drawConnections();
+            }
+        }
+
         function openAgentModal() {
             const modal = document.getElementById('agent-modal');
             const content = document.getElementById('agent-modal-content');
@@ -2864,43 +3155,66 @@
         }
 
         function appendAgentToGrid(name, slug, provider, desc) {
-            const grid = document.querySelector('#view-agents .grid.grid-cols-4');
-            // Fallback if removed/changed
-            if (!grid) {
-                console.warn("Agent grid not found");
+            const container = document.getElementById('organogram-content');
+            if (!container) {
+                console.warn("Organogram container not found");
                 return;
             }
 
+            // Create unique ID
+            const validSlug = slug.replace(/[^a-z0-9-]/gi, '-').toLowerCase();
+            const cardId = `card-${validSlug}-${Date.now()}`;
+
+            // Random Position near center (offset by random -50 to 50)
+            const randomX = (Math.random() - 0.5) * 100;
+            const randomY = (Math.random() - 0.5) * 100 + 200; // slightly below CEO
+
             // Create Card HTML
             const card = document.createElement('div');
-            card.className = "relative z-10 w-64 animate-in fade-in zoom-in duration-500 type-agent-card"; // Added class for easier selection if needed
+            card.id = cardId;
+            card.className = "absolute z-10 w-64 animate-in fade-in zoom-in duration-500";
+            card.style.left = `${randomX}px`;
+            card.style.top = `${randomY}px`;
+
             card.innerHTML = `
                 <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20"></div>
-                <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:-translate-y-1 hover:border-orange-200">
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:border-orange-200">
                     <div class="flex items-start gap-3">
                         <div class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
                             <i data-lucide="bot" class="w-4 h-4 text-orange-600"></i>
                         </div>
                         <div>
                             <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                <h3 class="font-bold text-slate-800 text-sm">${name}</h3>
+                                <h3 class="font-bold text-slate-800 text-sm" data-field="name">${name}</h3>
                                 <span class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
                             </div>
-                            <p class="text-[10px] text-slate-500 leading-snug mb-2">${desc || 'Novo agente de IA'}</p>
+                            <p class="text-[10px] text-slate-500 leading-snug mb-2" data-field="desc">${desc || 'Novo agente de IA'}</p>
                             <div class="flex gap-1 mb-2 flex-wrap">
-                                <span class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">${provider}</span>
-                                <span class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">${slug}</span>
+                                <span class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded" data-field="provider">${provider}</span>
+                                <span class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded" data-field="model">${validSlug}</span>
                             </div>
                             <div class="flex gap-2 text-slate-400">
-                                <button class="hover:text-orange-500"><i data-lucide="eye" class="w-3 h-3"></i></button>
-                                <button class="hover:text-orange-500"><i data-lucide="settings" class="w-3 h-3"></i></button>
-                                <button class="hover:text-red-500"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                                <button class="hover:text-orange-500" onclick="previewAgent('${cardId}')"><i data-lucide="eye" class="w-3 h-3"></i></button>
+                                <button class="hover:text-orange-500" onclick="editAgent('${cardId}')"><i data-lucide="settings" class="w-3 h-3"></i></button>
+                                <button class="hover:text-red-500" onclick="deleteAgent('${cardId}')"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
                             </div>
                         </div>
                     </div>
                 </div>`;
 
-            grid.appendChild(card);
+            // Attach Drag Event
+            card.addEventListener('mousedown', handleCardMouseDown);
+
+            container.appendChild(card);
+
+            // Auto-connect to CEO (Optional, but good for demo)
+            organogramState.connections.push({
+                id: `conn-${Date.now()}`,
+                from: 'card-ceo',
+                to: cardId
+            });
+            drawConnections();
+
             if (window.lucide) lucide.createIcons();
         }
 
