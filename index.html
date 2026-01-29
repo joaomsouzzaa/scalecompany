@@ -2348,7 +2348,8 @@
                 // Persist state
                 localStorage.setItem('last_active_view', viewId);
 
-                const views = ['dashboard', 'settings'];
+                // Add 'agents' to the list of views to manage
+                const views = ['dashboard', 'settings', 'agents'];
 
                 // Hide all views
                 views.forEach(v => {
@@ -2356,8 +2357,6 @@
                     if (el) {
                         el.classList.add('hidden');
                         el.classList.remove('fade-in');
-                    } else {
-                        console.warn("View element not found:", v);
                     }
                 });
 
@@ -2366,9 +2365,17 @@
                 if (target) {
                     target.classList.remove('hidden');
                     console.log("View shown:", viewId);
+
+                    // Auto-center Organogram if opening Agents view
+                    if (viewId === 'agents') {
+                        // Small delay to ensure display:block applies for rect calculation
+                        setTimeout(() => {
+                            if (typeof fitOrganogram === 'function') fitOrganogram();
+                        }, 50);
+                    }
                 } else {
                     console.error("Target view not found:", viewId);
-                    alert("Erro: Tela '" + viewId + "' não encontrada.");
+                    // alert("Erro: Tela '" + viewId + "' não encontrada."); // Suppress alert for robustness
                 }
 
                 // Close menus if open
@@ -2378,6 +2385,9 @@
                 // --- Toggle Sidebar Active State ---
                 const navDashboard = document.getElementById('nav-dashboard');
                 const navSettings = document.getElementById('nav-settings');
+                // Assume navAgents exists or is part of a submenu
+                // If there's a specific nav item for agents, toggle it here too.
+                // For now, handling Dashboard/Settings as before.
 
                 // Classes for styling
                 const activeClasses = ['bg-red-600/10', 'text-red-500'];
@@ -2398,9 +2408,14 @@
                 if (viewId === 'settings') {
                     setActive(navDashboard, false);
                     setActive(navSettings, true);
-                } else {
-                    // Default to dashboard active for any other view (e.g. 'dashboard')
+                } else if (viewId === 'dashboard') {
                     setActive(navDashboard, true);
+                    setActive(navSettings, false);
+                } else {
+                    // For 'agents', maybe we want to deactivate both or set a sub-item?
+                    // Keeping dashboard active is potentially confusing if not sub-item.
+                    // Let's deactivate both for now if 'agents' to show specialized state
+                    setActive(navDashboard, false);
                     setActive(navSettings, false);
                 }
             } catch (e) {
@@ -3225,13 +3240,7 @@
         }
 
         function fitOrganogram() {
-            // Simple reset for now (could be bounding box calc)
-            organogramState.scale = 1;
-            organogramState.pan = { x: 0, y: 0 };
-            updateOrganogramTransform();
-
             // Reset individual card positions to default "Tree" layout
-            // Adjusted for wider w-72 (288px) cards + spacing
             const positions = {
                 'card-ceo': { l: 0, t: -200 },
                 'card-traffic': { l: -500, t: 100 },
@@ -3247,7 +3256,63 @@
                     el.style.top = positions[id].t + 'px';
                 }
             });
+
+            centerContent();
             drawConnections();
+        }
+
+        function centerContent() {
+            const cards = document.querySelectorAll('[id^="card-"]');
+            if (cards.length === 0) return;
+
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+            cards.forEach(card => {
+                const left = parseFloat(card.style.left) || 0;
+                const top = parseFloat(card.style.top) || 0;
+                // Assuming w-72 (288px) and h-[180px] (180px)
+                // For robustness, could use getBoundingClientRect but that depends on current transform/scale
+                // Using raw style left/top is safer for the "logical" content plane
+                const width = 288;
+                const height = 180;
+
+                if (left < minX) minX = left;
+                if (top < minY) minY = top;
+                if (left + width > maxX) maxX = left + width;
+                if (top + height > maxY) maxY = top + height;
+            });
+
+            const contentWidth = maxX - minX;
+            const contentHeight = maxY - minY;
+            const contentCenterX = minX + contentWidth / 2;
+            const contentCenterY = minY + contentHeight / 2;
+
+            const container = document.getElementById('organogram-container');
+            const containerRect = container.getBoundingClientRect();
+
+            // Auto-fit scale
+            const padding = 40;
+            const availableW = containerRect.width - padding * 2;
+            const availableH = containerRect.height - padding * 2;
+
+            let targetScale = 1;
+            if (contentWidth > 0 && contentHeight > 0) {
+                const scaleX = availableW / contentWidth;
+                const scaleY = availableH / contentHeight;
+                targetScale = Math.min(scaleX, scaleY, 1); // Ensure we don't zoom in excessively, but 1 is fine standard
+                // Limit min scale
+                if (targetScale < 0.4) targetScale = 0.4;
+            }
+
+            organogramState.scale = targetScale;
+
+            // Pan to center: 
+            // ContainerCenter = Pan + ContentCenter * Scale
+            // Pan = ContainerCenter - ContentCenter * Scale
+            organogramState.pan.x = (containerRect.width / 2) - (contentCenterX * organogramState.scale);
+            organogramState.pan.y = (containerRect.height / 2) - (contentCenterY * organogramState.scale);
+
+            updateOrganogramTransform();
         }
 
         function drawConnections() {
