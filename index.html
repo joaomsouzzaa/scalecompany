@@ -5727,7 +5727,7 @@
                         return;
                     }
 
-                    if (state === 'open' || state === 'connected') {
+                    if (state === 'connected') {
                         clearInterval(pollInterval);
                         finalizeConnection(instanceName, manualToken);
                     }
