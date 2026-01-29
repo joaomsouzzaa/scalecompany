@@ -3198,22 +3198,39 @@
 
                 // Group
                 const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                // pointer-events-auto ensures the group children catch events even if parent SVG has none
-                group.setAttribute("class", "connection-group group pointer-events-auto");
+                // pointer-events-auto ensures the group children catch events
+                group.setAttribute("class", "connection-group pointer-events-auto");
+
+                // Strict Hover Logic via JS
+                group.onmouseenter = function () {
+                    const icon = this.querySelector('.trash-icon-container');
+                    if (icon) {
+                        icon.classList.remove('opacity-0', 'pointer-events-none');
+                        icon.classList.add('opacity-100', 'pointer-events-auto');
+                    }
+                };
+                group.onmouseleave = function () {
+                    const icon = this.querySelector('.trash-icon-container');
+                    if (icon) {
+                        icon.classList.remove('opacity-100', 'pointer-events-auto');
+                        icon.classList.add('opacity-0', 'pointer-events-none');
+                    }
+                };
 
                 const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                 path.setAttribute("d", pathData);
                 path.setAttribute("fill", "none");
                 path.setAttribute("stroke", "#cbd5e1");
                 path.setAttribute("stroke-width", "2");
-                path.setAttribute("class", "transition-colors group-hover:stroke-red-400");
+                path.setAttribute("class", "transition-colors duration-200"); // Removed group-hover color change to keep it simple or add via JS if needed
 
+                // Hit Area (thicker, invisible)
                 const hitPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
                 hitPath.setAttribute("d", pathData);
                 hitPath.setAttribute("fill", "none");
                 hitPath.setAttribute("stroke", "transparent");
                 hitPath.setAttribute("stroke-width", "20");
-                hitPath.setAttribute("class", "cursor-pointer"); // Only the thick path shows pointer
+                hitPath.setAttribute("class", "cursor-pointer");
 
                 // Trash Icon
                 const t = 0.5;
@@ -3221,14 +3238,13 @@
                 const midY = (1 - t) * (1 - t) * (1 - t) * y1 + 3 * (1 - t) * (1 - t) * t * cp1y + 3 * (1 - t) * t * t * cp2y + t * t * t * y2;
 
                 const deleteIcon = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
-                deleteIcon.setAttribute("x", midX - 10); // Center 20px icon
+                deleteIcon.setAttribute("x", midX - 10);
                 deleteIcon.setAttribute("y", midY - 10);
                 deleteIcon.setAttribute("width", "20");
                 deleteIcon.setAttribute("height", "20");
-                // Opacity transition for hover. pointer-events-none when hidden to avoid phantom clicks
-                deleteIcon.setAttribute("class", "opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto");
+                // Initially hidden, controlled by JS events on group
+                deleteIcon.setAttribute("class", "trash-icon-container opacity-0 pointer-events-none transition-opacity duration-200");
 
-                // Icon HTML with direct click handler
                 deleteIcon.innerHTML = `
                     <div class="w-5 h-5 bg-white rounded-full flex items-center justify-center border border-red-200 shadow-sm cursor-pointer hover:bg-red-50"
                          onclick="deleteConnection('${conn.id}'); event.stopPropagation();">
