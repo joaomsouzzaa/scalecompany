@@ -984,7 +984,7 @@
                                     </div>
 
                                     <div
-                                        class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 hover:border-orange-200 h-[220px] flex flex-col justify-between">
+                                        class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 hover:border-orange-200 h-[180px] flex flex-col justify-between">
                                         <div class="flex items-start gap-3">
                                             <div
                                                 class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
@@ -998,10 +998,10 @@
                                                     <span
                                                         class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase shrink-0">Ativo</span>
                                                 </div>
-                                                <p class="text-[10px] text-slate-500 leading-snug mb-2 line-clamp-3"
+                                                <p class="text-[10px] text-slate-500 leading-snug mb-1 line-clamp-3"
                                                     data-field="desc">Especialista em Meta Ads com acesso direto à API
                                                 </p>
-                                                <div class="flex gap-1 mb-2 flex-wrap">
+                                                <div class="flex gap-1 mb-1 flex-wrap">
                                                     <span
                                                         class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded"
                                                         data-field="provider">anthropic</span>
@@ -1011,7 +1011,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="flex gap-2 text-slate-400 border-t border-slate-100 pt-3 mt-auto">
+                                        <div class="flex gap-2 text-slate-400 border-t border-slate-100 pt-2 mt-auto">
                                             <button class="hover:text-orange-500"
                                                 onclick="previewAgent('card-traffic')"><i data-lucide="eye"
                                                     class="w-3 h-3"></i></button>
@@ -3081,44 +3081,121 @@
                 updateOrganogramTransform();
             } else if (organogramState.isDraggingCard && organogramState.activeCardId) {
                 const card = document.getElementById(organogramState.activeCardId);
-                const dx = (e.clientX - organogramState.dragStart.mouseX) / organogramState.scale;
-                const dy = (e.clientY - organogramState.dragStart.mouseY) / organogramState.scale;
+                const scale = organogramState.scale;
+                const newLeft = organogramState.dragStart.cardLeft + (e.clientX - organogramState.dragStart.mouseX) / scale;
+                const newTop = organogramState.dragStart.cardTop + (e.clientY - organogramState.dragStart.mouseY) / scale;
 
-                card.style.left = `${organogramState.dragStart.cardLeft + dx}px`;
-                card.style.top = `${organogramState.dragStart.cardTop + dy}px`;
-
-                drawConnections();
+                card.style.left = `${newLeft}px`;
+                card.style.top = `${newTop}px`;
+                drawConnections(); // Redraw connections as card moves
             }
         }
 
         function handleGlobalMouseUp(e) {
-            if (organogramState.isDraggingConnection) {
+            if (organogramState.isDraggingCard && organogramState.activeCardId) {
+                const card = document.getElementById(organogramState.activeCardId);
+
+                // The card position is already updated by handleGlobalMouseMove.
+                // Triggers collision resolution on the final position.
+                resolveCardCollision(card);
+
+                drawConnections();
+
+                card.classList.remove('z-50');
+                organogramState.isDraggingCard = false;
+                organogramState.activeCardId = null;
+                organogramState.dragStart = null; // Clear card drag state
+
+            } else if (organogramState.isDraggingConnection) {
                 const tempLine = document.getElementById('temp-connection-line');
                 if (tempLine) tempLine.remove();
 
-                // Check Drop Target - Look for HIT AREA, not just dot
-                const targetHitArea = e.target.closest('.connection-dot-in');
-
+                const targetHitArea = e.target.closest('.conn-hit-area');
                 if (targetHitArea) {
                     const targetCard = targetHitArea.closest('[id^="card-"]');
                     if (targetCard && targetCard.id !== organogramState.connectionStartId) {
-                        createConnection(organogramState.connectionStartId, targetCard.id);
+                        // Only create if dropping on IN (top) generally, or just allow any for now
+                        const isTargetIn = targetHitArea.classList.contains('connection-dot-in');
+                        if (isTargetIn) {
+                            createConnection(organogramState.connectionStartId, targetCard.id);
+                        }
                     }
                 }
 
                 organogramState.isDraggingConnection = false;
                 organogramState.connectionStartId = null;
                 organogramState.dragStartPoint = null;
-
-            } else if (organogramState.isDraggingCard && organogramState.activeCardId) {
-                const card = document.getElementById(organogramState.activeCardId);
-                card.classList.remove('z-50');
-                organogramState.isDraggingCard = false;
-                organogramState.activeCardId = null;
             }
 
             organogramState.isDraggingCanvas = false;
             document.getElementById('organogram-container').classList.remove('cursor-grabbing');
+        }
+
+        // --- Collision Logic ---
+        function resolveCardCollision(card) {
+            const margin = 20; // Minimum gap
+            const maxIterations = 10; // Prevent infinite loops
+            let iterations = 0;
+
+            // Simple "Push Down/Right" strategy or "Find Nearest Slot"
+            // Let's try a recursive nudge.
+
+            while (iterations < maxIterations) {
+                const cardRect = card.getBoundingClientRect();
+                let overlap = null;
+
+                const allCards = document.querySelectorAll('[id^="card-"]');
+                for (const other of allCards) {
+                    if (other.id === card.id) continue;
+                    const otherRect = other.getBoundingClientRect();
+
+                    if (isOverlapping(cardRect, otherRect, margin)) {
+                        overlap = otherRect;
+                        break;
+                    }
+                }
+
+                if (!overlap) break; // No collision
+
+                // Resolve: Move in the direction of the offset
+                // Current Card Center
+                const cardCx = cardRect.left + cardRect.width / 2;
+                const cardCy = cardRect.top + cardRect.height / 2;
+                // Other Card Center
+                const otherCx = overlap.left + overlap.width / 2;
+                const otherCy = overlap.top + overlap.height / 2;
+
+                const dx = cardCx - otherCx;
+                const dy = cardCy - otherCy;
+
+                // Nudge strongly in the dominant direction
+                let currentLeft = parseFloat(card.style.left);
+                let currentTop = parseFloat(card.style.top);
+
+                // If perfectly centered (rare), push down
+                if (Math.abs(dx) < 5 && Math.abs(dy) < 5) {
+                    card.style.top = `${currentTop + cardRect.height / organogramState.scale + margin}px`;
+                } else if (Math.abs(dx) > Math.abs(dy)) {
+                    // Push Horizontal
+                    const sign = dx > 0 ? 1 : -1;
+                    card.style.left = `${currentLeft + sign * (cardRect.width / organogramState.scale + margin)}px`;
+                } else {
+                    // Push Vertical
+                    const sign = dy > 0 ? 1 : -1;
+                    card.style.top = `${currentTop + sign * (cardRect.height / organogramState.scale + margin)}px`;
+                }
+
+                iterations++;
+            }
+        }
+
+        function isOverlapping(rect1, rect2, margin = 0) {
+            // Check if rect1 intersects rect2 with some margin
+            // Expand rect2 by margin effectively
+            return !(rect1.right < rect2.left - margin ||
+                rect1.left > rect2.right + margin ||
+                rect1.bottom < rect2.top - margin ||
+                rect1.top > rect2.bottom + margin);
         }
 
         function createConnection(fromId, toId) {
@@ -3416,7 +3493,7 @@
                      <div class="conn-dot"></div>
                 </div>
 
-                <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 hover:border-orange-200 h-[220px] flex flex-col justify-between">
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 hover:border-orange-200 h-[180px] flex flex-col justify-between">
                     <div class="flex items-start gap-3">
                         <div class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
                             <i data-lucide="bot" class="w-4 h-4 text-orange-600"></i>
@@ -3426,15 +3503,15 @@
                                 <h3 class="font-bold text-slate-800 text-sm truncate" data-field="name">${data.name}</h3>
                                 <span class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase shrink-0">Ativo</span>
                             </div>
-                            <p class="text-[10px] text-slate-500 leading-snug mb-2 line-clamp-3" data-field="desc">${data.desc}</p>
-                            <div class="flex gap-1 mb-2 flex-wrap">
+                            <p class="text-[10px] text-slate-500 leading-snug mb-1 line-clamp-3" data-field="desc">${data.desc}</p>
+                            <div class="flex gap-1 mb-1 flex-wrap">
                                 <span class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded" data-field="provider">${data.provider}</span>
                                 <span class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded" data-field="model">${data.model}</span>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="flex gap-2 text-slate-400 border-t border-slate-100 pt-3 mt-auto">
+                    <div class="flex gap-2 text-slate-400 border-t border-slate-100 pt-2 mt-auto">
                         <button class="hover:text-orange-500" onclick="previewAgent('${cardId}')"><i data-lucide="eye" class="w-3 h-3"></i></button>
                         <button class="hover:text-orange-500" onclick="editAgent('${cardId}')"><i data-lucide="settings" class="w-3 h-3"></i></button>
                         <button class="hover:text-red-500" onclick="deleteAgent('${cardId}')"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
