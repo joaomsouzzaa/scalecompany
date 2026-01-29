@@ -1524,9 +1524,31 @@
 
                             <!-- Tab Content: Alerts (Placeholder) -->
                             <div id="tab-content-alerts" class="wa-tab-content hidden animate-in fade-in duration-300">
-                                <div
-                                    class="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                                    <p class="text-slate-500">Nenhum alerta configurado.</p>
+                                <div id="alerts-view-container" class="space-y-6">
+                                    <div
+                                        class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                        <div>
+                                            <h3 class="text-lg font-bold text-slate-800">Meus Alertas</h3>
+                                            <p class="text-sm text-slate-500">Agende envios automáticos de relatórios.
+                                            </p>
+                                        </div>
+                                        <button onclick="openAlertModal()"
+                                            class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center shadow-lg shadow-orange-200">
+                                            <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Novo Alerta
+                                        </button>
+                                    </div>
+
+                                    <!-- Filters / Status Bar (Optional, simpler for now) -->
+
+                                    <!-- List Container -->
+                                    <div id="alerts-list-container"
+                                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        <!-- Loading Skeleton -->
+                                        <div class="animate-pulse bg-white rounded-xl h-48 border border-slate-200">
+                                        </div>
+                                        <div class="animate-pulse bg-white rounded-xl h-48 border border-slate-200">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -5927,6 +5949,566 @@
     </script>
     <!-- Duplicate Modal Deleted -->
 
+    <!-- ALERT MODAL -->
+    <div id="alert-modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity opacity-0"
+            id="alert-modal-backdrop"></div>
+
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div id="alert-modal-content"
+                class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col transition-all transform scale-95 opacity-0">
+
+                <!-- Modal Header -->
+                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+                    <h2 class="text-xl font-bold text-slate-800" id="alert-modal-title">Novo Alerta</h2>
+                    <button onclick="closeAlertModal()"
+                        class="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded-full transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body (Scrollable) -->
+                <div class="flex-1 overflow-y-auto p-6">
+                    <div class="flex flex-col lg:flex-row gap-8">
+
+                        <!-- Form Section -->
+                        <div class="flex-1 space-y-6">
+
+                            <!-- Hidden ID -->
+                            <input type="hidden" id="alert-id">
+
+                            <!-- Name & Status -->
+                            <div class="flex gap-4 items-start">
+                                <div class="flex-1">
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Nome do Alerta</label>
+                                    <input type="text" id="alert-name"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                                        placeholder="Ex: Relatório Diário SP">
+                                </div>
+                                <div class="shrink-0 pt-7">
+                                    <label class="inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="alert-active" class="sr-only peer" checked>
+                                        <div
+                                            class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500">
+                                        </div>
+                                        <span class="ms-3 text-sm font-medium text-slate-700">Ativo</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Schedule -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Horário do Disparo</label>
+                                <div class="flex items-center gap-3">
+                                    <input type="time" id="alert-time"
+                                        class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 w-32">
+                                    <span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">Brasília
+                                        (UTC-3)</span>
+                                </div>
+                            </div>
+
+                            <hr class="border-slate-100">
+
+                            <!-- Data Source -->
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800 mb-3 flex items-center"><i
+                                        data-lucide="database" class="w-4 h-4 mr-1.5 text-blue-500"></i> Fonte de Dados
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-500 mb-1">Conta de
+                                            Anúncios</label>
+                                        <select id="alert-account-select"
+                                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                                            <option value="">Selecione...</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-500 mb-1">Filtro de Cidade
+                                            (Opcional)</label>
+                                        <input type="text" id="alert-city"
+                                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                                            placeholder="Ex: São Paulo">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="border-slate-100">
+
+                            <!-- Delivery -->
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800 mb-3 flex items-center"><i
+                                        data-lucide="send" class="w-4 h-4 mr-1.5 text-green-500"></i> Envio</h4>
+
+                                <div class="mb-4">
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Enviar usando
+                                        Instância:</label>
+                                    <select id="alert-instance-select"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                                        <option value="">Selecione uma instância conectada...</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Destinatários</label>
+                                    <div class="flex gap-2 mb-2">
+                                        <input type="text" id="alert-recipient-input"
+                                            class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                                            placeholder="5511999999999">
+                                        <button onclick="addRecipient()"
+                                            class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors border border-slate-200">
+                                            <i data-lucide="plus" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
+                                    <!-- Recipients List -->
+                                    <div id="alert-recipients-list" class="flex flex-wrap gap-2 min-h-[30px]">
+                                        <!-- Chips -->
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Preview Section -->
+                        <div class="w-full lg:w-[320px] shrink-0 border-l border-slate-100 lg:pl-8 flex flex-col">
+                            <h4 class="text-sm font-bold text-slate-800 mb-3">Preview da Mensagem</h4>
+                            <div
+                                class="bg-[#E5DDD5] p-3 rounded-lg flex-1 min-h-[300px] relative overflow-hidden flex flex-col shadow-inner">
+                                <div class="bg-white rounded-lg p-2 shadow-md max-w-[90%] self-start relative text-sm text-[#111b21] leading-relaxed whitespace-pre-wrap font-sans"
+                                    id="alert-preview-text">
+                                    📊 *Relatório Diário - 30/01/2026*
+
+                                    💰 *Vendas:* R$ 0,00
+                                    🛒 *Qtd. Vendas:* 0
+                                    📈 *ROI:* ∞x
+                                    📉 *CPA:* R$ 0,00
+
+                                    📢 *Investimento Ads:* R$ 0,00
+                                    👀 *Impressões:* 0
+                                    👆 *Cliques:* 0
+
+                                    💳 *Métodos:*
+                                    Pix: 0 | Cartão: 0
+
+                                    _Gerado automaticamente pelo Scale._
+                                </div>
+                                <span
+                                    class="bg-white/80 backdrop-blur-sm absolute bottom-2 right-2 text-[10px] px-1.5 py-0.5 rounded text-slate-500">Exemplo</span>
+                            </div>
+
+                            <button onclick="sendTestAlert()" id="btn-test-alert"
+                                class="mt-4 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors border border-slate-200 flex items-center justify-center">
+                                <i data-lucide="send" class="w-3.5 h-3.5 mr-1.5"></i> Enviar Teste Agora
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div
+                    class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0 bg-slate-50/50 rounded-b-2xl">
+                    <button onclick="closeAlertModal()"
+                        class="px-4 py-2 text-slate-600 hover:text-slate-800 text-sm font-medium transition-colors">Cancelar</button>
+                    <button onclick="saveAlert()" id="btn-save-alert"
+                        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-lg shadow-blue-200 transition-all active:scale-95 flex items-center">
+                        <i data-lucide="save" class="w-4 h-4 mr-2"></i> Salvar Alerta
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- WHATSAPP ALERTS LOGIC -->
+    <script>
+        const ALERTS_API_URL = 'https://tvgrkklonqfclocqfswq.supabase.co/functions/v1/whatsapp-alerts';
+        // NOTE: Replace with dynamic URL if available in environment, but hardcoded for now based on project context
+
+        let currentAlerts = [];
+        let editingAlertId = null;
+        let alertRecipients = [];
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Hook into tab switch to load alerts
+            const originalSwitch = window.switchWaTab;
+            window.switchWaTab = function (tabName) {
+                if (originalSwitch) originalSwitch(tabName);
+                if (tabName === 'alerts') loadAlerts();
+            }
+        });
+
+        // --- LOAD ALERTS ---
+        async function loadAlerts() {
+            const container = document.getElementById('alerts-list-container');
+            if (!container) return;
+
+            // Loading State (if empty)
+            if (container.children.length === 0 || container.children[0].classList.contains('bg-slate-50')) {
+                container.innerHTML = `
+                    <div class="animate-pulse bg-white rounded-xl h-48 border border-slate-200"></div>
+                    <div class="animate-pulse bg-white rounded-xl h-48 border border-slate-200"></div>`;
+            }
+
+            try {
+                const res = await fetch(ALERTS_API_URL);
+                if (!res.ok) throw new Error("Falha ao carregar alertas");
+                const alerts = await res.json();
+                currentAlerts = alerts;
+                renderAlerts(alerts);
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12 bg-red-50 rounded-xl border border-dashed border-red-200">
+                        <p class="text-red-500 font-medium">Erro ao carregar alertas.</p>
+                        <p class="text-xs text-red-400 mt-1">${e.message}</p>
+                        <button onclick="loadAlerts()" class="mt-4 text-xs bg-white border border-red-200 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50">Tentar Novamente</button>
+                    </div>`;
+            }
+        }
+
+        function renderAlerts(alerts) {
+            const container = document.getElementById('alerts-list-container');
+            if (!container) return;
+
+            if (alerts.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                        <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
+                            <i data-lucide="bell-off" class="w-6 h-6"></i>
+                        </div>
+                        <p class="text-slate-500 font-medium">Nenhum alerta configurado.</p>
+                        <p class="text-xs text-slate-400 mt-1">Crie seu primeiro alerta automático agora.</p>
+                    </div>`;
+            } else {
+                container.innerHTML = alerts.map(alert => `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col relative group hover:shadow-md transition-all">
+                        <div class="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="editAlert('${alert.id}')" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                            <button onclick="deleteAlert('${alert.id}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-lg">
+                                <i data-lucide="zap" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm line-clamp-1">${alert.name}</h4>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 flex items-center">
+                                        <i data-lucide="clock" class="w-3 h-3 mr-1"></i> ${alert.schedule_time}
+                                    </span>
+                                    ${alert.active ?
+                        '<span class="w-2 h-2 rounded-full bg-emerald-500"></span>' :
+                        '<span class="w-2 h-2 rounded-full bg-slate-300"></span>'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 mb-4 flex-1">
+                            <div class="flex justify-between text-xs border-b border-slate-50 pb-2">
+                                <span class="text-slate-500">Próximo:</span>
+                                <span class="font-medium text-slate-700">Hoje às ${alert.schedule_time}</span>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span class="text-slate-500">Destinatários:</span>
+                                <span class="font-medium text-slate-700">${(alert.recipients || []).length}</span>
+                            </div>
+                        </div>
+
+                        <button onclick="triggerTestForId('${alert.id}')" class="w-full py-2 bg-slate-50 hover:bg-orange-50 hover:text-orange-700 text-slate-600 rounded-lg text-xs font-bold transition-colors border border-slate-200 flex items-center justify-center">
+                            <i data-lucide="send" class="w-3.5 h-3.5 mr-1.5"></i> Testar Envio
+                        </button>
+                    </div>
+                `).join('');
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // --- MODAL ---
+        function openAlertModal(alert = null) {
+            const modal = document.getElementById('alert-modal');
+            const backdrop = document.getElementById('alert-modal-backdrop');
+            const content = document.getElementById('alert-modal-content');
+
+            // Populate Accounts
+            populateAccountSelect();
+            populateInstanceSelect();
+
+            if (alert) {
+                editingAlertId = alert.id;
+                document.getElementById('alert-modal-title').innerText = 'Editar Alerta';
+                document.getElementById('alert-name').value = alert.name;
+                document.getElementById('alert-active').checked = alert.active;
+                document.getElementById('alert-time').value = alert.schedule_time;
+                document.getElementById('alert-account-select').value = alert.config?.accountId || '';
+                document.getElementById('alert-city').value = alert.config?.city || '';
+                document.getElementById('alert-instance-select').value = alert.instance_token || ''; // This assumes token match, strictly we should match by checking implementation logic but for now token is key
+                // Find instance by token
+                const sel = document.getElementById('alert-instance-select');
+                for (let opt of sel.options) {
+                    if (opt.value === alert.instance_token) {
+                        sel.value = alert.instance_token;
+                        break;
+                    }
+                }
+
+                alertRecipients = alert.recipients || [];
+            } else {
+                editingAlertId = null;
+                document.getElementById('alert-modal-title').innerText = 'Novo Alerta';
+                document.getElementById('alert-name').value = '';
+                document.getElementById('alert-active').checked = true;
+                document.getElementById('alert-time').value = '08:00';
+                document.getElementById('alert-city').value = '';
+                alertRecipients = [];
+
+                // Auto-select active account/instance if available
+                const savedAcc = localStorage.getItem('fb_selected_account_id');
+                if (savedAcc) document.getElementById('alert-account-select').value = savedAcc;
+            }
+
+            renderRecipients();
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                backdrop.classList.remove('opacity-0');
+                content.classList.remove('opacity-0', 'scale-95');
+                content.classList.add('opacity-100', 'scale-100');
+            }, 10);
+        }
+
+        function closeAlertModal() {
+            const modal = document.getElementById('alert-modal');
+            const backdrop = document.getElementById('alert-modal-backdrop');
+            const content = document.getElementById('alert-modal-content');
+
+            backdrop.classList.add('opacity-0');
+            content.classList.add('opacity-0', 'scale-95');
+            content.classList.remove('opacity-100', 'scale-100');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function populateAccountSelect() {
+            // Re-use logic from FB integration or just grab from DOM if needed. 
+            // Better: Read from local storage or wait for FB init to have fired?
+            // Since this runs after init, we might have `accountListContainer` populated?
+            // Let's implement a simple fetch or re-use existing
+            const select = document.getElementById('alert-account-select');
+            // Check existing campaign-select?
+            // Actually, we can just grab from localStorage 'fb_selected_account_id' as default, 
+            // but we need the LIST of accounts.
+            // Simplified: If user connected FB, `FB.api` call might store accounts?
+            // HACK: Use the accountDropdown items if available or just show currently selected as an option.
+
+            const accId = localStorage.getItem('fb_selected_account_id');
+            const accName = localStorage.getItem('fb_selected_account_name');
+
+            select.innerHTML = '<option value="">Selecione...</option>';
+            if (accId) {
+                const opt = document.createElement('option');
+                opt.value = accId;
+                opt.innerText = accName || `Conta ${accId}`;
+                opt.selected = true; // Default to current
+                select.appendChild(opt);
+                // Hint
+                const optHint = document.createElement('option');
+                optHint.disabled = true;
+                optHint.innerText = "(Para carregar outras, conecte no Dashboard)";
+                select.appendChild(optHint);
+            }
+        }
+
+        function populateInstanceSelect() {
+            const select = document.getElementById('alert-instance-select');
+            const instances = JSON.parse(localStorage.getItem('wa_instances') || '[]');
+            select.innerHTML = '<option value="">Selecione...</option>';
+            instances.forEach(inst => {
+                if (inst.status === 'connected') {
+                    const opt = document.createElement('option');
+                    opt.value = inst.token; // IMPORTANT: We save the TOKEN
+                    opt.innerText = inst.name;
+                    select.appendChild(opt);
+                }
+            });
+        }
+
+        // --- RECIPIENTS LOGIC ---
+        function addRecipient() {
+            const input = document.getElementById('alert-recipient-input');
+            const val = input.value.replace(/\D/g, '');
+            if (val.length < 10) return alert("Número inválido");
+
+            alertRecipients.push({ type: 'number', value: val });
+            input.value = '';
+            renderRecipients();
+        }
+
+        function removeRecipient(idx) {
+            alertRecipients.splice(idx, 1);
+            renderRecipients();
+        }
+
+        function renderRecipients() {
+            const container = document.getElementById('alert-recipients-list');
+            container.innerHTML = alertRecipients.map((rec, idx) => `
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                    ${rec.value}
+                    <button onclick="removeRecipient(${idx})" class="ml-1 text-blue-500 hover:text-blue-900"><i data-lucide="x" class="w-3 h-3"></i></button>
+                </span>
+            `).join('');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // --- SAVE ---
+        async function saveAlert() {
+            const name = document.getElementById('alert-name').value;
+            const active = document.getElementById('alert-active').checked;
+            const time = document.getElementById('alert-time').value;
+            const accountId = document.getElementById('alert-account-select').value;
+            const city = document.getElementById('alert-city').value;
+            const instanceToken = document.getElementById('alert-instance-select').value;
+
+            // Validations
+            if (!name) return alert("Nome é obrigatório");
+            if (!time) return alert("Horário é obrigatório");
+            if (!instanceToken) return alert("Selecione uma instância do WhatsApp conectada");
+            if (alertRecipients.length === 0) return alert("Adicione pelo menos um destinatário");
+
+            const btn = document.getElementById('btn-save-alert');
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Salvando...';
+            btn.disabled = true;
+
+            const payload = {
+                name,
+                active,
+                schedule_time: time,
+                config: {
+                    accountId,
+                    city
+                },
+                recipients: alertRecipients,
+                instance_token: instanceToken,
+                meta_token: localStorage.getItem('fb_access_token') || '' // Save current FB token
+            };
+
+            try {
+                let res;
+                if (editingAlertId) {
+                    res = await fetch(ALERTS_API_URL, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: editingAlertId, ...payload })
+                    });
+                } else {
+                    res = await fetch(ALERTS_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                }
+
+                if (!res.ok) throw new Error("Erro ao salvar");
+
+                closeAlertModal();
+                loadAlerts();
+            } catch (e) {
+                alert("Erro: " + e.message);
+            } finally {
+                btn.innerHTML = '<i data-lucide="save" class="w-4 h-4 mr-2"></i> Salvar Alerta';
+                btn.disabled = false;
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        async function editAlert(id) {
+            const alert = currentAlerts.find(a => a.id === id);
+            if (alert) openAlertModal(alert);
+        }
+
+        async function deleteAlert(id) {
+            if (!confirm("Tem certeza que deseja excluir?")) return;
+
+            try {
+                await fetch(ALERTS_API_URL, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                loadAlerts();
+            } catch (e) {
+                alert("Erro ao excluir");
+            }
+        }
+
+        async function triggerTestForId(id) {
+            const alert = currentAlerts.find(a => a.id === id);
+            if (!alert) return;
+
+            if (!confirm("Isso enviará uma mensagem de teste AGORA para os destinatários. Continuar?")) return;
+
+            // Show loading toast or global overlay?
+            // Simple alert for now or status
+            try {
+                const res = await fetch(`${ALERTS_API_URL}/test`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        config: alert.config,
+                        meta_token: alert.meta_token,
+                        instance_token: alert.instance_token,
+                        recipients: alert.recipients
+                    })
+                });
+                if (res.ok) alert("Teste enviado!");
+                else alert("Erro ao enviar teste.");
+            } catch (e) {
+                alert("Erro: " + e.message);
+            }
+        }
+
+        async function sendTestAlert() {
+            // From Modal
+            const accountId = document.getElementById('alert-account-select').value;
+            const city = document.getElementById('alert-city').value;
+            const instanceToken = document.getElementById('alert-instance-select').value;
+
+            if (!instanceToken) return alert("Selecione uma instância");
+            if (alertRecipients.length === 0) return alert("Adicione um destinatário");
+
+            const btn = document.getElementById('btn-test-alert');
+            btn.innerText = "Enviando...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${ALERTS_API_URL}/test`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        config: { accountId, city },
+                        meta_token: localStorage.getItem('fb_access_token') || '',
+                        instance_token: instanceToken,
+                        recipients: alertRecipients
+                    })
+                });
+                if (res.ok) alert("Teste enviado com sucesso!");
+                else {
+                    const d = await res.json();
+                    alert("Erro ao enviar: " + (d.error || res.statusText));
+                }
+            } catch (e) {
+                alert("Erro: " + e.message);
+            } finally {
+                btn.innerText = "Enviar Teste Agora";
+                btn.disabled = false;
+            }
+        }
+
+    </script>
 </body>
 
 </html>
