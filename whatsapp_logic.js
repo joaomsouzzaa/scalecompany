@@ -1,65 +1,26 @@
 
-// --- MINIMAL WHATSAPP LOGIC (REBUILD) ---
-
-console.log("WhatsApp Logic Module Loaded (Clean)");
+// --- MINIMAL WHATSAPP LOGIC (FAILSAFE) ---
+console.log("WhatsApp Logic Module Loaded (Failsafe Mode)");
 
 window.whatsappState = {
     instances: []
 };
 
-// 1. Initialization
-window.initWhatsApp = function () {
-    console.log("Initializing WhatsApp Module...");
-
-    // Setup Global Event Delegation for the "New Instance" button
-    if (!window.hasAttachedWaListeners) {
-        document.addEventListener('click', function (e) {
-            // Check for New Instance Button
-            const btnNew = e.target.closest('#btn-new-instance');
-            if (btnNew) {
-                e.preventDefault();
-                console.log("Button Clicked: New Instance");
-                window.openNewInstanceModal();
-            }
-
-            // Check for Save Button
-            const btnSave = e.target.closest('#btn-save-instance');
-            if (btnSave) {
-                e.preventDefault();
-                console.log("Button Clicked: Save Instance");
-                window.saveNewInstance();
-            }
-
-            // Check for Close Modal
-            const btnClose = e.target.closest('#btn-close-modal');
-            if (btnClose) {
-                e.preventDefault();
-                window.closeNewInstanceModal();
-            }
-        });
-        window.hasAttachedWaListeners = true;
-        console.log("Global Event Listeners Attached.");
-    }
-
-    renderWhatsApp();
-};
-
-// 2. Render Wrapper
-window.renderWhatsApp = function () {
-    // Determine if we have instances to show (placeholder for now)
-    const container = document.getElementById('instance-list-container');
-    if (container) {
-        container.innerHTML = `<p class="text-slate-500 text-center py-4">Nenhuma instância (Renderização limpa)</p>`;
-    }
-}
-
-// 3. Modal Logic
+// IMMEDIATE FUNCTION DEFINITION
+// Defined globally immediately, not inside an init function
 window.openNewInstanceModal = function () {
-    console.log("Opening Modal Function Called");
+    console.log("Opening Modal Function Called via ONCLICK or DELEGATION");
+
     const modal = document.getElementById('instance-modal');
     if (modal) {
         modal.classList.remove('hidden');
-        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        // Force display block via style just in case tailwind hidden class is stubborn
+        modal.style.display = 'flex';
+
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modal.style.opacity = '1';
+        }, 10);
     } else {
         console.error("CRITICAL: Modal element #instance-modal not found!");
         alert("Erro: O modal não foi encontrado na página.");
@@ -70,7 +31,10 @@ window.closeNewInstanceModal = function () {
     const modal = document.getElementById('instance-modal');
     if (modal) {
         modal.classList.add('opacity-0');
-        setTimeout(() => modal.classList.add('hidden'), 300);
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+        }, 300);
     }
 };
 
@@ -78,11 +42,24 @@ window.saveNewInstance = function () {
     const name = document.getElementById('wa-name').value;
     const phone = document.getElementById('wa-phone').value;
 
-    if (!name || !phone) {
-        alert("Preencha nome e telefone.");
+    if (!name) {
+        alert("Preencha o nome da instância.");
         return;
     }
 
-    alert(`Salvo com sucesso: ${name} (${phone})`);
+    alert(`Instância Salva! Nome: ${name}`);
     window.closeNewInstanceModal();
 }
+
+// Init function (Optional now, but good for rendering list)
+window.initWhatsApp = function () {
+    console.log("Initializing WhatsApp View...");
+
+    // Render empty state or list
+    const container = document.getElementById('instance-list-container');
+    if (container) {
+        container.innerHTML = `<div class="col-span-full text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+            <p class="text-slate-500">Nenhuma instância conectada.</p>
+        </div>`;
+    }
+};
