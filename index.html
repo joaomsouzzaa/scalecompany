@@ -868,14 +868,21 @@
 
                                 <!-- Level 1: CEO -->
                                 <div id="card-ceo" class="absolute z-10 w-80 group" style="left: 0px; top: -200px;">
-                                    <!-- Input Dot (Top) -->
+                                    <!-- Input Connection Area (Top) -->
                                     <div
-                                        class="connection-dot-in absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                        class="connection-dot-in absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-6 z-20 flex items-end justify-center group cursor-crosshair">
+                                        <div
+                                            class="w-2.5 h-2.5 bg-slate-900 rounded-full border border-white shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-125">
+                                        </div>
                                     </div>
 
-                                    <!-- Output Dot (Bottom) -->
-                                    <div class="connection-dot-out absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                                        onmousedown="handleDotMouseDown(event, 'card-ceo')"></div>
+                                    <!-- Output Connection Area (Bottom) -->
+                                    <div class="connection-dot-out absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-6 z-20 flex items-start justify-center group cursor-crosshair"
+                                        onmousedown="handleDotMouseDown(event, 'card-ceo')">
+                                        <div
+                                            class="w-2.5 h-2.5 bg-slate-900 rounded-full border border-white shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-125">
+                                        </div>
+                                    </div>
 
                                     <div
                                         class="bg-white p-5 rounded-lg shadow-lg border border-slate-100 relative hover:shadow-xl transition-all duration-300 hover:border-orange-200 h-[220px] flex flex-col justify-between">
@@ -922,10 +929,17 @@
                                 <div id="card-traffic" class="absolute z-10 w-64 group"
                                     style="left: -350px; top: 100px;">
                                     <div
-                                        class="connection-dot-in absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                        class="connection-dot-in absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-6 z-20 flex items-end justify-center group cursor-crosshair">
+                                        <div
+                                            class="w-2.5 h-2.5 bg-slate-900 rounded-full border border-white shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-125">
+                                        </div>
                                     </div>
-                                    <div class="connection-dot-out absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                                        onmousedown="handleDotMouseDown(event, 'card-traffic')"></div>
+                                    <div class="connection-dot-out absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-6 z-20 flex items-start justify-center group cursor-crosshair"
+                                        onmousedown="handleDotMouseDown(event, 'card-traffic')">
+                                        <div
+                                            class="w-2.5 h-2.5 bg-slate-900 rounded-full border border-white shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-125">
+                                        </div>
+                                    </div>
 
                                     <div
                                         class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 hover:border-orange-200 h-[220px] flex flex-col justify-between">
@@ -969,10 +983,17 @@
                                 <!-- Agent 2: Copy -->
                                 <div id="card-copy" class="absolute z-10 w-64 group" style="left: -110px; top: 100px;">
                                     <div
-                                        class="connection-dot-in absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                        class="connection-dot-in absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-6 z-20 flex items-end justify-center group cursor-crosshair">
+                                        <div
+                                            class="w-2.5 h-2.5 bg-slate-900 rounded-full border border-white shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-125">
+                                        </div>
                                     </div>
-                                    <div class="connection-dot-out absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                                        onmousedown="handleDotMouseDown(event, 'card-copy')"></div>
+                                    <div class="connection-dot-out absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-6 z-20 flex items-start justify-center group cursor-crosshair"
+                                        onmousedown="handleDotMouseDown(event, 'card-copy')">
+                                        <div
+                                            class="w-2.5 h-2.5 bg-slate-900 rounded-full border border-white shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-125">
+                                        </div>
+                                    </div>
 
                                     <div
                                         class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 hover:border-orange-200 h-[220px] flex flex-col justify-between">
@@ -1016,10 +1037,17 @@
                                 <div id="card-content" class="absolute z-10 w-64 group"
                                     style="left: 170px; top: 100px;">
                                     <div
-                                        class="connection-dot-in absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                        class="connection-dot-in absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-6 z-20 flex items-end justify-center group cursor-crosshair">
+                                        <div
+                                            class="w-2.5 h-2.5 bg-slate-900 rounded-full border border-white shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-125">
+                                        </div>
                                     </div>
-                                    <div class="connection-dot-out absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                                        onmousedown="handleDotMouseDown(event, 'card-content')"></div>
+                                    <div class="connection-dot-out absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-6 z-20 flex items-start justify-center group cursor-crosshair"
+                                        onmousedown="handleDotMouseDown(event, 'card-content')">
+                                        <div
+                                            class="w-2.5 h-2.5 bg-slate-900 rounded-full border border-white shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-125">
+                                        </div>
+                                    </div>
 
                                     <div
                                         class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 hover:border-orange-200 h-[220px] flex flex-col justify-between">
@@ -1062,10 +1090,17 @@
                                 <!-- Agent 4: Sales -->
                                 <div id="card-sales" class="absolute z-10 w-64 group" style="left: 450px; top: 100px;">
                                     <div
-                                        class="connection-dot-in absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                        class="connection-dot-in absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-6 z-20 flex items-end justify-center group cursor-crosshair">
+                                        <div
+                                            class="w-2.5 h-2.5 bg-slate-900 rounded-full border border-white shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-125">
+                                        </div>
                                     </div>
-                                    <div class="connection-dot-out absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                                        onmousedown="handleDotMouseDown(event, 'card-sales')"></div>
+                                    <div class="connection-dot-out absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-6 z-20 flex items-start justify-center group cursor-crosshair"
+                                        onmousedown="handleDotMouseDown(event, 'card-sales')">
+                                        <div
+                                            class="w-2.5 h-2.5 bg-slate-900 rounded-full border border-white shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-125">
+                                        </div>
+                                    </div>
 
                                     <div
                                         class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 hover:border-orange-200 h-[220px] flex flex-col justify-between">
@@ -2969,10 +3004,9 @@
                 const startCard = document.getElementById(organogramState.connectionStartId);
                 // Calculate position relative to container
                 const startX = (parseFloat(startCard.style.left) || 0) + (startCard.offsetWidth / 2);
-                const startY = (parseFloat(startCard.style.top) || 0) + startCard.offsetHeight; // Bottom
+                const startY = (parseFloat(startCard.style.top) || 0) + startCard.offsetHeight + 4; // Center of bottom dot
 
                 // End Point (Mouse relative to Content container)
-                // Formula: (MouseClient - ContainerContentClient) / Scale
                 const endX = (e.clientX - contentRect.left) / scale;
                 const endY = (e.clientY - contentRect.top) / scale;
 
@@ -3006,9 +3040,11 @@
                 if (tempLine) tempLine.remove();
 
                 // Check Drop Target
-                // Only consider valid dot-in targets
-                if (e.target.classList.contains('connection-dot-in')) {
-                    const targetCard = e.target.closest('[id^="card-"]');
+                // Only consider valid dot-in targets or their wrapper groups
+                const targetDot = e.target.closest('.connection-dot-in');
+
+                if (targetDot) {
+                    const targetCard = targetDot.closest('[id^="card-"]');
                     if (targetCard && targetCard.id !== organogramState.connectionStartId) {
                         createConnection(organogramState.connectionStartId, targetCard.id);
                     }
@@ -3032,9 +3068,6 @@
             // Check duplicates
             const exists = organogramState.connections.find(c => c.from === fromId && c.to === toId);
             if (exists) return; // Already exists
-
-            // Check reverse? (Optional: prevent A->B and B->A? )
-            // For now, allow whatever the user wants visually
 
             organogramState.connections.push({
                 id: `conn-${Date.now()}`,
@@ -3106,9 +3139,9 @@
 
                 // Parse positions from style (more reliable than collision with scale)
                 const x1 = (parseFloat(c1.style.left) || 0) + (c1.offsetWidth / 2);
-                const y1 = (parseFloat(c1.style.top) || 0) + c1.offsetHeight; // Bottom
+                const y1 = (parseFloat(c1.style.top) || 0) + c1.offsetHeight + 4; // Bottom Dot Center
                 const x2 = (parseFloat(c2.style.left) || 0) + (c2.offsetWidth / 2);
-                const y2 = (parseFloat(c2.style.top) || 0); // Top
+                const y2 = (parseFloat(c2.style.top) || 0) - 4; // Top Dot Center
 
                 // Bezier Curve
                 // Control points: vertical drop from source, vertical rise from target
@@ -3310,15 +3343,22 @@
             card.style.left = `${randomX}px`;
             card.style.top = `${randomY}px`;
 
-            // Consistent Height: h-[220px]
-            // Dots: Opacity 0 -> Hover Opacity 100
+            // Refined Dots:
+            // 1. Hit Area: w-6 h-6, transparent, absolute.
+            // 2. Visual Dot: w-2.5 h-2.5, black, initially invisible.
+            // 3. Interaction: Hover hit area -> Show dot.
+
             card.innerHTML = `
-                <!-- Input Dot (Top) -->
-                <div class="connection-dot-in absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                <!-- Input Connection Area (Top) -->
+                <div class="connection-dot-in absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-6 z-20 flex items-end justify-center group/dot cursor-crosshair">
+                     <div class="w-2.5 h-2.5 bg-slate-900 rounded-full border border-white shadow-sm opacity-0 group-hover/dot:opacity-100 transition-all duration-200 hover:scale-125"></div>
+                </div>
                 
-                <!-- Output Dot (Bottom) -->
-                <div class="connection-dot-out absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                     onmousedown="handleDotMouseDown(event, '${cardId}')"></div>
+                <!-- Output Connection Area (Bottom) -->
+                <div class="connection-dot-out absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-6 z-20 flex items-start justify-center group/dot cursor-crosshair"
+                     onmousedown="handleDotMouseDown(event, '${cardId}')">
+                     <div class="w-2.5 h-2.5 bg-slate-900 rounded-full border border-white shadow-sm opacity-0 group-hover/dot:opacity-100 transition-all duration-200 hover:scale-125"></div>
+                </div>
 
                 <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 hover:border-orange-200 h-[220px] flex flex-col justify-between">
                     <div class="flex items-start gap-3">
@@ -3332,7 +3372,6 @@
                             </div>
                             <p class="text-[10px] text-slate-500 leading-snug mb-2 line-clamp-3" data-field="desc">${desc || 'Novo agente de IA'}</p>
                             
-                            <!-- Tags moved to bottom/middle mainly, but here we keep flow -->
                             <div class="flex gap-1 mb-2 flex-wrap">
                                 <span class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded" data-field="provider">${provider}</span>
                                 <span class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded" data-field="model">${validSlug}</span>
@@ -3340,7 +3379,6 @@
                         </div>
                     </div>
                     
-                    <!-- Actions at bottom -->
                     <div class="flex gap-2 text-slate-400 border-t border-slate-100 pt-3 mt-auto">
                         <button class="hover:text-orange-500" onclick="previewAgent('${cardId}')" title="Visualizar"><i data-lucide="eye" class="w-4 h-4"></i></button>
                         <button class="hover:text-orange-500" onclick="editAgent('${cardId}')" title="Editar"><i data-lucide="settings" class="w-4 h-4"></i></button>
@@ -3358,6 +3396,31 @@
             // But previous requirement often implies hierarchy. I'll comment it out for "Drag to Connect" purity.
             // organogramState.connections.push({...}); 
             // Better: Let user connect.
+
+            // Attach Touch Events dynamically for new card
+            card.addEventListener('touchstart', (e) => {
+                const t = e.touches[0];
+                handleCardMouseDown({
+                    clientX: t.clientX,
+                    clientY: t.clientY,
+                    currentTarget: card,
+                    stopPropagation: () => e.stopPropagation(),
+                    target: e.target,
+                    closest: (s) => e.target.closest(s),
+                    preventDefault: () => { }
+                });
+            }, { passive: false });
+
+            const dotOut = card.querySelector('.connection-dot-out');
+            if (dotOut) {
+                dotOut.addEventListener('touchstart', (e) => {
+                    e.stopPropagation(); e.preventDefault();
+                    handleDotMouseDown({
+                        stopPropagation: () => { },
+                        preventDefault: () => { }
+                    }, cardId);
+                }, { passive: false });
+            }
 
             if (window.lucide) lucide.createIcons();
         }
