@@ -5411,7 +5411,8 @@
                     method: 'POST',
                     headers: {
                         'token': UAZAPI_CONFIG.token,
-                        'apikey': UAZAPI_CONFIG.token, // Add this for Evolution/Global compatibility
+                        'apikey': UAZAPI_CONFIG.token,
+                        'Authorization': `Bearer ${UAZAPI_CONFIG.token}`, // Try Bearer Auth
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ instanceName: instanceName })
