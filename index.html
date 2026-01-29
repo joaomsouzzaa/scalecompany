@@ -6294,6 +6294,12 @@
             if (window.lucide) lucide.createIcons();
         }
 
+        // --- EDIT ALERT ---
+        function editAlert(id) {
+            const alert = currentAlerts.find(a => a.id === id);
+            if (alert) openAlertModal(alert);
+        }
+
         // --- MODAL ---
         function openAlertModal(alert = null) {
             const modal = document.getElementById('alert-modal');
@@ -6315,7 +6321,8 @@
                     document.getElementById('alert-account-select').value = alert.config?.accountId || '';
                 }, 500);
 
-                document.getElementById('alert-date-range').value = alert.config?.date_range || 'today';
+                document.getElementById('alert-date-start').value = alert.config?.date_start || new Date().toISOString().split('T')[0];
+                document.getElementById('alert-date-end').value = alert.config?.date_end || new Date().toISOString().split('T')[0];
                 document.getElementById('alert-city').value = alert.config?.city || '';
 
                 alertRecipients = alert.recipients || [];
@@ -6325,6 +6332,12 @@
                 document.getElementById('alert-name').value = '';
                 document.getElementById('alert-active').checked = true;
                 document.getElementById('alert-time').value = '08:00';
+
+                // Set default dates to today
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('alert-date-start').value = today;
+                document.getElementById('alert-date-end').value = today;
+
                 document.getElementById('alert-city').value = '';
                 alertRecipients = [];
 
@@ -6602,7 +6615,8 @@ Pix: ${salesData.pix} | Cartão: ${salesData.card}
             const active = document.getElementById('alert-active').checked;
             const time = document.getElementById('alert-time').value;
             const accountId = document.getElementById('alert-account-select').value;
-            const dateRange = document.getElementById('alert-date-range').value;
+            const dateStart = document.getElementById('alert-date-start').value;
+            const dateEnd = document.getElementById('alert-date-end').value;
             const city = document.getElementById('alert-city').value;
 
             // Validations
