@@ -18,7 +18,7 @@ function initWhatsApp() {
     } else {
         // Initial Mock Data
         whatsappState.instances = [
-            { id: 'inst-1', name: 'Suporte Comercial', phone: '5511999990000', status: 'connected', qrCode: null }
+            { id: 'inst-1', name: 'Suporte Comercial', phone: '5511999990000', desc: 'Canal principal de vendas', status: 'connected', qrCode: null }
         ];
         whatsappState.groups = [
             { id: 'grp-1', name: 'Equipe de Vendas', lastMsg: 'Meta de hoje batida!', time: '14:30', unread: 2 },
@@ -28,6 +28,12 @@ function initWhatsApp() {
         saveWhatsAppState();
     }
     renderWhatsApp();
+}
+
+// Helper to init render
+function renderWhatsApp() {
+    renderInstances();
+    renderGroups();
 }
 
 function saveWhatsAppState() {
@@ -75,88 +81,150 @@ function renderInstances() {
     empty.classList.add('hidden');
 
     grid.innerHTML = whatsappState.instances.map(inst => `
-                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative group hover:shadow-md transition-all">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mr-3">
-                                <i data-lucide="smartphone" class="w-5 h-5 text-slate-500"></i>
-                            </div>
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm relative group hover:shadow-md transition-all flex flex-col justify-between">
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-2">
                             <div>
-                                <h3 class="font-medium text-slate-900">${inst.name}</h3>
-                                <p class="text-xs text-slate-500 font-mono">${inst.phone || 'Sem número'}</p>
+                                <h3 class="font-bold text-slate-800 text-lg">${inst.name}</h3>
+                                <p class="text-sm text-slate-500 font-mono mt-0.5">${inst.phone || 'Sem número'}</p>
                             </div>
+                            <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase ${inst.status === 'connected' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full ${inst.status === 'connected' ? 'bg-green-500' : 'bg-red-500'}"></span>
+                                ${inst.status === 'connected' ? 'Conectado' : 'Desconectado'}
+                            </span>
                         </div>
-                        <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase ${inst.status === 'connected' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
-                            ${inst.status === 'connected' ? 'Conectado' : 'Desconectado'}
-                        </span>
+                        <p class="text-xs text-slate-400 mb-4 line-clamp-2 min-h-[1.5em]">${inst.desc || ''}</p>
+                        
+                        <!-- Grid de Ações -->
+                        <div class="grid grid-cols-2 gap-2">
+                             <button onclick="connectInstance('${inst.id}')" class="flex items-center justify-center px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-medium rounded border border-slate-100 transition-colors">
+                                <i data-lucide="qr-code" class="w-4 h-4 mr-2"></i> QR Code
+                             </button>
+                             <button onclick="openWebhookModal('${inst.id}')" class="flex items-center justify-center px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-medium rounded border border-slate-100 transition-colors">
+                                <i data-lucide="webhook" class="w-4 h-4 mr-2"></i> Webhook
+                             </button>
+                             <button onclick="syncInstance('${inst.id}')" class="flex items-center justify-center px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-medium rounded border border-slate-100 transition-colors">
+                                <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i> Sincronizar
+                             </button>
+                             <button onclick="restartInstance('${inst.id}')" class="flex items-center justify-center px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-medium rounded border border-slate-100 transition-colors">
+                                <i data-lucide="power" class="w-4 h-4 mr-2"></i> Reiniciar
+                             </button>
+                        </div>
                     </div>
                     
-                    ${inst.status === 'connected' ? `
-                        <div class="grid grid-cols-2 gap-2 mt-4">
-                            <button class="px-3 py-2 bg-slate-50 text-slate-600 text-xs font-medium rounded hover:bg-slate-100 border border-slate-100 transition-colors">Testar Mensagem</button>
-                            <button onclick="deleteInstance('${inst.id}')" class="px-3 py-2 bg-red-50 text-red-600 text-xs font-medium rounded hover:bg-red-100 border border-red-100 transition-colors">Desconectar</button>
-                        </div>
-                    ` : `
-                        <div class="mt-4 p-4 bg-slate-50 rounded-lg flex flex-col items-center justify-center text-center border-dashed border-2 border-slate-200 group-hover:border-slate-300 transition-colors cursor-pointer" onclick="connectInstance('${inst.id}')">
-                            <i data-lucide="qr-code" class="w-8 h-8 text-slate-400 mb-2"></i>
-                            <span class="text-xs text-slate-500 font-medium">Clique para Escanear QR Code</span>
-                        </div>
-                    `}
+                    <!-- Footer Info/Delete -->
+                    <div class="px-5 py-3 bg-slate-50/50 border-t border-slate-100 flex justify-center">
+                         <button onclick="deleteInstance('${inst.id}')" class="text-red-400 hover:text-red-600 text-xs flex items-center transition-colors">
+                            <i data-lucide="trash-2" class="w-3 h-3 mr-1.5"></i> Desconectar
+                         </button>
+                    </div>
                 </div>
             `).join('');
 
     if (window.lucide) lucide.createIcons();
 }
 
+// --- NEW INSTANCE MODAL LOGIC ---
 function openNewInstanceModal() {
-    const name = prompt("Nome da nova instância (Ex: Vendas):");
-    if (!name) return;
+    const modal = document.getElementById('instance-modal');
+    const content = document.getElementById('instance-modal-content');
 
-    whatsappState.instances.push({
+    modal.classList.remove('hidden');
+    // Animation
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95', 'opacity-0');
+    }, 10);
+}
+
+function closeNewInstanceModal() {
+    const modal = document.getElementById('instance-modal');
+    const content = document.getElementById('instance-modal-content');
+
+    content.classList.add('scale-95', 'opacity-0');
+    modal.classList.add('opacity-0');
+
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        // Clear fields
+        document.getElementById('wa-name').value = '';
+        document.getElementById('wa-phone').value = '';
+        document.getElementById('wa-desc').value = '';
+    }, 300);
+}
+
+function saveNewInstance() {
+    const name = document.getElementById('wa-name').value.trim();
+    const phone = document.getElementById('wa-phone').value.trim();
+    const desc = document.getElementById('wa-desc').value.trim();
+
+    if (!name) {
+        alert("Por favor, informe o Nome da Instância.");
+        return;
+    }
+
+    const newInst = {
         id: `inst-${Date.now()}`,
         name: name,
-        phone: '',
+        phone: phone,
+        desc: desc,
         status: 'disconnected',
         qrCode: null
-    });
+    };
+
+    whatsappState.instances.push(newInst);
     saveWhatsAppState();
     renderInstances();
+    closeNewInstanceModal();
+
+    // Optional: Auto-trigger connect?
+    // connectInstance(newInst.id);
 }
 
 function deleteInstance(id) {
-    if (!confirm("Deseja desconectar e remover esta instância?")) return;
+    if (!confirm("Deseja realmente desconectar e remover esta instância?")) return;
     whatsappState.instances = whatsappState.instances.filter(i => i.id !== id);
     saveWhatsAppState();
     renderInstances();
 }
 
+// Mock Actions
 function connectInstance(id) {
-    // Mock connection flow
-    const card = document.querySelector(`button[onclick="connectInstance('${id}')"]`)?.parentElement; // simplified selector logic
-
-    // In a real app we would show a modal with the QR Code.
-    // For now, let's simulate a "Scanning" state.
-    alert("Gerando QR Code via UAZAPI... (Simulação)");
-
+    alert(`Simulando conexão UAZAPI para instância ${id}...\n\n(QR Code seria exibido aqui)`);
+    // Mock success after a while?
     setTimeout(() => {
-        const confirmConnect = confirm("Simular leitura do QR Code com sucesso?");
-        if (confirmConnect) {
-            const inst = whatsappState.instances.find(i => i.id === id);
-            if (inst) {
+        const inst = whatsappState.instances.find(i => i.id === id);
+        if (inst && inst.status !== 'connected') {
+            if (confirm("Deseja simular sucesso na conexão?")) {
                 inst.status = 'connected';
-                inst.phone = '55119' + Math.floor(Math.random() * 100000000);
                 saveWhatsAppState();
                 renderInstances();
-                alert("Dispositivo conectado com sucesso!");
             }
         }
     }, 1000);
 }
 
+function syncInstance(id) {
+    alert(`Sincronizando mensagens e contatos da instância ${id}...`);
+}
+
+function restartInstance(id) {
+    if (confirm("Reiniciar conexão da instância?")) {
+        alert(`Instância ${id} reiniciada com sucesso.`);
+    }
+}
+
+function openWebhookModal(id) {
+    alert(`Configuração de Webhook para ${id} (Em breve)`);
+}
+
+
 // --- GROUPS LOGIC ---
 function renderGroups() {
     const list = document.getElementById('groups-list');
     const countBadge = document.getElementById('count-groups');
+
+    if (!list) return; // robustness
 
     countBadge.innerText = whatsappState.groups.length;
 
@@ -251,8 +319,6 @@ function sendMessage() {
         const checks = msgArea.querySelectorAll('[data-lucide="check"]');
         if (checks.length) {
             const last = checks[checks.length - 1];
-            // Re-render icon not easy without re-innerHTML. 
-            // Just trust lucide or ignore for now.
         }
     }, 1000);
 }

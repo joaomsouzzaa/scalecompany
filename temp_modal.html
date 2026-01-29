@@ -1,0 +1,52 @@
+<!-- WA Instance Modal -->
+<div id="instance-modal"
+    class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[110] hidden flex items-center justify-center transition-opacity opacity-0">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 transform transition-all scale-95 opacity-0 duration-300"
+        id="instance-modal-content">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-xl">
+            <div>
+                <h3 class="text-lg font-bold text-slate-800">Nova Instância</h3>
+                <p class="text-xs text-slate-500 mt-1">Conecte um novo número de WhatsApp</p>
+            </div>
+            <button onclick="closeNewInstanceModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="p-6 space-y-4">
+            <!-- Name -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Nome da Instância <span
+                        class="text-red-500">*</span></label>
+                <input type="text" id="wa-name" placeholder="Ex: Suporte Comercial"
+                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all">
+            </div>
+
+            <!-- Phone -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Número do WhatsApp
+                    (Opcional)</label>
+                <input type="text" id="wa-phone" placeholder="5599999999999"
+                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all">
+                <p class="text-[10px] text-slate-400 mt-1">Apenas números, com DDI e DDD.</p>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Descrição</label>
+                <textarea id="wa-desc" rows="2" placeholder="Ex: Número exclusivo para atendimento ao cliente."
+                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all resize-none"></textarea>
+            </div>
+
+            <!-- Footer Actions -->
+            <div class="flex justify-end gap-3 pt-2">
+                <button onclick="closeNewInstanceModal()"
+                    class="px-4 py-2 text-slate-600 text-sm font-medium hover:bg-slate-50 rounded-lg border border-transparent">Cancelar</button>
+                <button onclick="saveNewInstance()"
+                    class="px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 shadow-sm transition-transform active:scale-95 flex items-center">
+                    <i data-lucide="check" class="w-4 h-4 mr-2"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
