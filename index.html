@@ -5356,7 +5356,7 @@
         // --- CONFIG UAZAPI ---
         const UAZAPI_CONFIG = {
             baseUrl: 'https://free.uazapi.com',
-            token: 'f90f7cf3-5218-43ca-8493-d44f41901466'
+            token: 'ZaW1qwTEkuq7Ub1cBUuyMiK5bNSu3nnMQ9lh7klElc2clSRV8t'
         };
 
         // GLOBAL MODAL FUNCTIONS
@@ -5438,15 +5438,14 @@
                     // Start Polling Status
                     startPollingStatus(instanceName);
                 } else {
-                    // DEBUG: Show raw response to user
-                    alert("DEBUG API: " + JSON.stringify(data));
-
                     // Check if instance already exists or other error
                     if (data && (data.error || (data.message && data.message.includes("exists")))) {
-                        // If exists, try connecting to it
                         connectExistingInstance(instanceName);
                     } else {
-                        throw new Error("Resposta da API desconhecida.");
+                        // Graceful error
+                        console.error("API Error Payload:", data);
+                        alert("Erro ao criar instância: " + (data.message || JSON.stringify(data)));
+                        window.closeNewInstanceModal();
                     }
                 }
 
