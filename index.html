@@ -5653,10 +5653,9 @@
                         document.getElementById('qr-loading').classList.add('hidden');
                         document.getElementById('qr-display').classList.remove('hidden');
 
-                        // Set explicit loading placeholder
-                        const img = document.getElementById('qr-code-img');
-                        // Use a generic loading spinner
-                        img.src = 'https://media.tenor.com/On7kvXhzml4AAAAj/loading-gif.gif';
+                        // Spinner removed by user request
+                        // const img = document.getElementById('qr-code-img');
+                        // img.src = '';
 
                         startPollingStatus(instanceName, manualToken);
                         return;
