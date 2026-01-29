@@ -912,6 +912,12 @@
                                     <!-- Dynamic Lines Injected via JS -->
                                 </svg>
 
+                                <!-- TEMP Connection Layer (High Z-Index for dragging visibility) -->
+                                <svg id="temp-connections-layer"
+                                    class="absolute top-0 left-0 w-[5000px] h-[5000px] pointer-events-none overflow-visible"
+                                    style="z-index: 50; transform: translate(-2500px, -2500px);">
+                                </svg>
+
                                 <!-- Level 1: CEO -->
                                 <div id="card-ceo" class="absolute z-10 w-80 group" style="left: 0px; top: -200px;">
                                     <!-- Input Connection Area (Top) -->
@@ -3001,15 +3007,27 @@
             organogramState.isDraggingConnection = true;
             organogramState.connectionStartId = cardId;
 
-            // Create Temp Line in SVG
-            const svg = document.getElementById('connections-layer');
+            // Create Temp Line in the NEW Temp Layer (High Z-Index)
+            const svg = document.getElementById('temp-connections-layer');
+            // Clear any old lines just in case
+            svg.innerHTML = '';
+
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
             path.id = "temp-connection-line";
             path.setAttribute("stroke", "#fb923c"); // Orange-400
             path.setAttribute("stroke-width", "3");
-            path.setAttribute("stroke-dasharray", "5,5");
+            path.setAttribute("stroke-dasharray", "5,5"); // Dashed style
             path.setAttribute("fill", "none");
-            path.setAttribute("pointer-events", "none"); // Let mouse events pass through to target
+            path.setAttribute("pointer-events", "none");
+
+            // INITIAL DRAW: Set start point immediately so it exists visually even before first move
+            const startCard = document.getElementById(cardId);
+            const startX = (parseFloat(startCard.style.left) || 0) + (startCard.offsetWidth / 2);
+            const startY = (parseFloat(startCard.style.top) || 0) + startCard.offsetHeight + 4;
+
+            // Initial path is just a dot/zero length
+            path.setAttribute("d", `M ${startX} ${startY} L ${startX} ${startY}`);
+
             svg.appendChild(path);
         }
 
