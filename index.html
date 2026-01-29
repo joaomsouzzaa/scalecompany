@@ -5436,14 +5436,15 @@
                     // Start Polling Status
                     startPollingStatus(instanceName);
                 } else {
+                    // DEBUG: Show raw response to user
+                    alert("DEBUG API: " + JSON.stringify(data));
+
                     // Check if instance already exists or other error
-                    if (data && data.status === 403) {
-                        alert("Erro: Token inválido ou sem permissão.");
-                    } else if (data && data.message && data.message.includes("already exists")) {
+                    if (data && (data.error || (data.message && data.message.includes("exists")))) {
                         // If exists, try connecting to it
                         connectExistingInstance(instanceName);
                     } else {
-                        throw new Error("Não foi possível gerar o QR Code. Verifique o console.");
+                        throw new Error("Resposta da API desconhecida.");
                     }
                 }
 
