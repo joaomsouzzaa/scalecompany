@@ -1769,6 +1769,96 @@
         </div>
     </div>
 
+    <!-- WhatsApp Instance Modal -->
+    <div id="instance-modal"
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center transition-opacity opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 transform transition-all scale-95 opacity-0 duration-300"
+            id="instance-modal-content">
+            <!-- Header -->
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-xl">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">Nova Instância</h3>
+                    <p class="text-xs text-slate-500 mt-1">Conecte um novo número de WhatsApp</p>
+                </div>
+                <button onclick="closeNewInstanceModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6 flex flex-col items-center justify-center space-y-6" id="qr-content-wrapper">
+
+                <!-- Step 1: Input Name & Token -->
+                <div id="step-name" class="w-full">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Nome da Instância</label>
+                    <input type="text" id="wa-name-input" class="w-full p-2 border border-slate-200 rounded-lg mb-4"
+                        placeholder="Ex: Loja Principal">
+
+                    <label class="block text-sm font-medium text-slate-700 mb-1">
+                        Token da Instância (Opcional)
+                        <span class="block text-xs text-slate-400 font-normal">Pegue no painel da UAZAPI. Se usar este
+                            token, a conexão é direta.</span>
+                    </label>
+                    <input type="text" id="new-instance-token"
+                        class="w-full p-2 border border-slate-200 rounded-lg text-sm font-mono mb-4"
+                        placeholder="Ex: 7a78c87b-...">
+
+                    <div class="flex justify-end space-x-2 mt-2">
+                        <button onclick="closeNewInstanceModal()"
+                            class="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg">Cancelar</button>
+                        <button onclick="initRealConnection()"
+                            class="px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-lg hover:opacity-90 transition-opacity">
+                            Gerar QR Code
+                        </button>
+                    </div>
+                </div>
+
+                <!-- QR Loading State -->
+                <div id="qr-loading" class="hidden flex flex-col items-center">
+                    <div
+                        class="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mb-3">
+                    </div>
+                    <p class="text-sm font-medium text-slate-600">Conectando à API...</p>
+                    <p class="text-xs text-slate-400 mt-1">Isso pode levar alguns segundos</p>
+                </div>
+
+                <!-- QR Display State -->
+                <div id="qr-display" class="hidden w-full flex flex-col items-center">
+                    <div class="w-48 h-48 bg-white p-2 rounded-lg border-2 border-slate-100 shadow-sm relative overflow-hidden"
+                        id="qr-image-container">
+                        <!-- IMAGEM QR HERE -->
+                    </div>
+                    <div class="mt-4 text-center">
+                        <p class="text-sm font-medium text-slate-800 mb-1">Abra o WhatsApp e escaneie</p>
+                        <p class="text-xs text-slate-500">Menu > Aparelhos conectados > Conectar um aparelho</p>
+                    </div>
+                </div>
+
+                <!-- QR Expired/Error State -->
+                <div id="qr-expired" class="hidden flex flex-col items-center text-center">
+                    <div class="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-3">
+                        <i data-lucide="alert-circle" class="w-6 h-6 text-red-500"></i>
+                    </div>
+                    <h3 class="font-medium text-slate-800 mb-1">Erro na Conexão</h3>
+                    <p class="text-sm text-slate-500 mb-4" id="qr-error-msg">Ocorreu um erro ao gerar o QR Code.</p>
+                    <button onclick="openNewInstanceModal()"
+                        class="text-sm text-orange-600 hover:text-orange-700 font-medium">Tentar Novamente</button>
+                </div>
+
+                <!-- Success State -->
+                <div id="qr-success" class="hidden flex flex-col items-center text-center">
+                    <div
+                        class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4 animate-in zoom-in duration-300">
+                        <i data-lucide="check" class="w-8 h-8 text-emerald-500"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">Conectado!</h3>
+                    <p class="text-slate-500 text-sm">Aparelho sincronizado com sucesso.</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <script>
         // Safety check for Lucide
         if (window.lucide) {
@@ -5373,6 +5463,7 @@
             document.getElementById('qr-success').classList.add('hidden');
 
             // Clear Input
+            // Clear Input
             const nameInput = document.getElementById('wa-name-input');
             if (nameInput) nameInput.value = '';
 
@@ -5393,7 +5484,10 @@
         // 1. CREATE INSTANCE & GET QR
         window.initRealConnection = async function () {
             const nameInput = document.getElementById('wa-name-input');
+            const tokenInput = document.getElementById('new-instance-token'); // New Input
+
             const instanceName = nameInput.value.trim();
+            const manualToken = tokenInput ? tokenInput.value.trim() : '';
 
             if (!instanceName) {
                 alert("Por favor, digite um nome para a instância.");
@@ -5405,307 +5499,264 @@
             document.getElementById('qr-loading').classList.remove('hidden');
 
             try {
-                // CALL API: Create Instance
-                console.log(`Creating instance: ${instanceName}...`);
-                const response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/create`, {
-                    method: 'POST',
-                    headers: {
-                        'token': UAZAPI_CONFIG.token,
-                        'apikey': UAZAPI_CONFIG.token,
-                        'Authorization': `Bearer ${UAZAPI_CONFIG.token}`, // Try Bearer Auth
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ instanceName: instanceName })
-                });
+                // 1. CREATE INSTANCE & GET QR
+                window.initRealConnection = async function () {
+                    const nameInput = document.getElementById('wa-name-input');
+                    const tokenInput = document.getElementById('new-instance-token');
 
-                const data = await response.json();
-                console.log("Create Response:", data);
+                    const instanceName = nameInput.value.trim();
+                    const manualToken = tokenInput ? tokenInput.value.trim() : '';
 
-                // Handle Success or Error
-                // Note: UAZAPI structure varies. Checking common responses.
-                // Usually returns { instance: {...}, hash: "...", qrcode: "base64..." } or similar
-
-                if (data && (data.qrcode || data.base64)) {
-                    const qrBase64 = data.qrcode || data.base64; // Handle diff naming
-
-                    // Show QR
-                    document.getElementById('qr-loading').classList.add('hidden');
-                    document.getElementById('qr-display').classList.remove('hidden');
-
-                    const img = document.getElementById('qr-code-img');
-                    img.src = qrBase64.startsWith('data:image') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
-
-                    // Start Polling Status
-                    startPollingStatus(instanceName);
-                } else {
-                    // Check strictly for "exists"
-                    const isExistsError = data && data.message && (
-                        data.message.toLowerCase().includes("exists") ||
-                        data.message.toLowerCase().includes("já existe")
-                    );
-
-                    if (isExistsError) {
-                        connectExistingInstance(instanceName);
-                    } else {
-                        // Fallback Strategy: Even if error (e.g. 401 on Create), try to CONNECT.
-                        // Assuming the user might have created it manually on the panel.
-                        console.warn("Create failed, attempting legacy connect...", data);
-                        connectExistingInstance(instanceName);
+                    if (!instanceName) {
+                        alert("Por favor, digite um nome para a instância.");
+                        return;
                     }
-                }
 
-            } catch (error) {
-                console.error("API Error:", error);
-                alert(`Erro ao conectar na API: ${error.message}`);
-                window.closeNewInstanceModal();
-            }
-        };
+                    // Transition UI -> Loading
+                    const stepName = document.getElementById('step-name');
+                    if (stepName) stepName.classList.add('hidden');
+                    document.getElementById('qr-loading').classList.remove('hidden');
 
-        // Fallback for existing instances
-        window.connectExistingInstance = async function (instanceName) {
-            console.log(`Fallback: Connecting to existing ${instanceName}`);
-            try {
-                // GET is the confirmed correct method for this server (POST gives 405)
-                const response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect/${instanceName}`, {
-                    method: 'GET',
-                    headers: { 'token': UAZAPI_CONFIG.token, 'apikey': UAZAPI_CONFIG.token }
-                });
+                    try {
+                        // FLOW 1: Manual Token (Direct Connect)
+                        if (manualToken) {
+                            console.log(`Connecting with Manual Token: ${manualToken}...`);
 
-                // Handle 404 specifically
-                if (response.status === 404) {
-                    alert(`Instância "${instanceName}" não encontrada! (Erro 404)\n\nCertifique-se de que você CRIOU ela no Painel da UAZAPI antes de clicar em "Gerar QR Code" aqui.`);
-                    window.closeNewInstanceModal();
-                    return;
-                }
+                            // POST /instance/connect ensures we act on the specific instance tied to the token
+                            const response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect`, {
+                                method: 'POST',
+                                headers: {
+                                    'token': manualToken, // Use Instance Token
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ instanceName: instanceName }) // Optional but helpful
+                            });
 
-                const data = await response.json();
+                            const data = await response.json();
 
-                if (data && (data.base64 || data.qrcode)) {
-                    const qrBase64 = data.base64 || data.qrcode;
-                    document.getElementById('qr-loading').classList.add('hidden');
-                    document.getElementById('qr-display').classList.remove('hidden');
-                    const img = document.getElementById('qr-code-img');
-                    img.src = qrBase64.startsWith('data:image') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
-                    startPollingStatus(instanceName);
-                } else {
-                    alert("Não consegui conectar na instância existente: " + (data.message || JSON.stringify(data)));
-                    window.closeNewInstanceModal();
-                }
-            } catch (e) {
-                alert("Erro ao conectar instância existente: " + e.message);
-                window.closeNewInstanceModal();
-            }
-        }
+                            if (data && (data.qrcode || data.base64)) {
+                                const qrBase64 = data.qrcode || data.base64;
+                                document.getElementById('qr-loading').classList.add('hidden');
+                                document.getElementById('qr-display').classList.remove('hidden');
 
-        // 2. POLL STATUS
-        let pollInterval = null;
-        function startPollingStatus(instanceName) {
-            if (pollInterval) clearInterval(pollInterval);
+                                const img = document.getElementById('qr-code-img');
+                                img.src = qrBase64.startsWith('data:image') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
 
-            let attempts = 0;
-            const maxAttempts = 100; // ~5 min timeout
-
-            pollInterval = setInterval(async () => {
-                attempts++;
-                if (attempts > maxAttempts) {
-                    clearInterval(pollInterval);
-                    document.getElementById('qr-expired').classList.remove('hidden');
-                    return;
-                }
-
-                try {
-                    // Check Request
-                    // Common endpoint: /instance/connectionState/{instanceName}
-                    const res = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connectionState/${instanceName}`, {
-                        method: 'GET',
-                        headers: {
-                            'token': UAZAPI_CONFIG.token,
-                            'apikey': UAZAPI_CONFIG.token
+                                // Start Polling with SPECIFIC Token
+                                startPollingStatus(instanceName, manualToken);
+                                return;
+                            } else if (data && data.instance && data.instance.status === 'connected') {
+                                // Already connected!
+                                finalizeConnection(instanceName, manualToken);
+                                return;
+                            } else {
+                                throw new Error(data.message || "Falha ao obter QR Code com o token fornecido.");
+                            }
                         }
-                    });
-                    const statusData = await res.json();
 
-                    // Parse Status
-                    // Usually: { state: "open" } or { state: "connecting" }
-                    const state = statusData.state || statusData.status;
-                    console.log(`Polling ${instanceName}: ${state}`);
+                        // FLOW 2: Legacy Creation (Admin Token)
+                        console.log(`Creating instance: ${instanceName}...`);
+                        const response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/create`, {
+                            method: 'POST',
+                            headers: {
+                                'token': UAZAPI_CONFIG.token,
+                                'apikey': UAZAPI_CONFIG.token,
+                                'Authorization': `Bearer ${UAZAPI_CONFIG.token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ instanceName: instanceName })
+                        });
 
-                    if (state === 'open' || state === 'connected') {
-                        clearInterval(pollInterval);
-                        finalizeConnection(instanceName);
+                        const data = await response.json();
+                        console.log("Create Response:", data);
+
+                        if (data && (data.qrcode || data.base64)) {
+                            const qrBase64 = data.qrcode || data.base64;
+                            document.getElementById('qr-loading').classList.add('hidden');
+                            document.getElementById('qr-display').classList.remove('hidden');
+
+                            const img = document.getElementById('qr-code-img');
+                            img.src = qrBase64.startsWith('data:image') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
+
+                            startPollingStatus(instanceName);
+                        } else {
+                            const isExistsError = data && data.message && (
+                                data.message.toLowerCase().includes("exists") ||
+                                data.message.toLowerCase().includes("já existe")
+                            );
+
+                            if (isExistsError) {
+                                connectExistingInstance(instanceName);
+                            } else {
+                                // Fallback: If 401/Unauthorized, it means we can't create. Suggest Manual Token.
+                                if (response.status === 401) {
+                                    alert("Não foi possível criar a instância automaticamente (Erro 401).\n\nSOLUÇÃO:\n1. Crie a instância '" + instanceName + "' no Painel da UAZAPI.\n2. Copie o TOKEN dela.\n3. Cole no campo 'Token da Instância' aqui.");
+                                    window.closeNewInstanceModal();
+                                } else {
+                                    console.warn("Create failed, attempting legacy connect...", data);
+                                    connectExistingInstance(instanceName);
+                                }
+                            }
+                        }
+
+                    } catch (error) {
+                        console.error("API Error:", error);
+                        alert(`Erro ao conectar na API: ${error.message}`);
+                        window.closeNewInstanceModal();
                     }
-                } catch (e) {
-                    console.warn("Polling error:", e);
-                }
-            }, 3000); // Check every 3s
-        }
-
-        // 3. FINALIZE & SAVE
-        async function finalizeConnection(instanceName) {
-            // UI Success
-            document.getElementById('qr-display').classList.add('hidden');
-            document.getElementById('qr-success').classList.remove('hidden');
-
-            try {
-                // Fetch Profile Info (Optional, but nice)
-                // Endpoint estimate: /chat/fetchProfilePictureUrl/{instanceName} (Mocked for safety if fails)
-                let phone = "N/A";
-                let photo = "";
-
-                // Try to get simple instance info if available
-                // For now, we save basic info + Connected Status
-
-                // SAVE TO LOCAL STORAGE
-                const newInstance = {
-                    id: 'wa-' + Date.now(),
-                    name: instanceName,
-                    phone: "Carregando...", // Will update later via webhook ideally
-                    desc: 'Conectado via UAZAPI',
-                    status: 'connected',
-                    createdAt: new Date().toISOString()
                 };
 
-                const instances = JSON.parse(localStorage.getItem('wa_instances') || '[]');
-                instances.push(newInstance);
-                localStorage.setItem('wa_instances', JSON.stringify(instances));
+                // Fallback for existing instances
+                window.connectExistingInstance = async function (instanceName) {
+                    console.log(`Fallback: Connecting to existing ${instanceName}`);
+                    try {
+                        // GET is the confirmed correct method for this server (POST gives 405)
+                        const response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect/${instanceName}`, {
+                            method: 'GET',
+                            headers: { 'token': UAZAPI_CONFIG.token, 'apikey': UAZAPI_CONFIG.token }
+                        });
 
-                setTimeout(() => {
-                    window.closeNewInstanceModal();
-                    loadWaInstances();
-                    updateWaCounters();
-                }, 2000);
+                        // Handle 404 specifically
+                        if (response.status === 404) {
+                            alert(`Instância "${instanceName}" não encontrada! (Erro 404)\n\nCertifique-se de que você CRIOU ela no Painel da UAZAPI antes de clicar em "Gerar QR Code" aqui.`);
+                            window.closeNewInstanceModal();
+                            return;
+                        }
 
-            } catch (e) {
-                console.error("Finalize error", e);
-                window.closeNewInstanceModal();
-            }
-        }
+                        const data = await response.json();
 
-        window.closeNewInstanceModal = function () {
-            if (pollInterval) clearInterval(pollInterval); // Stop Polling
-
-            const modal = document.getElementById('instance-modal');
-            const content = document.getElementById('instance-modal-content');
-
-            if (modal) {
-                modal.classList.add('opacity-0');
-                if (content) {
-                    content.classList.add('opacity-0', 'scale-95');
-                    content.classList.remove('scale-100', 'opacity-100');
+                        if (data && (data.base64 || data.qrcode)) {
+                            const qrBase64 = data.base64 || data.qrcode;
+                            document.getElementById('qr-loading').classList.add('hidden');
+                            document.getElementById('qr-display').classList.remove('hidden');
+                            const img = document.getElementById('qr-code-img');
+                            img.src = qrBase64.startsWith('data:image') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
+                            startPollingStatus(instanceName);
+                        } else {
+                            alert("Não consegui conectar na instância existente: " + (data.message || JSON.stringify(data)));
+                            window.closeNewInstanceModal();
+                        }
+                    } catch (e) {
+                        alert("Erro ao conectar instância existente: " + e.message);
+                        window.closeNewInstanceModal();
+                    }
                 }
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                }, 300);
-            }
-        };
 
-        // Navigation Logic Extension for WhatsApp
-        const originalNavigateTo = window.navigateTo;
-        window.navigateTo = function (viewId) {
-            originalNavigateTo(viewId);
-            // No init needed for simple modal logic
-        };
+                // 2. POLL STATUS
+                let pollInterval = null;
+                function startPollingStatus(instanceName, manualToken = null) {
+                    if (pollInterval) clearInterval(pollInterval);
+
+                    let attempts = 0;
+                    const maxAttempts = 100; // ~5 min timeout
+
+                    pollInterval = setInterval(async () => {
+                        attempts++;
+                        if (attempts > maxAttempts) {
+                            clearInterval(pollInterval);
+                            document.getElementById('qr-expired').classList.remove('hidden');
+                            return;
+                        }
+
+                        try {
+                            let state = 'disconnected';
+
+                            if (manualToken) {
+                                // Manual Token Polling (Root Status endpoint)
+                                const res = await fetch(`${UAZAPI_CONFIG.baseUrl}/status`, {
+                                    method: 'GET',
+                                    headers: { 'token': manualToken }
+                                });
+                                const data = await res.json();
+                                if (data && data.status && data.status.checked_instance) {
+                                    state = data.status.checked_instance.connection_status;
+                                }
+                            } else {
+                                // Legacy Polling
+                                const res = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connectionState/${instanceName}`, {
+                                    method: 'GET',
+                                    headers: {
+                                        'token': UAZAPI_CONFIG.token,
+                                        'apikey': UAZAPI_CONFIG.token
+                                    }
+                                });
+                                const statusData = await res.json();
+                                state = statusData.state || statusData.status;
+                            }
+
+                            console.log(`Polling ${instanceName}: ${state}`);
+
+                            if (state === 'open' || state === 'connected') {
+                                clearInterval(pollInterval);
+                                finalizeConnection(instanceName, manualToken);
+                            }
+                        } catch (e) {
+                            console.warn("Polling error:", e);
+                        }
+                    }, 3000); // Check every 3s
+                }
+
+                // 3. FINALIZE & SAVE
+                async function finalizeConnection(instanceName, manualToken = null) {
+                    // UI Success
+                    document.getElementById('qr-display').classList.add('hidden');
+                    document.getElementById('qr-success').classList.remove('hidden');
+
+                    try {
+                        // SAVE TO LOCAL STORAGE
+                        const newInstance = {
+                            id: manualToken || ('wa-' + Date.now()),
+                            name: instanceName,
+                            phone: "Carregando...",
+                            desc: 'Conectado via UAZAPI',
+                            status: 'connected',
+                            token: manualToken,
+                            createdAt: new Date().toISOString()
+                        };
+
+                        const instances = JSON.parse(localStorage.getItem('wa_instances') || '[]');
+                        instances.push(newInstance);
+                        localStorage.setItem('wa_instances', JSON.stringify(instances));
+
+                        setTimeout(() => {
+                            window.closeNewInstanceModal();
+                            loadWaInstances();
+                            updateWaCounters();
+                        }, 2000);
+
+                    } catch (e) {
+                        console.error("Finalize error", e);
+                        window.closeNewInstanceModal();
+                    }
+                }
+
+                window.closeNewInstanceModal = function () {
+                    if (pollInterval) clearInterval(pollInterval); // Stop Polling
+
+                    const modal = document.getElementById('instance-modal');
+                    const content = document.getElementById('instance-modal-content');
+
+                    if (modal) {
+                        modal.classList.add('opacity-0');
+                        if (content) {
+                            content.classList.add('opacity-0', 'scale-95');
+                            content.classList.remove('scale-100', 'opacity-100');
+                        }
+                        setTimeout(() => {
+                            modal.classList.add('hidden');
+                        }, 300);
+                    }
+                };
+
+                // Navigation Logic Extension for WhatsApp
+                const originalNavigateTo = window.navigateTo;
+                window.navigateTo = function (viewId) {
+                    originalNavigateTo(viewId);
+                    // No init needed for simple modal logic
+                };
     </script>
-    <!-- WA Instance Modal -->
-    <div id="instance-modal"
-        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[110] hidden flex items-center justify-center transition-opacity opacity-0">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 transform transition-all scale-95 opacity-0 duration-300"
-            id="instance-modal-content">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-xl">
-                <div>
-                    <h3 class="text-lg font-bold text-slate-800">Nova Instância</h3>
-                    <p class="text-xs text-slate-500 mt-1">Conecte um novo número de WhatsApp</p>
-                </div>
-                <!-- Close Button with ID -->
-                <button id="btn-close-modal" onclick="closeNewInstanceModal()"
-                    class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <!-- Real API Logic Wrapper -->
-            <div class="p-6 flex flex-col items-center justify-center space-y-6" id="qr-content-wrapper">
-
-                <!-- STEP 1: Instance Name Input -->
-                <div id="step-name" class="w-full flex flex-col gap-4 animate-in fade-in zoom-in duration-300">
-                    <div class="text-center">
-                        <div
-                            class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3 text-orange-600">
-                            <i data-lucide="smartphone" class="w-8 h-8"></i>
-                        </div>
-                        <h3 class="text-lg font-bold text-slate-800">Nova Conexão</h3>
-                        <p class="text-sm text-slate-500">Dê um nome para identificar este WhatsApp</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Nome da
-                            Instância</label>
-                        <input type="text" id="wa-name-input" placeholder="Ex: Comercial, Suporte, etc." autofocus
-                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-center font-medium focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all">
-                    </div>
-
-                    <button onclick="initRealConnection()"
-                        class="w-full py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20 text-sm font-bold flex items-center justify-center gap-2">
-                        Gerar QR Code <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                    </button>
-                </div>
-
-                <!-- STEP 2: QR Loading State -->
-                <div id="qr-loading" class="hidden flex flex-col items-center animate-pulse">
-                    <div
-                        class="w-48 h-48 bg-slate-100 rounded-lg flex items-center justify-center mb-4 border border-slate-200">
-                        <i data-lucide="loader-2" class="w-10 h-10 text-orange-500 animate-spin"></i>
-                    </div>
-                    <p class="text-lg font-bold text-slate-700 animate-pulse">Criando Instância...</p>
-                    <p class="text-xs text-slate-400 mt-1">Conectando à API...</p>
-                </div>
-
-                <!-- STEP 3: QR Display State -->
-                <div id="qr-display" class="hidden flex flex-col items-center animate-in fade-in zoom-in duration-300">
-                    <div class="relative group">
-                        <div
-                            class="w-56 h-56 bg-white p-2 rounded-xl border-2 border-slate-100 shadow-lg overflow-hidden flex items-center justify-center">
-                            <!-- Real QR Code Image -->
-                            <img id="qr-code-img" src="" alt="QR Code" class="w-full h-full object-contain">
-
-                            <!-- Expiry / Refresh Overlay -->
-                            <div id="qr-expired"
-                                class="hidden absolute inset-0 bg-white/90 flex flex-col items-center justify-center">
-                                <i data-lucide="refresh-cw" class="w-8 h-8 text-slate-400 mb-2"></i>
-                                <span class="text-xs font-bold text-slate-500">QR Expirado</span>
-                            </div>
-                        </div>
-                        <!-- Scanline Animation -->
-                        <div
-                            class="absolute top-0 left-0 w-full h-1 bg-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.6)] animate-[scan_2s_ease-in-out_infinite] pointer-events-none rounded-full">
-                        </div>
-                    </div>
-
-                    <div class="mt-6 text-center space-y-1">
-                        <p class="text-sm font-bold text-slate-800">Abra o WhatsApp e escaneie</p>
-                        <p class="text-xs text-slate-500">Aguardando conexão...</p>
-                        <div
-                            class="mt-2 flex items-center justify-center gap-2 text-[10px] text-emerald-600 font-medium bg-emerald-50 py-1 px-3 rounded-full">
-                            <i data-lucide="activity" class="w-3 h-3 animate-pulse"></i> Polling Ativo
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STEP 4: Success State -->
-                <div id="qr-success"
-                    class="hidden flex flex-col items-center justify-center py-4 animate-in fade-in zoom-in duration-300">
-                    <div
-                        class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-4 text-emerald-600 shadow-inner">
-                        <i data-lucide="check" class="w-10 h-10"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-slate-800">Conectado!</h3>
-                    <p class="text-sm text-slate-500 mt-1 mb-6">WhatsApp sincronizado com sucesso.</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Duplicate Modal Deleted -->
 
 </body>
 
 </html>
-```
