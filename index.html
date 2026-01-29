@@ -5473,12 +5473,20 @@
                         let newStatus = 'disconnected';
                         if (data && data.status && data.status.checked_instance) {
                             newStatus = data.status.checked_instance.connection_status;
+                        } else if (data && data.instance_data && data.instance_data.status) {
+                            newStatus = data.instance_data.status;
                         }
 
                         // Update if changed
                         if (inst.status !== newStatus) {
                             console.log(`Status changed for ${inst.name}: ${inst.status} -> ${newStatus}`);
                             instances[i].status = newStatus;
+                            changed = true;
+                        }
+                    } else if (res.status === 404 || res.status === 401) {
+                        // Instance deleted or invalid token -> Disconnected
+                        if (inst.status !== 'disconnected') {
+                            instances[i].status = 'disconnected';
                             changed = true;
                         }
                     }
@@ -5620,6 +5628,7 @@
 
                     const qrBase64 = getQr(data);
 
+                    // 1. Success: QR Found immediately
                     if (qrBase64) {
                         document.getElementById('qr-loading').classList.add('hidden');
                         document.getElementById('qr-display').classList.remove('hidden');
@@ -5627,14 +5636,25 @@
                         const img = document.getElementById('qr-code-img');
                         img.src = qrBase64.startsWith('data:image') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
 
-                        // Start Polling with SPECIFIC Token
                         startPollingStatus(instanceName, manualToken);
                         return;
-                    } else if (data && data.instance && data.instance.status === 'connected') {
-                        // Already connected!
+                    }
+                    // 2. Already Connected
+                    else if (data && data.instance && data.instance.status === 'connected') {
                         finalizeConnection(instanceName, manualToken);
                         return;
-                    } else {
+                    }
+                    // 3. Status "Waiting" (Open/Connecting) BUT no QR yet -> Start Polling anyway!
+                    else if (data && data.instance && (data.instance.status === 'open' || data.instance.status === 'connecting')) {
+                        console.log("Status is open/connecting, but no QR yet. Starting Polling to wait for QR...");
+                        document.getElementById('qr-loading').classList.add('hidden');
+                        // Show display with placeholder or empty
+                        document.getElementById('qr-display').classList.remove('hidden');
+
+                        startPollingStatus(instanceName, manualToken);
+                        return;
+                    }
+                    else {
                         throw new Error((data ? (data.message || JSON.stringify(data)) : "Sem resposta válida da API") || "Falha ao obter QR Code.");
                     }
                 }
