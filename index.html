@@ -5353,83 +5353,217 @@
             updateWaCounters();
         };
 
+        // --- CONFIG UAZAPI ---
+        const UAZAPI_CONFIG = {
+            baseUrl: 'https://free.uazapi.com',
+            token: 'f90f7cf3-5218-43ca-8493-d44f41901466'
+        };
+
         // GLOBAL MODAL FUNCTIONS
         window.openNewInstanceModal = function () {
-            console.log("Opening WhatsApp Modal (QR Mode)");
+            console.log("Opening WhatsApp Modal (Real API Mode)");
             const modal = document.getElementById('instance-modal');
             const content = document.getElementById('instance-modal-content');
 
-            // Reset States
-            document.getElementById('qr-loading').classList.remove('hidden');
+            // Reset to Step 1
+            document.getElementById('step-name').classList.remove('hidden');
+            document.getElementById('qr-loading').classList.add('hidden');
             document.getElementById('qr-display').classList.add('hidden');
+            document.getElementById('qr-expired').classList.add('hidden');
             document.getElementById('qr-success').classList.add('hidden');
+
+            // Clear Input
+            const nameInput = document.getElementById('wa-name-input');
+            if (nameInput) nameInput.value = '';
 
             if (modal) {
                 modal.classList.remove('hidden');
-                void modal.offsetWidth; // Force Reflow
+                void modal.offsetWidth;
                 modal.classList.remove('opacity-0');
 
                 if (content) {
                     content.classList.remove('opacity-0', 'scale-95');
                     content.classList.add('scale-100', 'opacity-100');
                 }
-
-                // Simulate "Generating Code" delay
-                setTimeout(() => {
-                    document.getElementById('qr-loading').classList.add('hidden');
-                    document.getElementById('qr-display').classList.remove('hidden');
-
-                    // Re-init lucide icons for the new content if needed
-                    if (window.lucide) lucide.createIcons();
-                }, 1500);
-
             } else {
-                console.error("Modal not found");
                 alert("Erro: Modal não encontrado!");
             }
         };
 
-        window.simulateQrScan = function () {
-            // Transition to Success
+        // 1. CREATE INSTANCE & GET QR
+        window.initRealConnection = async function () {
+            const nameInput = document.getElementById('wa-name-input');
+            const instanceName = nameInput.value.trim();
+
+            if (!instanceName) {
+                alert("Por favor, digite um nome para a instância.");
+                return;
+            }
+
+            // Transition UI -> Loading
+            document.getElementById('step-name').classList.add('hidden');
+            document.getElementById('qr-loading').classList.remove('hidden');
+
+            try {
+                // CALL API: Create Instance
+                console.log(`Creating instance: ${instanceName}...`);
+                const response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/create`, {
+                    method: 'POST',
+                    headers: {
+                        'token': UAZAPI_CONFIG.token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ instanceName: instanceName })
+                });
+
+                const data = await response.json();
+                console.log("Create Response:", data);
+
+                // Handle Success or Error
+                // Note: UAZAPI structure varies. Checking common responses.
+                // Usually returns { instance: {...}, hash: "...", qrcode: "base64..." } or similar
+
+                if (data && (data.qrcode || data.base64)) {
+                    const qrBase64 = data.qrcode || data.base64; // Handle diff naming
+
+                    // Show QR
+                    document.getElementById('qr-loading').classList.add('hidden');
+                    document.getElementById('qr-display').classList.remove('hidden');
+
+                    const img = document.getElementById('qr-code-img');
+                    img.src = qrBase64.startsWith('data:image') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
+
+                    // Start Polling Status
+                    startPollingStatus(instanceName);
+                } else {
+                    // Check if instance already exists or other error
+                    if (data && data.status === 403) {
+                        alert("Erro: Token inválido ou sem permissão.");
+                    } else if (data && data.message && data.message.includes("already exists")) {
+                        // If exists, try connecting to it
+                        connectExistingInstance(instanceName);
+                    } else {
+                        throw new Error("Não foi possível gerar o QR Code. Verifique o console.");
+                    }
+                }
+
+            } catch (error) {
+                console.error("API Error:", error);
+                alert(`Erro ao conectar na API: ${error.message}`);
+                window.closeNewInstanceModal();
+            }
+        };
+
+        // Fallback for existing instances
+        async function connectExistingInstance(instanceName) {
+            console.log("Instance exists, trying to fetch connect QR...");
+            try {
+                const response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect/${instanceName}`, {
+                    method: 'GET',
+                    headers: { 'token': UAZAPI_CONFIG.token }
+                });
+                const data = await response.json();
+                if (data && (data.base64 || data.qrcode)) {
+                    const qrBase64 = data.base64 || data.qrcode;
+                    document.getElementById('qr-loading').classList.add('hidden');
+                    document.getElementById('qr-display').classList.remove('hidden');
+                    const img = document.getElementById('qr-code-img');
+                    img.src = qrBase64.startsWith('data:image') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
+                    startPollingStatus(instanceName);
+                } else {
+                    alert("Instância já existe mas não consegui obter o QR Code. Tente outro nome.");
+                    window.closeNewInstanceModal();
+                }
+            } catch (e) {
+                alert("Erro ao conectar instância existente: " + e.message);
+                window.closeNewInstanceModal();
+            }
+        }
+
+        // 2. POLL STATUS
+        let pollInterval = null;
+        function startPollingStatus(instanceName) {
+            if (pollInterval) clearInterval(pollInterval);
+
+            let attempts = 0;
+            const maxAttempts = 100; // ~5 min timeout
+
+            pollInterval = setInterval(async () => {
+                attempts++;
+                if (attempts > maxAttempts) {
+                    clearInterval(pollInterval);
+                    document.getElementById('qr-expired').classList.remove('hidden');
+                    return;
+                }
+
+                try {
+                    // Check Request
+                    // Common endpoint: /instance/connectionState/{instanceName}
+                    const res = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connectionState/${instanceName}`, {
+                        method: 'GET',
+                        headers: { 'token': UAZAPI_CONFIG.token }
+                    });
+                    const statusData = await res.json();
+
+                    // Parse Status
+                    // Usually: { state: "open" } or { state: "connecting" }
+                    const state = statusData.state || statusData.status;
+                    console.log(`Polling ${instanceName}: ${state}`);
+
+                    if (state === 'open' || state === 'connected') {
+                        clearInterval(pollInterval);
+                        finalizeConnection(instanceName);
+                    }
+                } catch (e) {
+                    console.warn("Polling error:", e);
+                }
+            }, 3000); // Check every 3s
+        }
+
+        // 3. FINALIZE & SAVE
+        async function finalizeConnection(instanceName) {
+            // UI Success
             document.getElementById('qr-display').classList.add('hidden');
             document.getElementById('qr-success').classList.remove('hidden');
 
-            // Auto-Create after short delay
-            setTimeout(() => {
-                autoCreateInstance();
-            }, 1500);
-        };
+            try {
+                // Fetch Profile Info (Optional, but nice)
+                // Endpoint estimate: /chat/fetchProfilePictureUrl/{instanceName} (Mocked for safety if fails)
+                let phone = "N/A";
+                let photo = "";
 
-        window.autoCreateInstance = function () {
-            // Mock Data Generation
-            const mockNames = ['Loja Principal', 'Suporte N1', 'Atendimento Comercial', 'Financeiro'];
-            const randomName = mockNames[Math.floor(Math.random() * mockNames.length)];
-            const randomPhone = '55119' + Math.floor(Math.random() * 100000000); // 55119XXXXXXXX
+                // Try to get simple instance info if available
+                // For now, we save basic info + Connected Status
 
-            // PERSISTENCE LOGIC
-            const newInstance = {
-                id: 'wa-' + Date.now(),
-                name: randomName,
-                phone: randomPhone,
-                desc: 'Conectado via QR Code (Simulação)',
-                status: 'connected',
-                createdAt: new Date().toISOString()
-            };
+                // SAVE TO LOCAL STORAGE
+                const newInstance = {
+                    id: 'wa-' + Date.now(),
+                    name: instanceName,
+                    phone: "Carregando...", // Will update later via webhook ideally
+                    desc: 'Conectado via UAZAPI',
+                    status: 'connected',
+                    createdAt: new Date().toISOString()
+                };
 
-            const instances = JSON.parse(localStorage.getItem('wa_instances') || '[]');
-            instances.push(newInstance);
-            localStorage.setItem('wa_instances', JSON.stringify(instances));
+                const instances = JSON.parse(localStorage.getItem('wa_instances') || '[]');
+                instances.push(newInstance);
+                localStorage.setItem('wa_instances', JSON.stringify(instances));
 
-            // Feedback & Close
-            // alert(`Instância "${randomName}" conectada com sucesso!`);
-            window.closeNewInstanceModal();
+                setTimeout(() => {
+                    window.closeNewInstanceModal();
+                    loadWaInstances();
+                    updateWaCounters();
+                }, 2000);
 
-            // Refresh UI
-            loadWaInstances();
-            updateWaCounters();
-        };
+            } catch (e) {
+                console.error("Finalize error", e);
+                window.closeNewInstanceModal();
+            }
+        }
 
         window.closeNewInstanceModal = function () {
+            if (pollInterval) clearInterval(pollInterval); // Stop Polling
+
             const modal = document.getElementById('instance-modal');
             const content = document.getElementById('instance-modal-content');
 
@@ -5439,7 +5573,6 @@
                     content.classList.add('opacity-0', 'scale-95');
                     content.classList.remove('scale-100', 'opacity-100');
                 }
-
                 setTimeout(() => {
                     modal.classList.add('hidden');
                 }, 300);
@@ -5470,54 +5603,83 @@
                 </button>
             </div>
 
+            <!-- Real API Logic Wrapper -->
             <div class="p-6 flex flex-col items-center justify-center space-y-6" id="qr-content-wrapper">
-                <!-- QR Loading State -->
-                <div id="qr-loading" class="flex flex-col items-center animate-pulse">
-                    <div class="w-48 h-48 bg-slate-100 rounded-lg flex items-center justify-center mb-4">
-                        <i data-lucide="loader-2" class="w-10 h-10 text-slate-400 animate-spin"></i>
+
+                <!-- STEP 1: Instance Name Input -->
+                <div id="step-name" class="w-full flex flex-col gap-4 animate-in fade-in zoom-in duration-300">
+                    <div class="text-center">
+                        <div
+                            class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3 text-orange-600">
+                            <i data-lucide="smartphone" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800">Nova Conexão</h3>
+                        <p class="text-sm text-slate-500">Dê um nome para identificar este WhatsApp</p>
                     </div>
-                    <p class="text-sm text-slate-500 font-medium">Gerando QR Code...</p>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Nome da
+                            Instância</label>
+                        <input type="text" id="wa-name-input" placeholder="Ex: Comercial, Suporte, etc." autofocus
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-center font-medium focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all">
+                    </div>
+
+                    <button onclick="initRealConnection()"
+                        class="w-full py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20 text-sm font-bold flex items-center justify-center gap-2">
+                        Gerar QR Code <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
                 </div>
 
-                <!-- QR Display State (Hidden initially) -->
-                <div id="qr-display" class="hidden flex flex-col items-center animate-in fade-in zoom-in duration-300">
-                    <div class="relative group cursor-pointer" onclick="simulateQrScan()">
-                        <div
-                            class="w-48 h-48 bg-white p-2 rounded-lg border-2 border-slate-100 shadow-sm relative overflow-hidden">
-                            <!-- Mock QR Code (Using an icon/pattern for demo) -->
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=UAZAPI_DEMO_CONNECT"
-                                alt="QR Code"
-                                class="w-full h-full opacity-80 group-hover:opacity-100 transition-opacity">
+                <!-- STEP 2: QR Loading State -->
+                <div id="qr-loading" class="hidden flex flex-col items-center animate-pulse">
+                    <div
+                        class="w-48 h-48 bg-slate-100 rounded-lg flex items-center justify-center mb-4 border border-slate-200">
+                        <i data-lucide="loader-2" class="w-10 h-10 text-orange-500 animate-spin"></i>
+                    </div>
+                    <p class="text-lg font-bold text-slate-700 animate-pulse">Criando Instância...</p>
+                    <p class="text-xs text-slate-400 mt-1">Conectando à API...</p>
+                </div>
 
-                            <!-- Obfuscation / "Click to Simulate" Overlay for clarity -->
-                            <div
-                                class="absolute inset-0 flex items-center justify-center bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span
-                                    class="bg-black/70 text-white text-[10px] px-2 py-1 rounded-full font-bold shadow-lg">Clique
-                                    para Simular Leitura</span>
+                <!-- STEP 3: QR Display State -->
+                <div id="qr-display" class="hidden flex flex-col items-center animate-in fade-in zoom-in duration-300">
+                    <div class="relative group">
+                        <div
+                            class="w-56 h-56 bg-white p-2 rounded-xl border-2 border-slate-100 shadow-lg overflow-hidden flex items-center justify-center">
+                            <!-- Real QR Code Image -->
+                            <img id="qr-code-img" src="" alt="QR Code" class="w-full h-full object-contain">
+
+                            <!-- Expiry / Refresh Overlay -->
+                            <div id="qr-expired"
+                                class="hidden absolute inset-0 bg-white/90 flex flex-col items-center justify-center">
+                                <i data-lucide="refresh-cw" class="w-8 h-8 text-slate-400 mb-2"></i>
+                                <span class="text-xs font-bold text-slate-500">QR Expirado</span>
                             </div>
                         </div>
                         <!-- Scanline Animation -->
                         <div
-                            class="absolute top-0 left-0 w-full h-1 bg-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.6)] animate-[scan_2s_ease-in-out_infinite] pointer-events-none">
+                            class="absolute top-0 left-0 w-full h-1 bg-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.6)] animate-[scan_2s_ease-in-out_infinite] pointer-events-none rounded-full">
                         </div>
                     </div>
 
-                    <div class="mt-4 text-center">
+                    <div class="mt-6 text-center space-y-1">
                         <p class="text-sm font-bold text-slate-800">Abra o WhatsApp e escaneie</p>
-                        <p class="text-xs text-slate-500 mt-1">Menu > Aparelhos conectados > Conectar um aparelho</p>
+                        <p class="text-xs text-slate-500">Aguardando conexão...</p>
+                        <div
+                            class="mt-2 flex items-center justify-center gap-2 text-[10px] text-emerald-600 font-medium bg-emerald-50 py-1 px-3 rounded-full">
+                            <i data-lucide="activity" class="w-3 h-3 animate-pulse"></i> Polling Ativo
+                        </div>
                     </div>
                 </div>
 
-                <!-- Connection Success State (Hidden) -->
+                <!-- STEP 4: Success State -->
                 <div id="qr-success"
-                    class="hidden flex flex-col items-center justify-center py-8 animate-in fade-in zoom-in duration-300">
+                    class="hidden flex flex-col items-center justify-center py-4 animate-in fade-in zoom-in duration-300">
                     <div
-                        class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4 text-emerald-600">
-                        <i data-lucide="check" class="w-8 h-8"></i>
+                        class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-4 text-emerald-600 shadow-inner">
+                        <i data-lucide="check" class="w-10 h-10"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-800">Conectado!</h3>
-                    <p class="text-xs text-slate-500 mt-1">Aparelho sincronizado com sucesso.</p>
+                    <h3 class="text-xl font-bold text-slate-800">Conectado!</h3>
+                    <p class="text-sm text-slate-500 mt-1 mb-6">WhatsApp sincronizado com sucesso.</p>
                 </div>
             </div>
         </div>
