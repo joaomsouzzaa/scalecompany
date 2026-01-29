@@ -5504,14 +5504,14 @@
         // Call sync when tab is opened or page loads
         document.addEventListener('DOMContentLoaded', () => {
             // ... existing init ...
-            setInterval(checkInstancesStatus, 10000); // Check every 10s
+            // setInterval(checkInstancesStatus, 10000); // Check every 10s
         });
 
         // Also hook into tab switch
         const originalSwitchWaTab = window.switchWaTab;
         window.switchWaTab = function (tabName) {
             originalSwitchWaTab(tabName);
-            if (tabName === 'instances') checkInstancesStatus();
+            // if (tabName === 'instances') checkInstancesStatus();
         };
 
         // --- CONFIG UAZAPI ---
