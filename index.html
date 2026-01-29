@@ -6032,26 +6032,25 @@
                                     <div>
                                         <label class="block text-xs font-medium text-slate-500 mb-1">Conta de
                                             Anúncios</label>
-                                        <select id="alert-account-select"
+                                        <select id="alert-account-select" onchange="updatePreviewWithRealData()"
                                             class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500">
                                             <option value="">Selecione...</option>
                                         </select>
                                     </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3 mt-3">
                                     <div>
-                                        <label class="block text-xs font-medium text-slate-500 mb-1">Período dos
-                                            Dados</label>
-                                        <select id="alert-date-range"
+                                        <label class="block text-xs font-medium text-slate-500 mb-1">Data Início</label>
+                                        <input type="date" id="alert-date-start" onchange="updatePreviewWithRealData()"
                                             class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500">
-                                            <option value="today">Hoje</option>
-                                            <option value="yesterday">Ontem</option>
-                                            <option value="last_7_days">Últimos 7 dias</option>
-                                            <option value="last_30_days">Últimos 30 dias</option>
-                                            <option value="this_month">Este mês</option>
-                                            <option value="last_month">Mês passado</option>
-                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-500 mb-1">Data Fim</label>
+                                        <input type="date" id="alert-date-end" onchange="updatePreviewWithRealData()"
+                                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500">
                                     </div>
                                 </div>
-                                <div class="mt-4">
+                                <div class="mt-3">
                                     <label class="block text-xs font-medium text-slate-500 mb-1">Filtro de Cidade
                                         (Opcional)</label>
                                     <input type="text" id="alert-city"
@@ -6439,6 +6438,79 @@
             if (window.lucide) lucide.createIcons();
         }
 
+        // --- UPDATE PREVIEW WITH REAL DATA ---
+        async function updatePreviewWithRealData() {
+            const accountId = document.getElementById('alert-account-select').value;
+            const dateStart = document.getElementById('alert-date-start').value;
+            const dateEnd = document.getElementById('alert-date-end').value;
+            const previewEl = document.getElementById('alert-preview-text');
+
+            if (!accountId || !dateStart || !dateEnd) {
+                return; // Need all fields to fetch data
+            }
+
+            try {
+                // Fetch Ad Account data from Facebook
+                const fbToken = localStorage.getItem('fb_access_token');
+                if (!fbToken) {
+                    console.error('No FB token found');
+                    return;
+                }
+
+                const url = `https://graph.facebook.com/v21.0/act_${accountId}/insights?fields=spend,impressions,clicks&time_range={"since":"${dateStart}","until":"${dateEnd}"}&access_token=${fbToken}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                let spend = 0, impressions = 0, clicks = 0;
+                if (data.data && data.data.length > 0) {
+                    spend = parseFloat(data.data[0].spend || 0);
+                    impressions = parseInt(data.data[0].impressions || 0);
+                    clicks = parseInt(data.data[0].clicks || 0);
+                }
+
+                // Fetch Sales data from Supabase
+                const salesData = await fetchSalesData(dateStart, dateEnd);
+
+                // Update preview
+                const dateDisplay = new Date(dateEnd).toLocaleDateString('pt-BR');
+                previewEl.innerHTML = `📊 <strong>Relatório Diário - ${dateDisplay}</strong> 💰 <strong>Vendas:</strong> R$ ${salesData.total.toFixed(2)}
+🛒 <strong>Qtd. Vendas:</strong> ${salesData.count} 📊 <strong>ROI:</strong> ${salesData.roi}
+📉 <strong>CPA:</strong> R$ ${salesData.cpa} 📢 <strong>Investimento Ads:</strong> R$ ${spend.toFixed(2)} 👀 <strong>Impressões:</strong> ${impressions.toLocaleString('pt-BR')} 👆 <strong>Cliques:</strong> ${clicks} 💳 <strong>Métodos:</strong>
+Pix: ${salesData.pix} | Cartão: ${salesData.card}
+
+<em>Gerado automaticamente pelo Scale.</em>`;
+
+            } catch (error) {
+                console.error('Error fetching preview data:', error);
+            }
+        }
+
+        async function fetchSalesData(dateStart, dateEnd) {
+            // Fetch from Supabase sales table
+            try {
+                const supabase = window.supabaseClient;
+                if (!supabase) return { total: 0, count: 0, roi: '∞x', cpa: '0,00', pix: 0, card: 0 };
+
+                const { data, error } = await supabase
+                    .from('sales')
+                    .select('value, payment_method')
+                    .gte('created_at', dateStart)
+                    .lte('created_at', dateEnd + ' 23:59:59');
+
+                if (error) throw error;
+
+                const total = data.reduce((sum, sale) => sum + parseFloat(sale.value || 0), 0);
+                const count = data.length;
+                const pix = data.filter(s => s.payment_method?.toLowerCase().includes('pix')).length;
+                const card = data.filter(s => s.payment_method?.toLowerCase().includes('cart')).length;
+
+                return { total, count, roi: '∞x', cpa: '0,00', pix, card };
+            } catch (error) {
+                console.error('Error fetching sales:', error);
+                return { total: 0, count: 0, roi: '∞x', cpa: '0,00', pix: 0, card: 0 };
+            }
+        }
+
         async function populateAccountSelect() {
             const select = document.getElementById('alert-account-select');
             select.innerHTML = '<option value="">Carregando...</option>';
@@ -6548,7 +6620,8 @@
                 schedule_time: time,
                 config: {
                     accountId,
-                    date_range: dateRange,
+                    date_start: dateStart,
+                    date_end: dateEnd,
                     city
                 },
                 recipients: alertRecipients,
