@@ -181,49 +181,70 @@
 
             <!-- Navigation -->
             <nav class="flex-1 py-6 space-y-2 px-3">
-                <!-- Parent Item: Dashboard -->
+                <!-- Parent Item: Growth -->
                 <div>
-                    <button onclick="toggleDashboardMenu()"
-                        class="w-full flex items-center justify-between px-3 py-3 rounded-lg bg-red-600/10 text-red-500 group overflow-hidden whitespace-nowrap min-h-[44px] transition-colors hover:bg-slate-800 hover:text-white"
-                        id="nav-dashboard-parent">
+                    <button onclick="toggleGrowthMenu()"
+                        class="w-full flex items-center justify-between px-3 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors group overflow-hidden whitespace-nowrap min-h-[44px]"
+                        id="nav-growth-parent">
                         <div class="flex items-center">
-                            <i data-lucide="layout-dashboard" class="w-5 h-5 min-w-[20px]"></i>
+                            <!-- Growth Icon -->
+                            <i data-lucide="trending-up" class="w-5 h-5 min-w-[20px]"></i>
                             <span
-                                class="font-medium text-sm ml-3 transition-opacity duration-300 opacity-100 sidebar-text">Dashboard</span>
+                                class="font-medium text-sm ml-3 transition-opacity duration-300 opacity-100 sidebar-text">Growth</span>
                         </div>
-                        <i data-lucide="chevron-down" id="dashboard-chevron"
+                        <i data-lucide="chevron-down" id="growth-chevron"
                             class="w-4 h-4 transition-transform sidebar-text"></i>
                     </button>
 
-                    <!-- Submenu -->
-                    <div id="dashboard-submenu" class="ml-4 mt-1 space-y-1 hidden border-l border-slate-700 pl-2">
-                        <!-- Workshop Scale (Active & Linked) -->
-                        <a href="#" onclick="navigateTo('dashboard'); setActiveSubItem(this)"
-                            class="flex items-center px-3 py-2 rounded-lg text-white text-sm transition-colors group">
-                            <span class="w-1.5 h-1.5 rounded-full bg-red-500 mr-2 transition-colors"></span>
-                            <span class="sidebar-text">Workshop Scale</span>
-                        </a>
+                    <!-- Growth Submenu -->
+                    <div id="growth-submenu" class="ml-4 mt-1 space-y-1 hidden border-l border-slate-700 pl-2">
 
-                        <!-- Scale Summit (Inactive) -->
-                        <a href="#"
-                            class="flex items-center px-3 py-2 rounded-lg text-slate-500 cursor-default text-sm transition-colors group">
-                            <span class="w-1.5 h-1.5 rounded-full bg-slate-700 mr-2 transition-colors"></span>
-                            <span class="sidebar-text">Scale Summit</span>
-                        </a>
+                        <!-- Child: Dashboard (Moved inside Growth) -->
+                        <div>
+                            <button onclick="toggleDashboardMenu()"
+                                class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors group overflow-hidden whitespace-nowrap"
+                                id="nav-dashboard-parent">
+                                <div class="flex items-center">
+                                    <i data-lucide="layout-dashboard" class="w-4 h-4 min-w-[16px]"></i>
+                                    <span
+                                        class="font-medium text-sm ml-3 transition-opacity duration-300 opacity-100 sidebar-text">Dashboard</span>
+                                </div>
+                                <i data-lucide="chevron-down" id="dashboard-chevron"
+                                    class="w-3.5 h-3.5 transition-transform sidebar-text"></i>
+                            </button>
 
-                        <!-- Program Scale (Inactive) -->
-                        <a href="#"
-                            class="flex items-center px-3 py-2 rounded-lg text-slate-500 cursor-default text-sm transition-colors group">
-                            <span class="w-1.5 h-1.5 rounded-full bg-slate-700 mr-2 transition-colors"></span>
-                            <span class="sidebar-text">Program Scale</span>
-                        </a>
+                            <!-- Dashboard Submenu (Level 2) -->
+                            <div id="dashboard-submenu"
+                                class="ml-4 mt-1 space-y-1 hidden border-l border-slate-700 pl-2">
+                                <!-- Workshop Scale -->
+                                <a href="#" onclick="navigateTo('dashboard'); setActiveSubItem(this)"
+                                    class="flex items-center px-3 py-2 rounded-lg text-white text-sm transition-colors group">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-red-500 mr-2 transition-colors"></span>
+                                    <span class="sidebar-text">Workshop Scale</span>
+                                </a>
 
-                        <!-- Scale Club (Inactive) -->
-                        <a href="#"
-                            class="flex items-center px-3 py-2 rounded-lg text-slate-500 cursor-default text-sm transition-colors group">
-                            <span class="w-1.5 h-1.5 rounded-full bg-slate-700 mr-2 transition-colors"></span>
-                            <span class="sidebar-text">Scale Club</span>
-                        </a>
+                                <!-- Scale Summit -->
+                                <a href="#"
+                                    class="flex items-center px-3 py-2 rounded-lg text-slate-500 cursor-default text-sm transition-colors group">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-700 mr-2 transition-colors"></span>
+                                    <span class="sidebar-text">Scale Summit</span>
+                                </a>
+
+                                <!-- Program Scale -->
+                                <a href="#"
+                                    class="flex items-center px-3 py-2 rounded-lg text-slate-500 cursor-default text-sm transition-colors group">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-700 mr-2 transition-colors"></span>
+                                    <span class="sidebar-text">Program Scale</span>
+                                </a>
+
+                                <!-- Scale Club -->
+                                <a href="#"
+                                    class="flex items-center px-3 py-2 rounded-lg text-slate-500 cursor-default text-sm transition-colors group">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-700 mr-2 transition-colors"></span>
+                                    <span class="sidebar-text">Scale Club</span>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -2779,6 +2800,48 @@
                 sidebar.classList.add('-translate-x-full');
                 backdrop.classList.add('opacity-0');
                 setTimeout(() => backdrop.classList.add('hidden'), 300); // Wait for fade out
+            }
+        }
+
+        // --- Toggle Growth Menu ---
+        function toggleGrowthMenu(forceClose = false) {
+            if (!forceClose && isSidebarCollapsed) {
+                toggleSidebar();
+            }
+
+            const submenu = document.getElementById('growth-submenu');
+            const chevron = document.getElementById('growth-chevron');
+
+            // Quick safety check
+            if (!submenu || !chevron) return;
+
+            // Initial Setup for animation if still using 'hidden' (Legacy fix)
+            if (submenu.classList.contains('hidden')) {
+                submenu.classList.remove('hidden');
+                submenu.classList.add('max-h-0', 'opacity-0', 'overflow-hidden', 'transition-all', 'duration-300', 'ease-in-out');
+                // Force reflow
+                void submenu.offsetWidth;
+            }
+
+            const isClosed = submenu.classList.contains('max-h-0') || forceClose;
+
+            if (forceClose) {
+                submenu.classList.add('max-h-0', 'opacity-0');
+                submenu.classList.remove('max-h-96', 'opacity-100'); // Arbitrary large height
+                chevron.style.transform = 'rotate(0deg)';
+                return;
+            }
+
+            if (isClosed) {
+                // Open
+                submenu.classList.remove('max-h-0', 'opacity-0');
+                submenu.classList.add('max-h-96', 'opacity-100');
+                chevron.style.transform = 'rotate(180deg)';
+            } else {
+                // Close
+                submenu.classList.add('max-h-0', 'opacity-0');
+                submenu.classList.remove('max-h-96', 'opacity-100');
+                chevron.style.transform = 'rotate(0deg)';
             }
         }
 
