@@ -5682,6 +5682,7 @@
 
                 try {
                     let state = 'disconnected';
+                    let currentQr = null;
 
                     if (manualToken) {
                         // Manual Token Polling (Root Status endpoint)
@@ -5690,9 +5691,18 @@
                             headers: { 'token': manualToken }
                         });
                         const data = await res.json();
+
+                        // Extract State
                         if (data && data.status && data.status.checked_instance) {
                             state = data.status.checked_instance.connection_status;
+                            // Check for QR inside status
+                            if (data.status.checked_instance.qrCode) currentQr = data.status.checked_instance.qrCode;
+                            if (data.status.checked_instance.base64) currentQr = data.status.checked_instance.base64;
                         }
+                        // Also check top level if API varies
+                        if (data.qrcode) currentQr = data.qrcode;
+                        if (data.base64) currentQr = data.base64;
+
                     } else {
                         // Legacy Polling
                         const res = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connectionState/${instanceName}`, {
@@ -5706,7 +5716,16 @@
                         state = statusData.state || statusData.status;
                     }
 
-                    console.log(`Polling ${instanceName}: ${state}`);
+                    console.log(`Polling ${instanceName}: ${state} | QR Present: ${!!currentQr}`);
+
+                    // If we got a NEW QR code during polling, update the view!
+                    if (currentQr) {
+                        const img = document.getElementById('qr-code-img');
+                        const newSrc = currentQr.startsWith('data:image') ? currentQr : `data:image/png;base64,${currentQr}`;
+                        if (img && img.src !== newSrc) img.src = newSrc;
+                        // DO NOT FINALIZE if we have a QR code, even if status says 'open' (it might be 'open' for scanning)
+                        return;
+                    }
 
                     if (state === 'open' || state === 'connected') {
                         clearInterval(pollInterval);
