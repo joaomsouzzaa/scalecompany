@@ -5411,6 +5411,7 @@
                     method: 'POST',
                     headers: {
                         'token': UAZAPI_CONFIG.token,
+                        'apikey': UAZAPI_CONFIG.token, // Add this for Evolution/Global compatibility
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ instanceName: instanceName })
