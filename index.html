@@ -3000,33 +3000,52 @@
             card.classList.add('z-50'); // Bring to front
         }
 
+        // Helper to get precise dot center in SVG coordinates
+        function getDotCenter(cardId, type) {
+            const card = document.getElementById(cardId);
+            if (!card) return null;
+
+            const selector = type === 'out' ? '.connection-dot-out .conn-dot' : '.connection-dot-in .conn-dot';
+            const dot = card.querySelector(selector);
+            if (!dot) return null;
+
+            const dotRect = dot.getBoundingClientRect();
+            const contentRect = document.getElementById('organogram-content').getBoundingClientRect();
+            const scale = organogramState.scale;
+
+            // Calculate relative to content origin (0,0)
+            const relX = (dotRect.left + dotRect.width / 2 - contentRect.left) / scale;
+            const relY = (dotRect.top + dotRect.height / 2 - contentRect.top) / scale;
+
+            // Add SVG Transform Offset (2500)
+            return { x: relX + 2500, y: relY + 2500 };
+        }
+
         function handleDotMouseDown(e, cardId) {
-            e.stopPropagation(); // Prevent card/canvas drag
-            e.preventDefault(); // Prevent selection
+            e.stopPropagation();
+            e.preventDefault();
+
+            const startPos = getDotCenter(cardId, 'out');
+            if (!startPos) return;
 
             organogramState.isDraggingConnection = true;
             organogramState.connectionStartId = cardId;
+            organogramState.dragStartPoint = startPos; // Cache start point
 
-            // Create Temp Line in the NEW Temp Layer (High Z-Index)
+            // Create Temp Line in High Z-Index Layer
             const svg = document.getElementById('temp-connections-layer');
-            // Clear any old lines just in case
             svg.innerHTML = '';
 
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
             path.id = "temp-connection-line";
-            path.setAttribute("stroke", "#fb923c"); // Orange-400
+            path.setAttribute("stroke", "#fb923c");
             path.setAttribute("stroke-width", "3");
-            path.setAttribute("stroke-dasharray", "5,5"); // Dashed style
+            path.setAttribute("stroke-dasharray", "5,5");
             path.setAttribute("fill", "none");
             path.setAttribute("pointer-events", "none");
 
-            // INITIAL DRAW: Set start point immediately so it exists visually even before first move
-            const startCard = document.getElementById(cardId);
-            const startX = (parseFloat(startCard.style.left) || 0) + (startCard.offsetWidth / 2);
-            const startY = (parseFloat(startCard.style.top) || 0) + startCard.offsetHeight + 4;
-
-            // Initial path is just a dot/zero length
-            path.setAttribute("d", `M ${startX} ${startY} L ${startX} ${startY}`);
+            // Initial Draw (Zero length)
+            path.setAttribute("d", `M ${startPos.x} ${startPos.y} L ${startPos.x} ${startPos.y}`);
 
             svg.appendChild(path);
         }
@@ -3034,20 +3053,17 @@
         function handleGlobalMouseMove(e) {
             if (organogramState.isDraggingConnection) {
                 const path = document.getElementById('temp-connection-line');
-                if (!path) return;
+                if (!path || !organogramState.dragStartPoint) return;
 
                 const contentRect = document.getElementById('organogram-content').getBoundingClientRect();
                 const scale = organogramState.scale;
 
-                // Start Point (Bottom of Source Card)
-                const startCard = document.getElementById(organogramState.connectionStartId);
-                // Calculate position relative to container
-                const startX = (parseFloat(startCard.style.left) || 0) + (startCard.offsetWidth / 2);
-                const startY = (parseFloat(startCard.style.top) || 0) + startCard.offsetHeight + 4; // Center of bottom dot
+                const startX = organogramState.dragStartPoint.x;
+                const startY = organogramState.dragStartPoint.y;
 
-                // End Point (Mouse relative to Content container)
-                const endX = (e.clientX - contentRect.left) / scale;
-                const endY = (e.clientY - contentRect.top) / scale;
+                // End Point (Mouse) + SVG Offset
+                const endX = ((e.clientX - contentRect.left) / scale) + 2500;
+                const endY = ((e.clientY - contentRect.top) / scale) + 2500;
 
                 // Bezier Curve
                 const cp1x = startX;
@@ -3069,7 +3085,7 @@
                 card.style.left = `${organogramState.dragStart.cardLeft + dx}px`;
                 card.style.top = `${organogramState.dragStart.cardTop + dy}px`;
 
-                drawConnections(); // Redraw lines real-time
+                drawConnections();
             }
         }
 
@@ -3078,12 +3094,11 @@
                 const tempLine = document.getElementById('temp-connection-line');
                 if (tempLine) tempLine.remove();
 
-                // Check Drop Target
-                // Only consider valid dot-in targets or their wrapper groups
-                const targetDot = e.target.closest('.connection-dot-in');
+                // Check Drop Target - Look for HIT AREA, not just dot
+                const targetHitArea = e.target.closest('.connection-dot-in');
 
-                if (targetDot) {
-                    const targetCard = targetDot.closest('[id^="card-"]');
+                if (targetHitArea) {
+                    const targetCard = targetHitArea.closest('[id^="card-"]');
                     if (targetCard && targetCard.id !== organogramState.connectionStartId) {
                         createConnection(organogramState.connectionStartId, targetCard.id);
                     }
@@ -3091,6 +3106,7 @@
 
                 organogramState.isDraggingConnection = false;
                 organogramState.connectionStartId = null;
+                organogramState.dragStartPoint = null;
 
             } else if (organogramState.isDraggingCard && organogramState.activeCardId) {
                 const card = document.getElementById(organogramState.activeCardId);
@@ -3104,9 +3120,8 @@
         }
 
         function createConnection(fromId, toId) {
-            // Check duplicates
             const exists = organogramState.connections.find(c => c.from === fromId && c.to === toId);
-            if (exists) return; // Already exists
+            if (exists) return;
 
             organogramState.connections.push({
                 id: `conn-${Date.now()}`,
@@ -3172,18 +3187,17 @@
             // Agents (Target): Top Middle
 
             organogramState.connections.forEach(conn => {
-                const c1 = document.getElementById(conn.from);
-                const c2 = document.getElementById(conn.to);
-                if (!c1 || !c2) return;
+                const startPos = getDotCenter(conn.from, 'out');
+                const endPos = getDotCenter(conn.to, 'in');
 
-                // Parse positions from style (more reliable than collision with scale)
-                const x1 = (parseFloat(c1.style.left) || 0) + (c1.offsetWidth / 2);
-                const y1 = (parseFloat(c1.style.top) || 0) + c1.offsetHeight + 4; // Bottom Dot Center
-                const x2 = (parseFloat(c2.style.left) || 0) + (c2.offsetWidth / 2);
-                const y2 = (parseFloat(c2.style.top) || 0) - 4; // Top Dot Center
+                if (!startPos || !endPos) return;
 
-                // Bezier Curve
-                // Control points: vertical drop from source, vertical rise from target
+                const x1 = startPos.x;
+                const y1 = startPos.y;
+                const x2 = endPos.x;
+                const y2 = endPos.y;
+
+                // Bezier
                 const cp1x = x1;
                 const cp1y = y1 + 50;
                 const cp2x = x2;
