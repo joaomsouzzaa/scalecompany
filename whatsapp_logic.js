@@ -33,16 +33,20 @@ try {
             }
             renderWhatsApp();
 
-            // Attach Event Listener for Button check
-            const btn = document.getElementById('btn-new-instance');
-            if (btn) {
-                console.log("Button found, attaching listener");
-                // Remove old listeners just in case
-                const newBtn = btn.cloneNode(true);
-                btn.parentNode.replaceChild(newBtn, btn);
-                newBtn.addEventListener('click', window.openNewInstanceModal);
+            // Event Delegation for Button (Robust against DOM timing)
+            if (!window.hasAttachedWaListeners) {
+                document.addEventListener('click', function (e) {
+                    const btn = e.target.closest('#btn-new-instance');
+                    if (btn) {
+                        e.preventDefault();
+                        console.log("Delegated Click: Nova Instância");
+                        window.openNewInstanceModal();
+                    }
+                });
+                window.hasAttachedWaListeners = true;
+                console.log("Global Event Listener Attached for WA Button");
             } else {
-                console.warn("Button btn-new-instance not found during init");
+                console.log("Listeners already attached.");
             }
 
         } catch (e) {
