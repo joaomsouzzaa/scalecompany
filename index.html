@@ -5194,21 +5194,80 @@
             <span class="text-lg font-medium text-slate-800">Carregando...</span>
         </div>
     </div>
-    <!-- Load WhatsApp Logic -->
-    <script src="whatsapp_logic.js?v=3"></script>
-
+    <!-- Load WhatsApp Logic (INLINE FAILSAFE) -->
     <script>
+        // --- WHATSAPP LOGIC (INLINE) ---
+        console.log("WhatsApp Inline Logic Loaded");
+
+        // GLOBAL FUNCTIONS
+        window.openNewInstanceModal = function () {
+            console.log("Opening WhatsApp Modal (Inline)");
+            const modal = document.getElementById('instance-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                // Force layout calc
+                void modal.offsetWidth;
+                modal.classList.remove('opacity-0');
+            } else {
+                console.error("Modal not found");
+                alert("Erro: Modal não encontrado!");
+            }
+        };
+
+        window.closeNewInstanceModal = function () {
+            const modal = document.getElementById('instance-modal');
+            if (modal) {
+                modal.classList.add('opacity-0');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+        };
+
+        window.saveNewInstance = function () {
+            const nameField = document.getElementById('wa-name');
+            const name = nameField ? nameField.value.trim() : '';
+
+            if (!name) {
+                alert("Por favor, digite um nome para a instância.");
+                if (nameField) nameField.focus();
+                return;
+            }
+
+            // Simulate Saving
+            const btn = document.getElementById('btn-save-instance');
+            const originalText = btn ? btn.innerHTML : 'Salvar';
+
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Salvando...';
+                if (window.lucide) lucide.createIcons();
+            }
+
+            setTimeout(() => {
+                alert(`Instância "${name}" criada com sucesso!`);
+                window.closeNewInstanceModal();
+
+                // Reset Form
+                if (nameField) nameField.value = '';
+                document.getElementById('wa-phone').value = '';
+                document.getElementById('wa-desc').value = '';
+
+                // Show Empty State (or updated list if we had logic)
+                // For now, keep it simple as requested
+
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            }, 1000);
+        };
+
         // Navigation Logic Extension for WhatsApp
         const originalNavigateTo = window.navigateTo;
         window.navigateTo = function (viewId) {
             originalNavigateTo(viewId);
-
-            if (viewId === 'whatsapp') {
-                // Initialize WhatsApp Logic when entering view
-                if (typeof initWhatsApp === 'function') {
-                    initWhatsApp();
-                }
-            }
+            // No init needed for simple modal logic
         };
     </script>
     <!-- WA Instance Modal -->
@@ -5222,7 +5281,8 @@
                     <p class="text-xs text-slate-500 mt-1">Conecte um novo número de WhatsApp</p>
                 </div>
                 <!-- Close Button with ID -->
-                <button id="btn-close-modal" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <button id="btn-close-modal" onclick="closeNewInstanceModal()"
+                    class="text-slate-400 hover:text-slate-600 transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
@@ -5254,12 +5314,12 @@
 
                 <!-- Actions -->
                 <div class="pt-4 flex gap-3">
-                    <button id="btn-close-modal-secondary"
+                    <button id="btn-close-modal-secondary" onclick="closeNewInstanceModal()"
                         class="flex-1 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium">
                         Cancelar
                     </button>
                     <!-- Save Button with ID -->
-                    <button id="btn-save-instance"
+                    <button id="btn-save-instance" onclick="saveNewInstance()"
                         class="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-sm text-sm font-medium flex justify-center items-center">
                         <i data-lucide="save" class="w-4 h-4 mr-2"></i>
                         Salvar Instância
