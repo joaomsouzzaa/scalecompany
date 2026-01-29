@@ -1830,7 +1830,12 @@
                     </div>
                     <div class="mt-4 text-center">
                         <p class="text-sm font-medium text-slate-800 mb-1">Abra o WhatsApp e escaneie</p>
-                        <p class="text-xs text-slate-500">Menu > Aparelhos conectados > Conectar um aparelho</p>
+                        <p class="text-xs text-slate-500 mb-3">Menu > Aparelhos conectados > Conectar um aparelho</p>
+                        <button
+                            onclick="finalizeConnection(document.getElementById('wa-name-input').value, document.getElementById('new-instance-token').value)"
+                            class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors">
+                            Já Escaneiei / Concluir
+                        </button>
                     </div>
                 </div>
 
@@ -5728,8 +5733,12 @@
                     }
 
                     if (state === 'connected') {
-                        clearInterval(pollInterval);
-                        finalizeConnection(instanceName, manualToken);
+                        // DISABLE AUTO-FINALIZE to prevent premature closing
+                        // clearInterval(pollInterval);
+                        // finalizeConnection(instanceName, manualToken);
+
+                        // Just notify in console, let user click "Já escaneiei"
+                        console.log("Status detected as CONNECTED. Waiting for user confirmation.");
                     }
                 } catch (e) {
                     console.warn("Polling error:", e);
