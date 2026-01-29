@@ -5967,8 +5967,22 @@
                     </button>
                 </div>
 
-                <!-- Modal Body (Scrollable) -->
-                <div class="flex-1 overflow-y-auto p-6">
+                <!-- Tab Navigation -->
+                <div class="border-b border-slate-200 px-6">
+                    <div class="flex gap-6">
+                        <button onclick="switchAlertTab('editor')" id="alert-tab-editor"
+                            class="pb-3 px-1 text-sm font-medium border-b-2 border-blue-500 text-blue-600 transition-colors">
+                            <i data-lucide="settings" class="w-4 h-4 inline mr-1.5"></i> Editor
+                        </button>
+                        <button onclick="switchAlertTab('log')" id="alert-tab-log"
+                            class="pb-3 px-1 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">
+                            <i data-lucide="list" class="w-4 h-4 inline mr-1.5"></i> Log
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Editor -->
+                <div id="alert-tab-content-editor" class="flex-1 overflow-y-auto p-6">
                     <div class="flex flex-col lg:flex-row gap-8">
 
                         <!-- Form Section -->
@@ -6097,6 +6111,16 @@
                     </div>
                 </div>
 
+                <!-- Tab Content: Log -->
+                <div id="alert-tab-content-log" class="hidden flex-1 overflow-y-auto p-6">
+                    <div class="space-y-3" id="alert-log-list">
+                        <div class="text-center py-12 text-slate-400">
+                            <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                            <p class="text-sm">Nenhum envio registrado ainda.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Footer -->
                 <div
                     class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0 bg-slate-50/50 rounded-b-2xl">
@@ -6121,6 +6145,33 @@
         let currentAlerts = [];
         let editingAlertId = null;
         let alertRecipients = [];
+        let currentAlertLogs = []; // Store logs for current alert
+
+        // --- TAB SWITCHING ---
+        function switchAlertTab(tabName) {
+            const tabs = ['editor', 'log'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`alert-tab-${t}`);
+                const content = document.getElementById(`alert-tab-content-${t}`);
+
+                if (t === tabName) {
+                    btn.classList.add('border-blue-500', 'text-blue-600');
+                    btn.classList.remove('border-transparent', 'text-slate-500');
+                    content.classList.remove('hidden');
+
+                    // Load logs when switching to log tab
+                    if (t === 'log' && editingAlertId) {
+                        loadAlertLogs(editingAlertId);
+                    }
+                } else {
+                    btn.classList.remove('border-blue-500', 'text-blue-600');
+                    btn.classList.add('border-transparent', 'text-slate-500');
+                    content.classList.add('hidden');
+                }
+            });
+
+            if (window.lucide) lucide.createIcons();
+        }
 
         // --- INIT ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -6187,8 +6238,12 @@
                 container.innerHTML = alerts.map(alert => `
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col relative group hover:shadow-md transition-all">
                         <div class="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onclick="editAlert('${alert.id}')" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded"><i data-lucide="pencil" class="w-4 h-4"></i></button>
-                            <button onclick="deleteAlert('${alert.id}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            <button onclick="editAlert('${alert.id}')" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Editar">
+                                <i data-lucide="settings" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="deleteAlert('${alert.id}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Excluir">
+                                <i data-lucide="trash" class="w-4 h-4"></i>
+                            </button>
                         </div>
                         
                         <div class="flex items-center gap-3 mb-4">
@@ -6263,6 +6318,9 @@
 
             renderRecipients();
 
+            // Reset to Editor tab
+            switchAlertTab('editor');
+
             modal.classList.remove('hidden');
             setTimeout(() => {
                 backdrop.classList.remove('opacity-0');
@@ -6283,6 +6341,84 @@
             setTimeout(() => {
                 modal.classList.add('hidden');
             }, 300);
+        }
+
+        // --- LOG MANAGEMENT ---
+        function addAlertLog(alertId, recipient, status, message = '') {
+            // Load existing logs
+            const allLogs = JSON.parse(localStorage.getItem('whatsapp_alert_logs') || '{}');
+
+            if (!allLogs[alertId]) {
+                allLogs[alertId] = [];
+            }
+
+            // Add new log entry
+            allLogs[alertId].unshift({
+                timestamp: new Date().toISOString(),
+                recipient,
+                status, // 'success', 'error', 'pending'
+                message,
+                response_code: status === 'success' ? 200 : (status === 'error' ? 400 : null)
+            });
+
+            // Keep only last 50 logs per alert
+            if (allLogs[alertId].length > 50) {
+                allLogs[alertId] = allLogs[alertId].slice(0, 50);
+            }
+
+            localStorage.setItem('whatsapp_alert_logs', JSON.stringify(allLogs));
+        }
+
+        function loadAlertLogs(alertId) {
+            const container = document.getElementById('alert-log-list');
+            const allLogs = JSON.parse(localStorage.getItem('whatsapp_alert_logs') || '{}');
+            const logs = allLogs[alertId] || [];
+
+            if (logs.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-slate-400">
+                        <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                        <p class="text-sm">Nenhum envio registrado ainda.</p>
+                    </div>`;
+            } else {
+                container.innerHTML = logs.map(log => {
+                    const date = new Date(log.timestamp);
+                    const dateStr = date.toLocaleDateString('pt-BR');
+                    const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+                    let statusColor = 'slate';
+                    let statusIcon = 'clock';
+                    let statusText = 'Pendente';
+
+                    if (log.status === 'success') {
+                        statusColor = 'emerald';
+                        statusIcon = 'check-circle';
+                        statusText = 'Enviado';
+                    } else if (log.status === 'error') {
+                        statusColor = 'red';
+                        statusIcon = 'x-circle';
+                        statusText = 'Erro';
+                    }
+
+                    return `
+                        <div class="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                            <div class="flex items-start justify-between mb-2">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="${statusIcon}" class="w-4 h-4 text-${statusColor}-600"></i>
+                                    <span class="text-xs font-medium text-${statusColor}-700">${statusText}</span>
+                                </div>
+                                <span class="text-xs text-slate-500">${dateStr} ${timeStr}</span>
+                            </div>
+                            <div class="text-xs text-slate-600">
+                                <span class="font-mono bg-white px-1.5 py-0.5 rounded">${log.recipient}</span>
+                                ${log.message ? `<p class="mt-1 text-slate-500">${log.message}</p>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            if (window.lucide) lucide.createIcons();
         }
 
         async function populateAccountSelect() {
