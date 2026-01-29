@@ -867,15 +867,18 @@
                                 </svg>
 
                                 <!-- Level 1: CEO -->
-                                <div id="card-ceo" class="absolute z-10 w-80" style="left: 0px; top: -200px;">
-                                    <!-- Centered relative to 0,0 center of content -->
+                                <div id="card-ceo" class="absolute z-10 w-80 group" style="left: 0px; top: -200px;">
+                                    <!-- Input Dot (Top) -->
                                     <div
-                                        class="bg-white p-5 rounded-lg shadow-lg border border-slate-100 relative group hover:shadow-xl transition-all duration-300 hover:border-orange-200">
-                                        <!-- Connectors (Bottom) -->
-                                        <div
-                                            class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
-                                        </div>
+                                        class="connection-dot-in absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    </div>
 
+                                    <!-- Output Dot (Bottom) -->
+                                    <div class="connection-dot-out absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                        onmousedown="handleDotMouseDown(event, 'card-ceo')"></div>
+
+                                    <div
+                                        class="bg-white p-5 rounded-lg shadow-lg border border-slate-100 relative hover:shadow-xl transition-all duration-300 hover:border-orange-200 h-[220px] flex flex-col justify-between">
                                         <div class="flex items-start gap-4">
                                             <div
                                                 class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
@@ -887,11 +890,11 @@
                                                     <span
                                                         class="px-2 py-0.5 rounded-full bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wide">Ativo</span>
                                                 </div>
-                                                <p class="text-xs text-slate-500 leading-relaxed mb-3"
+                                                <p class="text-xs text-slate-500 leading-relaxed mb-3 line-clamp-3"
                                                     data-field="desc">Assistente executivo que gerencia estratégia,
                                                     metas, projetos e equipe</p>
                                                 <!-- Tags -->
-                                                <div class="flex gap-2 mb-4">
+                                                <div class="flex gap-2 mb-4 flex-wrap">
                                                     <span
                                                         class="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded"
                                                         data-field="provider">anthropic</span>
@@ -899,32 +902,33 @@
                                                         class="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded"
                                                         data-field="model">claude</span>
                                                 </div>
-                                                <!-- Actions -->
-                                                <div
-                                                    class="flex gap-3 text-slate-400 group-hover:text-slate-600 transition-colors">
-                                                    <button class="hover:text-orange-500"
-                                                        onclick="previewAgent('card-ceo')" title="Visualizar"><i
-                                                            data-lucide="eye" class="w-4 h-4"></i></button>
-                                                    <button class="hover:text-orange-500"
-                                                        onclick="editAgent('card-ceo')" title="Editar"><i
-                                                            data-lucide="settings" class="w-4 h-4"></i></button>
-                                                    <button class="hover:text-red-500" onclick="deleteAgent('card-ceo')"
-                                                        title="Excluir"><i data-lucide="trash-2"
-                                                            class="w-4 h-4"></i></button>
-                                                </div>
                                             </div>
+                                        </div>
+                                        <!-- Actions -->
+                                        <div
+                                            class="flex gap-3 text-slate-400 group-hover:text-slate-600 transition-colors border-t border-slate-100 pt-3 mt-auto">
+                                            <button class="hover:text-orange-500" onclick="previewAgent('card-ceo')"
+                                                title="Visualizar"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                                            <button class="hover:text-orange-500" onclick="editAgent('card-ceo')"
+                                                title="Editar"><i data-lucide="settings" class="w-4 h-4"></i></button>
+                                            <button class="hover:text-red-500" onclick="deleteAgent('card-ceo')"
+                                                title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Level 2: Subordinates -->
                                 <!-- Agent 1: Traffic -->
-                                <div id="card-traffic" class="absolute z-10 w-64" style="left: -350px; top: 100px;">
+                                <div id="card-traffic" class="absolute z-10 w-64 group"
+                                    style="left: -350px; top: 100px;">
                                     <div
-                                        class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                        class="connection-dot-in absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                     </div>
+                                    <div class="connection-dot-out absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                        onmousedown="handleDotMouseDown(event, 'card-traffic')"></div>
+
                                     <div
-                                        class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:border-orange-200">
+                                        class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 hover:border-orange-200 h-[220px] flex flex-col justify-between">
                                         <div class="flex items-start gap-3">
                                             <div
                                                 class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
@@ -937,7 +941,7 @@
                                                     <span
                                                         class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
                                                 </div>
-                                                <p class="text-[10px] text-slate-500 leading-snug mb-2"
+                                                <p class="text-[10px] text-slate-500 leading-snug mb-2 line-clamp-3"
                                                     data-field="desc">Especialista em Meta Ads com acesso direto à API
                                                 </p>
                                                 <div class="flex gap-1 mb-2 flex-wrap">
@@ -948,29 +952,30 @@
                                                         class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded"
                                                         data-field="model">claude</span>
                                                 </div>
-                                                <div class="flex gap-2 text-slate-400">
-                                                    <button class="hover:text-orange-500"
-                                                        onclick="previewAgent('card-traffic')"><i data-lucide="eye"
-                                                            class="w-3 h-3"></i></button>
-                                                    <button class="hover:text-orange-500"
-                                                        onclick="editAgent('card-traffic')"><i data-lucide="settings"
-                                                            class="w-3 h-3"></i></button>
-                                                    <button class="hover:text-red-500"
-                                                        onclick="deleteAgent('card-traffic')"><i data-lucide="trash-2"
-                                                            class="w-3 h-3"></i></button>
-                                                </div>
                                             </div>
+                                        </div>
+                                        <div class="flex gap-2 text-slate-400 border-t border-slate-100 pt-3 mt-auto">
+                                            <button class="hover:text-orange-500"
+                                                onclick="previewAgent('card-traffic')"><i data-lucide="eye"
+                                                    class="w-3 h-3"></i></button>
+                                            <button class="hover:text-orange-500" onclick="editAgent('card-traffic')"><i
+                                                    data-lucide="settings" class="w-3 h-3"></i></button>
+                                            <button class="hover:text-red-500" onclick="deleteAgent('card-traffic')"><i
+                                                    data-lucide="trash-2" class="w-3 h-3"></i></button>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Agent 2: Copy -->
-                                <div id="card-copy" class="absolute z-10 w-64" style="left: -110px; top: 100px;">
+                                <div id="card-copy" class="absolute z-10 w-64 group" style="left: -110px; top: 100px;">
                                     <div
-                                        class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                        class="connection-dot-in absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                     </div>
+                                    <div class="connection-dot-out absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                        onmousedown="handleDotMouseDown(event, 'card-copy')"></div>
+
                                     <div
-                                        class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:border-orange-200">
+                                        class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 hover:border-orange-200 h-[220px] flex flex-col justify-between">
                                         <div class="flex items-start gap-3">
                                             <div
                                                 class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
@@ -983,7 +988,7 @@
                                                     <span
                                                         class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
                                                 </div>
-                                                <p class="text-[10px] text-slate-500 leading-snug mb-2"
+                                                <p class="text-[10px] text-slate-500 leading-snug mb-2 line-clamp-3"
                                                     data-field="desc">Criação de textos persuasivos e scripts de vendas
                                                 </p>
                                                 <div class="flex gap-1 mb-2 flex-wrap">
@@ -994,29 +999,30 @@
                                                         class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded"
                                                         data-field="model">claude</span>
                                                 </div>
-                                                <div class="flex gap-2 text-slate-400">
-                                                    <button class="hover:text-orange-500"
-                                                        onclick="previewAgent('card-copy')"><i data-lucide="eye"
-                                                            class="w-3 h-3"></i></button>
-                                                    <button class="hover:text-orange-500"
-                                                        onclick="editAgent('card-copy')"><i data-lucide="settings"
-                                                            class="w-3 h-3"></i></button>
-                                                    <button class="hover:text-red-500"
-                                                        onclick="deleteAgent('card-copy')"><i data-lucide="trash-2"
-                                                            class="w-3 h-3"></i></button>
-                                                </div>
                                             </div>
+                                        </div>
+                                        <div class="flex gap-2 text-slate-400 border-t border-slate-100 pt-3 mt-auto">
+                                            <button class="hover:text-orange-500" onclick="previewAgent('card-copy')"><i
+                                                    data-lucide="eye" class="w-3 h-3"></i></button>
+                                            <button class="hover:text-orange-500" onclick="editAgent('card-copy')"><i
+                                                    data-lucide="settings" class="w-3 h-3"></i></button>
+                                            <button class="hover:text-red-500" onclick="deleteAgent('card-copy')"><i
+                                                    data-lucide="trash-2" class="w-3 h-3"></i></button>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Agent 3: Content -->
-                                <div id="card-content" class="absolute z-10 w-64" style="left: 170px; top: 100px;">
+                                <div id="card-content" class="absolute z-10 w-64 group"
+                                    style="left: 170px; top: 100px;">
                                     <div
-                                        class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                        class="connection-dot-in absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                     </div>
+                                    <div class="connection-dot-out absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                        onmousedown="handleDotMouseDown(event, 'card-content')"></div>
+
                                     <div
-                                        class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:border-orange-200">
+                                        class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 hover:border-orange-200 h-[220px] flex flex-col justify-between">
                                         <div class="flex items-start gap-3">
                                             <div
                                                 class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
@@ -1029,7 +1035,7 @@
                                                     <span
                                                         class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
                                                 </div>
-                                                <p class="text-[10px] text-slate-500 leading-snug mb-2"
+                                                <p class="text-[10px] text-slate-500 leading-snug mb-2 line-clamp-3"
                                                     data-field="desc">Gera conteúdo para redes sociais e blog</p>
                                                 <div class="flex gap-1 mb-2 flex-wrap">
                                                     <span
@@ -1039,29 +1045,30 @@
                                                         class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded"
                                                         data-field="model">claude</span>
                                                 </div>
-                                                <div class="flex gap-2 text-slate-400">
-                                                    <button class="hover:text-orange-500"
-                                                        onclick="previewAgent('card-content')"><i data-lucide="eye"
-                                                            class="w-3 h-3"></i></button>
-                                                    <button class="hover:text-orange-500"
-                                                        onclick="editAgent('card-content')"><i data-lucide="settings"
-                                                            class="w-3 h-3"></i></button>
-                                                    <button class="hover:text-red-500"
-                                                        onclick="deleteAgent('card-content')"><i data-lucide="trash-2"
-                                                            class="w-3 h-3"></i></button>
-                                                </div>
                                             </div>
+                                        </div>
+                                        <div class="flex gap-2 text-slate-400 border-t border-slate-100 pt-3 mt-auto">
+                                            <button class="hover:text-orange-500"
+                                                onclick="previewAgent('card-content')"><i data-lucide="eye"
+                                                    class="w-3 h-3"></i></button>
+                                            <button class="hover:text-orange-500" onclick="editAgent('card-content')"><i
+                                                    data-lucide="settings" class="w-3 h-3"></i></button>
+                                            <button class="hover:text-red-500" onclick="deleteAgent('card-content')"><i
+                                                    data-lucide="trash-2" class="w-3 h-3"></i></button>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Agent 4: Sales -->
-                                <div id="card-sales" class="absolute z-10 w-64" style="left: 450px; top: 100px;">
+                                <div id="card-sales" class="absolute z-10 w-64 group" style="left: 450px; top: 100px;">
                                     <div
-                                        class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20">
+                                        class="connection-dot-in absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                     </div>
+                                    <div class="connection-dot-out absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                        onmousedown="handleDotMouseDown(event, 'card-sales')"></div>
+
                                     <div
-                                        class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:border-orange-200">
+                                        class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 hover:border-orange-200 h-[220px] flex flex-col justify-between">
                                         <div class="flex items-start gap-3">
                                             <div
                                                 class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
@@ -1074,7 +1081,7 @@
                                                     <span
                                                         class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
                                                 </div>
-                                                <p class="text-[10px] text-slate-500 leading-snug mb-2"
+                                                <p class="text-[10px] text-slate-500 leading-snug mb-2 line-clamp-3"
                                                     data-field="desc">Realiza atendimento humano e fechamento</p>
                                                 <div class="flex gap-1 mb-2 flex-wrap">
                                                     <span
@@ -1084,18 +1091,16 @@
                                                         class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded"
                                                         data-field="model">claude</span>
                                                 </div>
-                                                <div class="flex gap-2 text-slate-400">
-                                                    <button class="hover:text-orange-500"
-                                                        onclick="previewAgent('card-sales')"><i data-lucide="eye"
-                                                            class="w-3 h-3"></i></button>
-                                                    <button class="hover:text-orange-500"
-                                                        onclick="editAgent('card-sales')"><i data-lucide="settings"
-                                                            class="w-3 h-3"></i></button>
-                                                    <button class="hover:text-red-500"
-                                                        onclick="deleteAgent('card-sales')"><i data-lucide="trash-2"
-                                                            class="w-3 h-3"></i></button>
-                                                </div>
                                             </div>
+                                        </div>
+                                        <div class="flex gap-2 text-slate-400 border-t border-slate-100 pt-3 mt-auto">
+                                            <button class="hover:text-orange-500"
+                                                onclick="previewAgent('card-sales')"><i data-lucide="eye"
+                                                    class="w-3 h-3"></i></button>
+                                            <button class="hover:text-orange-500" onclick="editAgent('card-sales')"><i
+                                                    data-lucide="settings" class="w-3 h-3"></i></button>
+                                            <button class="hover:text-red-500" onclick="deleteAgent('card-sales')"><i
+                                                    data-lucide="trash-2" class="w-3 h-3"></i></button>
                                         </div>
                                     </div>
                                 </div>
@@ -2815,6 +2820,8 @@
             pan: { x: 0, y: 0 },
             isDraggingCanvas: false,
             isDraggingCard: false,
+            isDraggingConnection: false, // New: Track connection drag
+            connectionStartId: null,     // New: Store source card ID
             dragStart: { x: 0, y: 0 },
             activeCardId: null,
             connections: [
@@ -2831,14 +2838,71 @@
             const content = document.getElementById('organogram-content');
 
             if (container && content) {
-                // Canvas Drag (Pan)
+                // Mouse Listeners
                 container.addEventListener('mousedown', handleCanvasMouseDown);
                 window.addEventListener('mousemove', handleGlobalMouseMove);
                 window.addEventListener('mouseup', handleGlobalMouseUp);
 
-                // Card Drag
+                // Touch Listeners (Mobile Support)
+                container.addEventListener('touchstart', (e) => {
+                    if (e.touches.length > 1) return; // Allow pinch zooom maybe?
+                    const t = e.touches[0];
+                    // Delegate to canvas MouseDown
+                    handleCanvasMouseDown({
+                        clientX: t.clientX,
+                        clientY: t.clientY,
+                        target: e.target,
+                        preventDefault: () => e.preventDefault(),
+                        closest: (s) => e.target.closest(s)
+                    });
+                }, { passive: false });
+
+                window.addEventListener('touchmove', (e) => {
+                    const t = e.touches[0];
+                    // Prevent scroll if dragging
+                    if (organogramState.isDraggingCanvas || organogramState.isDraggingCard || organogramState.isDraggingConnection) {
+                        e.preventDefault();
+                    }
+                    handleGlobalMouseMove({ clientX: t.clientX, clientY: t.clientY });
+                }, { passive: false });
+
+                window.addEventListener('touchend', (e) => {
+                    const t = e.changedTouches[0];
+                    const realTarget = document.elementFromPoint(t.clientX, t.clientY);
+                    handleGlobalMouseUp({
+                        clientX: t.clientX,
+                        clientY: t.clientY,
+                        target: realTarget || e.target
+                    });
+                });
+
+                // Card Listeners
                 document.querySelectorAll('#organogram-content > div[id^="card-"]').forEach(card => {
                     card.addEventListener('mousedown', handleCardMouseDown);
+                    card.addEventListener('touchstart', (e) => {
+                        const t = e.touches[0];
+                        handleCardMouseDown({
+                            clientX: t.clientX,
+                            clientY: t.clientY,
+                            currentTarget: card,
+                            stopPropagation: () => e.stopPropagation(),
+                            target: e.target,
+                            closest: (s) => e.target.closest(s),
+                            preventDefault: () => { }
+                        });
+                    }, { passive: false });
+
+                    const dotOut = card.querySelector('.connection-dot-out');
+                    if (dotOut) {
+                        dotOut.addEventListener('mousedown', (e) => handleDotMouseDown(e, card.id));
+                        dotOut.addEventListener('touchstart', (e) => {
+                            e.stopPropagation(); e.preventDefault();
+                            handleDotMouseDown({
+                                stopPropagation: () => { },
+                                preventDefault: () => { }
+                            }, card.id);
+                        }, { passive: false });
+                    }
                 });
 
                 // Initial Draw
@@ -2848,8 +2912,7 @@
 
         function handleCanvasMouseDown(e) {
             if (e.target.closest('[id^="card-"]')) return; // Ignore if clicking a card
-            // Ignore zoom buttons
-            if (e.target.closest('button')) return;
+            if (e.target.closest('button')) return; // Ignore zoom buttons
 
             organogramState.isDraggingCanvas = true;
             organogramState.dragStart = { x: e.clientX - organogramState.pan.x, y: e.clientY - organogramState.pan.y };
@@ -2858,21 +2921,13 @@
 
         function handleCardMouseDown(e) {
             e.stopPropagation(); // Prevent canvas drag
-            // Ignore buttons inside card
-            if (e.target.closest('button')) return;
+            // Ignore buttons inside card or dots (handled separately)
+            if (e.target.closest('button') || e.target.classList.contains('connection-dot-out')) return;
 
             organogramState.isDraggingCard = true;
             organogramState.activeCardId = e.currentTarget.id;
 
             const card = e.currentTarget;
-            // Get current transform/left/top
-            // We are using absolute positioning with left/top style
-            const rect = card.getBoundingClientRect();
-            const contentRect = document.getElementById('organogram-content').getBoundingClientRect();
-
-            // Calculate offset relative to mouse inside the card
-            // Logic: Relative Position = (Mouse Client - Container Client) / Scale
-            // Easier: just store initial mouse and initial card position
             organogramState.dragStart = {
                 mouseX: e.clientX,
                 mouseY: e.clientY,
@@ -2883,8 +2938,53 @@
             card.classList.add('z-50'); // Bring to front
         }
 
+        function handleDotMouseDown(e, cardId) {
+            e.stopPropagation(); // Prevent card/canvas drag
+            e.preventDefault(); // Prevent selection
+
+            organogramState.isDraggingConnection = true;
+            organogramState.connectionStartId = cardId;
+
+            // Create Temp Line in SVG
+            const svg = document.getElementById('connections-layer');
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.id = "temp-connection-line";
+            path.setAttribute("stroke", "#fb923c"); // Orange-400
+            path.setAttribute("stroke-width", "3");
+            path.setAttribute("stroke-dasharray", "5,5");
+            path.setAttribute("fill", "none");
+            path.setAttribute("pointer-events", "none"); // Let mouse events pass through to target
+            svg.appendChild(path);
+        }
+
         function handleGlobalMouseMove(e) {
-            if (organogramState.isDraggingCanvas) {
+            if (organogramState.isDraggingConnection) {
+                const path = document.getElementById('temp-connection-line');
+                if (!path) return;
+
+                const contentRect = document.getElementById('organogram-content').getBoundingClientRect();
+                const scale = organogramState.scale;
+
+                // Start Point (Bottom of Source Card)
+                const startCard = document.getElementById(organogramState.connectionStartId);
+                // Calculate position relative to container
+                const startX = (parseFloat(startCard.style.left) || 0) + (startCard.offsetWidth / 2);
+                const startY = (parseFloat(startCard.style.top) || 0) + startCard.offsetHeight; // Bottom
+
+                // End Point (Mouse relative to Content container)
+                // Formula: (MouseClient - ContainerContentClient) / Scale
+                const endX = (e.clientX - contentRect.left) / scale;
+                const endY = (e.clientY - contentRect.top) / scale;
+
+                // Bezier Curve
+                const cp1x = startX;
+                const cp1y = startY + 50;
+                const cp2x = endX;
+                const cp2y = endY - 50;
+
+                path.setAttribute("d", `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`);
+
+            } else if (organogramState.isDraggingCanvas) {
                 organogramState.pan.x = e.clientX - organogramState.dragStart.x;
                 organogramState.pan.y = e.clientY - organogramState.dragStart.y;
                 updateOrganogramTransform();
@@ -2900,15 +3000,48 @@
             }
         }
 
-        function handleGlobalMouseUp() {
-            if (organogramState.isDraggingCard && organogramState.activeCardId) {
+        function handleGlobalMouseUp(e) {
+            if (organogramState.isDraggingConnection) {
+                const tempLine = document.getElementById('temp-connection-line');
+                if (tempLine) tempLine.remove();
+
+                // Check Drop Target
+                // Only consider valid dot-in targets
+                if (e.target.classList.contains('connection-dot-in')) {
+                    const targetCard = e.target.closest('[id^="card-"]');
+                    if (targetCard && targetCard.id !== organogramState.connectionStartId) {
+                        createConnection(organogramState.connectionStartId, targetCard.id);
+                    }
+                }
+
+                organogramState.isDraggingConnection = false;
+                organogramState.connectionStartId = null;
+
+            } else if (organogramState.isDraggingCard && organogramState.activeCardId) {
                 const card = document.getElementById(organogramState.activeCardId);
                 card.classList.remove('z-50');
+                organogramState.isDraggingCard = false;
+                organogramState.activeCardId = null;
             }
+
             organogramState.isDraggingCanvas = false;
-            organogramState.isDraggingCard = false;
-            organogramState.activeCardId = null;
             document.getElementById('organogram-container').classList.remove('cursor-grabbing');
+        }
+
+        function createConnection(fromId, toId) {
+            // Check duplicates
+            const exists = organogramState.connections.find(c => c.from === fromId && c.to === toId);
+            if (exists) return; // Already exists
+
+            // Check reverse? (Optional: prevent A->B and B->A? )
+            // For now, allow whatever the user wants visually
+
+            organogramState.connections.push({
+                id: `conn-${Date.now()}`,
+                from: fromId,
+                to: toId
+            });
+            drawConnections();
         }
 
         function updateOrganogramTransform() {
@@ -3165,20 +3298,29 @@
             const validSlug = slug.replace(/[^a-z0-9-]/gi, '-').toLowerCase();
             const cardId = `card-${validSlug}-${Date.now()}`;
 
-            // Random Position near center (offset by random -50 to 50)
+            // Random Position near center
             const randomX = (Math.random() - 0.5) * 100;
-            const randomY = (Math.random() - 0.5) * 100 + 200; // slightly below CEO
+            const randomY = (Math.random() - 0.5) * 100 + 200;
 
             // Create Card HTML
             const card = document.createElement('div');
             card.id = cardId;
-            card.className = "absolute z-10 w-64 animate-in fade-in zoom-in duration-500";
+            // group class allows hover detection for children
+            card.className = "absolute z-10 w-64 group animate-in fade-in zoom-in duration-500";
             card.style.left = `${randomX}px`;
             card.style.top = `${randomY}px`;
 
+            // Consistent Height: h-[220px]
+            // Dots: Opacity 0 -> Hover Opacity 100
             card.innerHTML = `
-                <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20"></div>
-                <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:border-orange-200">
+                <!-- Input Dot (Top) -->
+                <div class="connection-dot-in absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                
+                <!-- Output Dot (Bottom) -->
+                <div class="connection-dot-out absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-20 cursor-crosshair opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                     onmousedown="handleDotMouseDown(event, '${cardId}')"></div>
+
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 hover:border-orange-200 h-[220px] flex flex-col justify-between">
                     <div class="flex items-start gap-3">
                         <div class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
                             <i data-lucide="bot" class="w-4 h-4 text-orange-600"></i>
@@ -3188,32 +3330,34 @@
                                 <h3 class="font-bold text-slate-800 text-sm" data-field="name">${name}</h3>
                                 <span class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
                             </div>
-                            <p class="text-[10px] text-slate-500 leading-snug mb-2" data-field="desc">${desc || 'Novo agente de IA'}</p>
+                            <p class="text-[10px] text-slate-500 leading-snug mb-2 line-clamp-3" data-field="desc">${desc || 'Novo agente de IA'}</p>
+                            
+                            <!-- Tags moved to bottom/middle mainly, but here we keep flow -->
                             <div class="flex gap-1 mb-2 flex-wrap">
                                 <span class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded" data-field="provider">${provider}</span>
                                 <span class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded" data-field="model">${validSlug}</span>
                             </div>
-                            <div class="flex gap-2 text-slate-400">
-                                <button class="hover:text-orange-500" onclick="previewAgent('${cardId}')"><i data-lucide="eye" class="w-3 h-3"></i></button>
-                                <button class="hover:text-orange-500" onclick="editAgent('${cardId}')"><i data-lucide="settings" class="w-3 h-3"></i></button>
-                                <button class="hover:text-red-500" onclick="deleteAgent('${cardId}')"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
-                            </div>
                         </div>
+                    </div>
+                    
+                    <!-- Actions at bottom -->
+                    <div class="flex gap-2 text-slate-400 border-t border-slate-100 pt-3 mt-auto">
+                        <button class="hover:text-orange-500" onclick="previewAgent('${cardId}')" title="Visualizar"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                        <button class="hover:text-orange-500" onclick="editAgent('${cardId}')" title="Editar"><i data-lucide="settings" class="w-4 h-4"></i></button>
+                        <button class="hover:text-red-500" onclick="deleteAgent('${cardId}')" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
                 </div>`;
 
-            // Attach Drag Event
+            // Attach Drag Event (Card Body) mostly handled by global logic, but we need to ensure card is targetable
             card.addEventListener('mousedown', handleCardMouseDown);
 
             container.appendChild(card);
 
-            // Auto-connect to CEO (Optional, but good for demo)
-            organogramState.connections.push({
-                id: `conn-${Date.now()}`,
-                from: 'card-ceo',
-                to: cardId
-            });
-            drawConnections();
+            // Auto-connect removed for manual testing, OR keep if user wants default. 
+            // User requested manual connections, so I won't auto-connect newly created agents to keep lines clean unless requested.
+            // But previous requirement often implies hierarchy. I'll comment it out for "Drag to Connect" purity.
+            // organogramState.connections.push({...}); 
+            // Better: Let user connect.
 
             if (window.lucide) lucide.createIcons();
         }
