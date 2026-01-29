@@ -937,46 +937,34 @@
                                         class="bg-white p-5 rounded-lg shadow-lg border border-slate-100 relative hover:shadow-xl transition-all duration-300 hover:border-orange-200 h-[220px] flex flex-col justify-between">
                                         <div class="flex items-start gap-4">
                                             <div
-                                                class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
-                                                <i data-lucide="bot" class="w-6 h-6 text-orange-600"></i>
+                                                class="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg shrink-0">
+                                                <span class="font-bold text-lg">JS</span>
                                             </div>
-                                            <div>
-                                                <div class="flex items-center gap-2 mb-1">
-                                                    <h3 class="font-bold text-slate-800" data-field="name">CEO</h3>
-                                                    <span
-                                                        class="px-2 py-0.5 rounded-full bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wide">Ativo</span>
-                                                </div>
-                                                <p class="text-xs text-slate-500 leading-relaxed mb-3 line-clamp-3"
-                                                    data-field="desc">Assistente executivo que gerencia estratégia,
-                                                    metas, projetos e equipe</p>
-                                                <!-- Tags -->
-                                                <div class="flex gap-2 mb-4 flex-wrap">
-                                                    <span
-                                                        class="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded"
-                                                        data-field="provider">anthropic</span>
-                                                    <span
-                                                        class="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded"
-                                                        data-field="model">claude</span>
+                                            <div class="flex-1 min-w-0">
+                                                <h3 class="font-bold text-base truncate">João Souza</h3>
+                                                <p
+                                                    class="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-1">
+                                                    CEO / Founder</p>
+                                                <div
+                                                    class="px-2 py-0.5 rounded bg-slate-800 text-xs inline-block text-slate-300">
+                                                    Scale Company
                                                 </div>
                                             </div>
                                         </div>
-                                        <!-- Actions -->
                                         <div
-                                            class="flex gap-3 text-slate-400 group-hover:text-slate-600 transition-colors border-t border-slate-100 pt-3 mt-auto">
-                                            <button class="hover:text-orange-500" onclick="previewAgent('card-ceo')"
-                                                title="Visualizar"><i data-lucide="eye" class="w-4 h-4"></i></button>
-                                            <button class="hover:text-orange-500" onclick="editAgent('card-ceo')"
-                                                title="Editar"><i data-lucide="settings" class="w-4 h-4"></i></button>
-                                            <button class="hover:text-red-500" onclick="deleteAgent('card-ceo')"
-                                                title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                            class="mt-auto pt-3 border-t border-slate-700/50 flex justify-between items-center">
+                                            <div class="flex items-center gap-1.5 text-slate-400">
+                                                <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                                                <span class="text-xs font-medium">Equipe Principal</span>
+                                            </div>
+                                            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Level 2: Agents (Horizontal Row) -->
                                 <!-- Agent 1: Traffic -->
-                                <div id="card-traffic" class="absolute z-10 w-72 group"
-                                    style="left: -500px; top: 100px;">
+                                <div id="card-traffic" class="relative group z-10 w-72">
                                     <div class="conn-hit-area top-point connection-dot-in">
                                         <div class="conn-dot"></div>
                                     </div>
@@ -1026,7 +1014,7 @@
                                 </div>
 
                                 <!-- Agent 2: Copy -->
-                                <div id="card-copy" class="absolute z-10 w-72 group" style="left: -170px; top: 100px;">
+                                <div id="card-copy" class="relative group z-10 w-72">
                                     <div class="conn-hit-area top-point connection-dot-in">
                                         <div class="conn-dot"></div>
                                     </div>
@@ -1075,8 +1063,7 @@
                                 </div>
 
                                 <!-- Agent 3: Content -->
-                                <div id="card-content" class="absolute z-10 w-72 group"
-                                    style="left: 170px; top: 100px;">
+                                <div id="card-content" class="relative group z-10 w-72">
                                     <div class="conn-hit-area top-point connection-dot-in">
                                         <div class="conn-dot"></div>
                                     </div>
@@ -1125,7 +1112,7 @@
                                 </div>
 
                                 <!-- Agent 4: Sales -->
-                                <div id="card-sales" class="absolute z-10 w-72 group" style="left: 500px; top: 100px;">
+                                <div id="card-sales" class="relative group z-10 w-72">
                                     <div class="conn-hit-area top-point connection-dot-in">
                                         <div class="conn-dot"></div>
                                     </div>
@@ -3033,11 +3020,11 @@
             const scale = organogramState.scale;
 
             // Calculate relative to content origin (0,0)
+            // With new Flex layout, SVG matches content size 1:1, so no 2500 offset needed.
             const relX = (dotRect.left + dotRect.width / 2 - contentRect.left) / scale;
             const relY = (dotRect.top + dotRect.height / 2 - contentRect.top) / scale;
 
-            // Add SVG Transform Offset (2500)
-            return { x: relX + 2500, y: relY + 2500 };
+            return { x: relX, y: relY };
         }
 
         function handleDotMouseDown(e, cardId) {
@@ -3292,25 +3279,19 @@
         }
 
         function fitOrganogram() {
-            // Reset individual card positions to default "Tree" layout
-            const positions = {
-                'card-ceo': { l: 0, t: -200 },
-                'card-traffic': { l: -500, t: 100 },
-                'card-copy': { l: -170, t: 100 },
-                'card-content': { l: 170, t: 100 },
-                'card-sales': { l: 500, t: 100 }
-            };
+            // With Flexbox, we don't need to manually set positions.
+            // The CSS 'flex items-center justify-center' handles the layout.
 
-            Object.keys(positions).forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.style.left = positions[id].l + 'px';
-                    el.style.top = positions[id].t + 'px';
-                }
-            });
+            // Reset Zoom/Pan to defaults so Flexbox centering is visible
+            organogramState.pan = { x: 0, y: 0 };
+            organogramState.scale = 1;
+            updateOrganogramTransform();
 
-            centerContent();
-            drawConnections();
+            // Redraw connections to match new grid positions
+            // Tiny delay to ensure flex layout is computed
+            setTimeout(() => {
+                drawConnections();
+            }, 50);
         }
 
         function centerContent() {
@@ -3592,11 +3573,10 @@
             const cardId = `card-${validSlug}-${Date.now()}`;
 
             const card = document.createElement('div');
-            // Updated to w-72 for consistency
-            card.className = 'absolute z-10 w-72 group animate-in fade-in zoom-in duration-500';
+            // Updated for Flexbox Grid: Relative, no absolute positioning
+            card.className = 'relative group z-10 w-72 animate-in fade-in zoom-in duration-500';
             card.id = cardId;
-            card.style.left = '0px';
-            card.style.top = '100px';
+            // No style.left/top needed
 
             card.innerHTML = `
                 <!-- Input Connection Area (Top) -->
