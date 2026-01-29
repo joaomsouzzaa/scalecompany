@@ -5781,13 +5781,27 @@
                         // Extract State
                         if (data && data.status && data.status.checked_instance) {
                             state = data.status.checked_instance.connection_status;
-                            // Check for QR inside status
-                            if (data.status.checked_instance.qrCode) currentQr = data.status.checked_instance.qrCode;
-                            if (data.status.checked_instance.base64) currentQr = data.status.checked_instance.base64;
                         }
-                        // Also check top level if API varies
-                        if (data.qrcode) currentQr = data.qrcode;
-                        if (data.base64) currentQr = data.base64;
+
+                        // ROBUST QR EXTRACTION (Same as initRealConnection)
+                        // This fixes the issue where polling missed the QR because it was nested
+                        const getQr = (d) => {
+                            if (!d) return null;
+                            if (d.qrcode) return d.qrcode;
+                            if (d.base64) return d.base64;
+                            // Check nested status object if present
+                            if (d.status && d.status.checked_instance) {
+                                if (d.status.checked_instance.qrCode) return d.status.checked_instance.qrCode;
+                                if (d.status.checked_instance.base64) return d.status.checked_instance.base64;
+                            }
+                            if (d.instance) {
+                                if (d.instance.qrcode) return d.instance.qrcode;
+                                if (d.instance.base64) return d.instance.base64;
+                            }
+                            return null;
+                        };
+
+                        currentQr = getQr(data);
 
                     } else {
                         // Legacy Polling
