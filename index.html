@@ -1482,11 +1482,51 @@
                             </div>
 
                             <!-- List Container -->
-                            <div id="instance-list-container"
-                                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- Tabs Header -->
+                            <div class="border-b border-slate-200 mb-6">
+                                <div class="flex gap-6">
+                                    <button onclick="switchWaTab('instances')" id="tab-btn-instances"
+                                        class="pb-3 border-b-2 border-orange-500 text-orange-600 font-medium text-sm transition-colors">
+                                        Instâncias <span id="count-instances"
+                                            class="ml-1 bg-orange-100 text-orange-700 py-0.5 px-2 rounded-full text-xs">0</span>
+                                    </button>
+                                    <button onclick="switchWaTab('groups')" id="tab-btn-groups"
+                                        class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm transition-colors">
+                                        Grupos <span
+                                            class="ml-1 bg-slate-100 text-slate-600 py-0.5 px-2 rounded-full text-xs">0</span>
+                                    </button>
+                                    <button onclick="switchWaTab('alerts')" id="tab-btn-alerts"
+                                        class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm transition-colors">
+                                        Alertas
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Tab Content: Instances -->
+                            <div id="tab-content-instances" class="wa-tab-content animate-in fade-in duration-300">
+                                <div id="instance-list-container"
+                                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <!-- Rendered dynamically -->
+                                    <div
+                                        class="col-span-full text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                                        <p class="text-slate-500">Nenhuma instância conectada.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab Content: Groups (Placeholder) -->
+                            <div id="tab-content-groups" class="wa-tab-content hidden animate-in fade-in duration-300">
                                 <div
-                                    class="col-span-full text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                                    <p class="text-slate-500">Nenhuma instância conectada.</p>
+                                    class="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                                    <p class="text-slate-500">Nenhum grupo sincronizado.</p>
+                                </div>
+                            </div>
+
+                            <!-- Tab Content: Alerts (Placeholder) -->
+                            <div id="tab-content-alerts" class="wa-tab-content hidden animate-in fade-in duration-300">
+                                <div
+                                    class="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                                    <p class="text-slate-500">Nenhum alerta configurado.</p>
                                 </div>
                             </div>
                         </div>
@@ -5199,7 +5239,121 @@
         // --- WHATSAPP LOGIC (INLINE) ---
         console.log("WhatsApp Inline Logic Loaded");
 
-        // GLOBAL FUNCTIONS
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            loadWaInstances();
+            updateWaCounters();
+        });
+
+        // TABS LOGIC
+        window.switchWaTab = function (tabName) {
+            // Update Headers
+            const tabs = ['instances', 'groups', 'alerts'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-btn-${t}`);
+                const content = document.getElementById(`tab-content-${t}`);
+
+                if (t === tabName) {
+                    btn.classList.add('border-orange-500', 'text-orange-600');
+                    btn.classList.remove('border-transparent', 'text-slate-500');
+                    content.classList.remove('hidden');
+                } else {
+                    btn.classList.remove('border-orange-500', 'text-orange-600');
+                    btn.classList.add('border-transparent', 'text-slate-500');
+                    content.classList.add('hidden');
+                }
+            });
+
+            // Toggle "New Instance" button visibility
+            const newBtn = document.getElementById('btn-new-instance');
+            if (newBtn) {
+                if (tabName === 'instances') newBtn.classList.remove('hidden');
+                else newBtn.classList.add('hidden');
+            }
+        };
+
+        // --- INSTANCE MANAGEMENT ---
+
+        function loadWaInstances() {
+            const container = document.getElementById('instance-list-container');
+            if (!container) return;
+
+            const instances = JSON.parse(localStorage.getItem('wa_instances') || '[]');
+            const countBadge = document.getElementById('count-instances');
+            if (countBadge) countBadge.innerText = instances.length;
+
+            if (instances.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                        <p class="text-slate-500">Nenhuma instância conectada.</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = instances.map(inst => `
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between h-full transition-shadow hover:shadow-md">
+                    <!-- Header -->
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="font-bold text-slate-800">${inst.name}</h3>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${inst.status === 'connected' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}">
+                                    ${inst.status === 'connected' ? 'Conectado' : 'Desconectado'}
+                                </span>
+                            </div>
+                            <p class="text-sm font-mono text-slate-500">${inst.phone || 'Sem número'}</p>
+                        </div>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="mb-6 flex-1">
+                        <p class="text-xs text-slate-500 line-clamp-2">${inst.desc || 'Sem descrição'}</p>
+                    </div>
+
+                    <!-- Actions Grid -->
+                    <div class="grid grid-cols-2 gap-2 mb-4">
+                        <button class="flex items-center justify-center gap-2 px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-medium transition-colors border border-slate-200">
+                            <i data-lucide="qr-code" class="w-3.5 h-3.5"></i> QR Code
+                        </button>
+                        <button class="flex items-center justify-center gap-2 px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-medium transition-colors border border-slate-200">
+                            <i data-lucide="webhook" class="w-3.5 h-3.5"></i> Webhook
+                        </button>
+                        <button class="flex items-center justify-center gap-2 px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-medium transition-colors border border-slate-200">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Sincronizar
+                        </button>
+                        <button class="flex items-center justify-center gap-2 px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-medium transition-colors border border-slate-200">
+                            <i data-lucide="power" class="w-3.5 h-3.5"></i> Reiniciar
+                        </button>
+                    </div>
+
+                    <!-- Footer Action -->
+                    <button onclick="deleteWaInstance('${inst.id}')" class="w-full py-2 text-red-500 hover:bg-red-50 rounded-lg text-xs font-bold transition-colors flex items-center justify-center border border-transparent hover:border-red-100">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5 mr-1.5"></i> Desconectar
+                    </button>
+                </div>
+            `).join('');
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function updateWaCounters() {
+            const instances = JSON.parse(localStorage.getItem('wa_instances') || '[]');
+            const countBadge = document.getElementById('count-instances');
+            if (countBadge) countBadge.innerText = instances.length;
+        }
+
+        window.deleteWaInstance = function (id) {
+            if (!confirm('Tem certeza que deseja desconectar e remover esta instância?')) return;
+
+            let instances = JSON.parse(localStorage.getItem('wa_instances') || '[]');
+            instances = instances.filter(i => i.id !== id);
+            localStorage.setItem('wa_instances', JSON.stringify(instances));
+
+            loadWaInstances();
+            updateWaCounters();
+        };
+
+        // GLOBAL MODAL FUNCTIONS
         window.openNewInstanceModal = function () {
             console.log("Opening WhatsApp Modal (Inline)");
             const modal = document.getElementById('instance-modal');
@@ -5240,7 +5394,12 @@
 
         window.saveNewInstance = function () {
             const nameField = document.getElementById('wa-name');
+            const phoneField = document.getElementById('wa-phone');
+            const descField = document.getElementById('wa-desc');
+
             const name = nameField ? nameField.value.trim() : '';
+            const phone = phoneField ? phoneField.value.trim() : '';
+            const desc = descField ? descField.value.trim() : '';
 
             if (!name) {
                 alert("Por favor, digite um nome para a instância.");
@@ -5248,7 +5407,7 @@
                 return;
             }
 
-            // Simulate Saving
+            // Button Loading State
             const btn = document.getElementById('btn-save-instance');
             const originalText = btn ? btn.innerHTML : 'Salvar';
 
@@ -5259,22 +5418,38 @@
             }
 
             setTimeout(() => {
+                // PERSISTENCE LOGIC
+                const newInstance = {
+                    id: 'wa-' + Date.now(),
+                    name: name,
+                    phone: phone,
+                    desc: desc,
+                    status: 'connected', // Auto-connect for demo
+                    createdAt: new Date().toISOString()
+                };
+
+                const instances = JSON.parse(localStorage.getItem('wa_instances') || '[]');
+                instances.push(newInstance);
+                localStorage.setItem('wa_instances', JSON.stringify(instances));
+
+                // Success Feedback
                 alert(`Instância "${name}" criada com sucesso!`);
                 window.closeNewInstanceModal();
 
+                // Refresh UI
+                loadWaInstances();
+                updateWaCounters();
+
                 // Reset Form
                 if (nameField) nameField.value = '';
-                document.getElementById('wa-phone').value = '';
-                document.getElementById('wa-desc').value = '';
-
-                // Show Empty State (or updated list if we had logic)
-                // For now, keep it simple as requested
+                if (phoneField) phoneField.value = '';
+                if (descField) descField.value = '';
 
                 if (btn) {
                     btn.disabled = false;
                     btn.innerHTML = originalText;
                 }
-            }, 1000);
+            }, 800); // Slight delay for realism
         };
 
         // Navigation Logic Extension for WhatsApp
