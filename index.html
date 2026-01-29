@@ -2986,8 +2986,108 @@
             editingAgentId: null // New: Track which agent is being edited
         };
 
+        // --- PERSISTENCE LOGIC ---
+        function saveState() {
+            // Save Agents (Scrape from DOM for now, or maintain a parallel array. Scraping is robust for this hybrid setup)
+            const agents = [];
+            document.querySelectorAll('[id^="card-"]').forEach(card => {
+                agents.push({
+                    id: card.id,
+                    left: card.style.left,
+                    top: card.style.top,
+                    name: card.querySelector('[data-field="name"]')?.textContent || 'CEO', // CEO might not have data-field name if not fully updated, but we added it
+                    desc: card.querySelector('[data-field="desc"]')?.textContent || '',
+                    provider: card.querySelector('[data-field="provider"]')?.textContent || '',
+                    model: card.querySelector('[data-field="model"]')?.textContent || ''
+                });
+            });
+
+            const state = {
+                agents: agents,
+                connections: organogramState.connections
+            };
+            localStorage.setItem('scale_organogram_data', JSON.stringify(state));
+        }
+
+        function loadState() {
+            const data = localStorage.getItem('scale_organogram_data');
+            if (!data) return; // Use defaults (HTML structure)
+
+            const state = JSON.parse(data);
+
+            // Restore Connections
+            if (state.connections) {
+                organogramState.connections = state.connections;
+            }
+
+            // Restore Agents
+            if (state.agents && state.agents.length > 0) {
+                const content = document.getElementById('organogram-content');
+                // We need to sync: 
+                // 1. Update existing cards
+                // 2. Create missing cards
+                // 3. Delete extra cards (optional, but good for consistency)
+
+                // Set of IDs in storage
+                const storedIds = new Set(state.agents.map(a => a.id));
+
+                // 1. Remove cards not in storage
+                document.querySelectorAll('[id^="card-"]').forEach(card => {
+                    if (!storedIds.has(card.id)) {
+                        card.remove();
+                    }
+                });
+
+                // 2. Update or Create
+                state.agents.forEach(agent => {
+                    let card = document.getElementById(agent.id);
+                    if (card) {
+                        // Update Position
+                        card.style.left = agent.left;
+                        card.style.top = agent.top;
+                        // Update Content
+                        if (agent.id !== 'card-ceo') { // Allow CEO updates too if desired, user said "including CEO"
+                            const nameEl = card.querySelector('[data-field="name"]');
+                            if (nameEl) nameEl.textContent = agent.name;
+                            const descEl = card.querySelector('[data-field="desc"]');
+                            if (descEl) descEl.textContent = agent.desc;
+                            const provEl = card.querySelector('[data-field="provider"]');
+                            if (provEl) provEl.textContent = agent.provider;
+                            const modEl = card.querySelector('[data-field="model"]');
+                            if (modEl) modEl.textContent = agent.model;
+                        } else {
+                            // Similar update for CEO if fields exist
+                            const nameEl = card.querySelector('[data-field="name"]');
+                            if (nameEl) nameEl.textContent = agent.name;
+                            const descEl = card.querySelector('[data-field="desc"]');
+                            if (descEl) descEl.textContent = agent.desc;
+                            const provEl = card.querySelector('[data-field="provider"]');
+                            if (provEl) provEl.textContent = agent.provider;
+                            const modEl = card.querySelector('[data-field="model"]');
+                            if (modEl) modEl.textContent = agent.model;
+                        }
+                    } else {
+                        // Create New Card
+                        // We can reuse appendAgentToGrid but need to force ID and position
+                        // Or just create manually to ensure exact ID restore
+                        appendAgentToGrid({
+                            name: agent.name,
+                            desc: agent.desc,
+                            provider: agent.provider,
+                            model: agent.model,
+                            slug: agent.id.replace('card-', '').split('-')[0] // approx slug
+                        }, agent.id, agent.left, agent.top);
+                    }
+                });
+            }
+
+            // Draw lines after restore
+            setTimeout(drawConnections, 50);
+        }
+
         // Initialize listeners
         setTimeout(() => {
+            loadState(); // Load data on init
             const container = document.getElementById('organogram-container');
             const content = document.getElementById('organogram-content');
 
@@ -3125,7 +3225,7 @@
             }, 50);
         }
 
-        function appendAgentToGrid(data) {
+        function appendAgentToGrid(data, forcedId = null, forcedLeft = null, forcedTop = null) {
             const content = document.getElementById('organogram-content');
             if (!content) {
                 console.warn("Organogram content container not found");
@@ -3133,18 +3233,25 @@
             }
 
             // Create unique ID
-            const validSlug = data.slug.replace(/[^a-z0-9-]/gi, '-').toLowerCase();
-            const cardId = `card-${validSlug}-${Date.now()}`;
+            let cardId = forcedId;
+            if (!cardId) {
+                const validSlug = data.slug.replace(/[^a-z0-9-]/gi, '-').toLowerCase();
+                cardId = `card-${validSlug}-${Date.now()}`;
+            }
 
             const card = document.createElement('div');
             // Absolute positioning for "Fixed but Movable" layout
             card.className = 'absolute z-10 group w-72 animate-in fade-in zoom-in duration-500';
             card.id = cardId;
 
-            // Initial Position (Below existing row or centered)
-            // For now, place it below the main row to avoid immediate overlap
-            card.style.left = '0px';
-            card.style.top = '350px';
+            // Initial Position
+            if (forcedLeft && forcedTop) {
+                card.style.left = forcedLeft;
+                card.style.top = forcedTop;
+            } else {
+                card.style.left = '0px';
+                card.style.top = '350px';
+            }
 
             card.innerHTML = `
         <!-- Input Connection Area (Top) -->
@@ -3321,6 +3428,15 @@
                 organogramState.connectionStartId = null;
                 organogramState.dragStartPoint = null;
             }
+
+            // Reset
+            organogramState.isDraggingCard = false;
+            organogramState.isDraggingCanvas = false;
+            organogramState.activeCardId = null;
+            document.body.style.cursor = 'default';
+
+            // Save State after interaction
+            saveState();
 
             organogramState.isDraggingCanvas = false;
             document.getElementById('organogram-container').classList.remove('cursor-grabbing');
@@ -3639,6 +3755,7 @@
             console.log("Deleting connection:", connId); // Debug log
             organogramState.connections = organogramState.connections.filter(c => c.id !== connId);
             drawConnections();
+            saveState(); // Save after connection/line delete
         };
 
         // --- Card Actions ---
@@ -3708,6 +3825,7 @@
                 // Remove connections
                 organogramState.connections = organogramState.connections.filter(c => c.from !== cardId && c.to !== cardId);
                 drawConnections();
+                saveState(); // Save after agent delete
             }
         }
 
@@ -3800,6 +3918,7 @@
                     } else {
                         closeAgentModal();
                     }
+                    saveState(); // Save after update existing
                 }
             } else {
                 // CREATE NEW
@@ -3821,6 +3940,11 @@
                 const modelSelect = document.getElementById('agent-model');
                 const modelName = modelSelect.options[modelSelect.selectedIndex].text;
                 appendAgentToGrid({ name, slug, provider, model: modelName, desc });
+                // appendAgentToGrid now calls saveState() internally or we call it here? 
+                // Let's ensure appendAgentToGrid calls it OR call it here.
+                // Better to call here if appendAgentToGrid is pure DOM.
+                // But appendAgentToGrid might be async or used by loadState (which shouldn't save).
+                // Let's check appendAgentToGrid signature.
             }
         }
 
