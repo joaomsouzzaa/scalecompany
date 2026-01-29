@@ -5447,11 +5447,10 @@
                     if (isExistsError) {
                         connectExistingInstance(instanceName);
                     } else {
-                        // Show REAL error
-                        console.error("API Error Payload:", data);
-                        const msg = data.message || data.error || JSON.stringify(data);
-                        alert("Erro UAZAPI: " + msg);
-                        window.closeNewInstanceModal();
+                        // Fallback Strategy: Even if error (e.g. 401 on Create), try to CONNECT.
+                        // Assuming the user might have created it manually on the panel.
+                        console.warn("Create failed, attempting legacy connect...", data);
+                        connectExistingInstance(instanceName);
                     }
                 }
 
@@ -5464,13 +5463,32 @@
 
         // Fallback for existing instances
         async function connectExistingInstance(instanceName) {
-            console.log("Instance exists, trying to fetch connect QR...");
+            console.log(`Fallback: Connecting to existing ${instanceName}`);
             try {
-                const response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect/${instanceName}`, {
+                // Try GET first (Classic Evolution behavior)
+                // If fails 404/405, we might try POST later, but let's stick to GET with correct headers first
+                let response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect/${instanceName}`, {
                     method: 'GET',
-                    headers: { 'token': UAZAPI_CONFIG.token }
+                    headers: {
+                        'token': UAZAPI_CONFIG.token,
+                        'apikey': UAZAPI_CONFIG.token
+                    }
                 });
+
+                // If Method Not Allowed (405) or Not Found (404), Try POST as per User Docs
+                if (response.status === 404 || response.status === 405) {
+                    console.log("GET connect failed, trying POST...");
+                    response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect/${instanceName}`, {
+                        method: 'POST',
+                        headers: {
+                            'token': UAZAPI_CONFIG.token,
+                            'apikey': UAZAPI_CONFIG.token
+                        }
+                    });
+                }
+
                 const data = await response.json();
+
                 if (data && (data.base64 || data.qrcode)) {
                     const qrBase64 = data.base64 || data.qrcode;
                     document.getElementById('qr-loading').classList.add('hidden');
@@ -5479,7 +5497,7 @@
                     img.src = qrBase64.startsWith('data:image') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
                     startPollingStatus(instanceName);
                 } else {
-                    alert("Instância já existe mas não consegui obter o QR Code. Tente outro nome.");
+                    alert("Não consegui conectar na instância existente: " + (data.message || JSON.stringify(data)));
                     window.closeNewInstanceModal();
                 }
             } catch (e) {
@@ -5509,7 +5527,10 @@
                     // Common endpoint: /instance/connectionState/{instanceName}
                     const res = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connectionState/${instanceName}`, {
                         method: 'GET',
-                        headers: { 'token': UAZAPI_CONFIG.token }
+                        headers: {
+                            'token': UAZAPI_CONFIG.token,
+                            'apikey': UAZAPI_CONFIG.token
+                        }
                     });
                     const statusData = await res.json();
 
