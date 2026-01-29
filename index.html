@@ -5423,7 +5423,7 @@
 
                     <!-- Footer Action -->
                     <button onclick="deleteWaInstance('${inst.id}')" class="w-full py-2 text-red-500 hover:bg-red-50 rounded-lg text-xs font-bold transition-colors flex items-center justify-center border border-transparent hover:border-red-100">
-                        <i data-lucide="trash-2" class="w-3.5 h-3.5 mr-1.5"></i> Desconectar
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5 mr-1.5"></i> Remover
                     </button>
                 </div>
             `).join('');
@@ -5446,6 +5446,64 @@
 
             loadWaInstances();
             updateWaCounters();
+        };
+
+        // --- NEW: LIVE STATUS SYNC ---
+        async function checkInstancesStatus() {
+            const instances = JSON.parse(localStorage.getItem('wa_instances') || '[]');
+            if (instances.length === 0) return;
+
+            let changed = false;
+            const container = document.getElementById('instance-list-container');
+
+            for (let i = 0; i < instances.length; i++) {
+                const inst = instances[i];
+                if (!inst.token) continue;
+
+                try {
+                    // Use Manual Token Status Endpoint
+                    const res = await fetch(`${UAZAPI_CONFIG.baseUrl}/status`, {
+                        method: 'GET',
+                        headers: { 'token': inst.token }
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        // Status logic
+                        let newStatus = 'disconnected';
+                        if (data && data.status && data.status.checked_instance) {
+                            newStatus = data.status.checked_instance.connection_status;
+                        }
+
+                        // Update if changed
+                        if (inst.status !== newStatus) {
+                            console.log(`Status changed for ${inst.name}: ${inst.status} -> ${newStatus}`);
+                            instances[i].status = newStatus;
+                            changed = true;
+                        }
+                    }
+                } catch (e) {
+                    console.warn(`Failed to check status for ${inst.name}`, e);
+                }
+            }
+
+            if (changed) {
+                localStorage.setItem('wa_instances', JSON.stringify(instances));
+                loadWaInstances(); // Re-render
+            }
+        }
+
+        // Call sync when tab is opened or page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // ... existing init ...
+            setInterval(checkInstancesStatus, 10000); // Check every 10s
+        });
+
+        // Also hook into tab switch
+        const originalSwitchWaTab = window.switchWaTab;
+        window.switchWaTab = function (tabName) {
+            originalSwitchWaTab(tabName);
+            if (tabName === 'instances') checkInstancesStatus();
         };
 
         // --- CONFIG UAZAPI ---
