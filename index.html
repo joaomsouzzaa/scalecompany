@@ -5355,24 +5355,78 @@
 
         // GLOBAL MODAL FUNCTIONS
         window.openNewInstanceModal = function () {
-            console.log("Opening WhatsApp Modal (Inline)");
+            console.log("Opening WhatsApp Modal (QR Mode)");
             const modal = document.getElementById('instance-modal');
             const content = document.getElementById('instance-modal-content');
 
+            // Reset States
+            document.getElementById('qr-loading').classList.remove('hidden');
+            document.getElementById('qr-display').classList.add('hidden');
+            document.getElementById('qr-success').classList.add('hidden');
+
             if (modal) {
                 modal.classList.remove('hidden');
-                // Force layout calc
-                void modal.offsetWidth;
+                void modal.offsetWidth; // Force Reflow
                 modal.classList.remove('opacity-0');
 
                 if (content) {
                     content.classList.remove('opacity-0', 'scale-95');
                     content.classList.add('scale-100', 'opacity-100');
                 }
+
+                // Simulate "Generating Code" delay
+                setTimeout(() => {
+                    document.getElementById('qr-loading').classList.add('hidden');
+                    document.getElementById('qr-display').classList.remove('hidden');
+
+                    // Re-init lucide icons for the new content if needed
+                    if (window.lucide) lucide.createIcons();
+                }, 1500);
+
             } else {
                 console.error("Modal not found");
                 alert("Erro: Modal não encontrado!");
             }
+        };
+
+        window.simulateQrScan = function () {
+            // Transition to Success
+            document.getElementById('qr-display').classList.add('hidden');
+            document.getElementById('qr-success').classList.remove('hidden');
+
+            // Auto-Create after short delay
+            setTimeout(() => {
+                autoCreateInstance();
+            }, 1500);
+        };
+
+        window.autoCreateInstance = function () {
+            // Mock Data Generation
+            const mockNames = ['Loja Principal', 'Suporte N1', 'Atendimento Comercial', 'Financeiro'];
+            const randomName = mockNames[Math.floor(Math.random() * mockNames.length)];
+            const randomPhone = '55119' + Math.floor(Math.random() * 100000000); // 55119XXXXXXXX
+
+            // PERSISTENCE LOGIC
+            const newInstance = {
+                id: 'wa-' + Date.now(),
+                name: randomName,
+                phone: randomPhone,
+                desc: 'Conectado via QR Code (Simulação)',
+                status: 'connected',
+                createdAt: new Date().toISOString()
+            };
+
+            const instances = JSON.parse(localStorage.getItem('wa_instances') || '[]');
+            instances.push(newInstance);
+            localStorage.setItem('wa_instances', JSON.stringify(instances));
+
+            // Feedback & Close
+            // alert(`Instância "${randomName}" conectada com sucesso!`);
+            window.closeNewInstanceModal();
+
+            // Refresh UI
+            loadWaInstances();
+            updateWaCounters();
         };
 
         window.closeNewInstanceModal = function () {
@@ -5390,66 +5444,6 @@
                     modal.classList.add('hidden');
                 }, 300);
             }
-        };
-
-        window.saveNewInstance = function () {
-            const nameField = document.getElementById('wa-name');
-            const phoneField = document.getElementById('wa-phone');
-            const descField = document.getElementById('wa-desc');
-
-            const name = nameField ? nameField.value.trim() : '';
-            const phone = phoneField ? phoneField.value.trim() : '';
-            const desc = descField ? descField.value.trim() : '';
-
-            if (!name) {
-                alert("Por favor, digite um nome para a instância.");
-                if (nameField) nameField.focus();
-                return;
-            }
-
-            // Button Loading State
-            const btn = document.getElementById('btn-save-instance');
-            const originalText = btn ? btn.innerHTML : 'Salvar';
-
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Salvando...';
-                if (window.lucide) lucide.createIcons();
-            }
-
-            setTimeout(() => {
-                // PERSISTENCE LOGIC
-                const newInstance = {
-                    id: 'wa-' + Date.now(),
-                    name: name,
-                    phone: phone,
-                    desc: desc,
-                    status: 'connected', // Auto-connect for demo
-                    createdAt: new Date().toISOString()
-                };
-
-                const instances = JSON.parse(localStorage.getItem('wa_instances') || '[]');
-                instances.push(newInstance);
-                localStorage.setItem('wa_instances', JSON.stringify(instances));
-
-                // Success Feedback
-                alert(`Instância "${name}" criada com sucesso!`);
-                window.closeNewInstanceModal();
-
-                // Refresh UI
-                loadWaInstances();
-                updateWaCounters();
-
-                // Reset Form
-                if (nameField) nameField.value = '';
-                if (phoneField) phoneField.value = '';
-                if (descField) descField.value = '';
-
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                }
-            }, 800); // Slight delay for realism
         };
 
         // Navigation Logic Extension for WhatsApp
@@ -5476,43 +5470,54 @@
                 </button>
             </div>
 
-            <div class="p-6 space-y-4">
-                <!-- Name -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Nome da Instância <span
-                            class="text-red-500">*</span></label>
-                    <input type="text" id="wa-name" placeholder="Ex: Suporte Comercial"
-                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all">
+            <div class="p-6 flex flex-col items-center justify-center space-y-6" id="qr-content-wrapper">
+                <!-- QR Loading State -->
+                <div id="qr-loading" class="flex flex-col items-center animate-pulse">
+                    <div class="w-48 h-48 bg-slate-100 rounded-lg flex items-center justify-center mb-4">
+                        <i data-lucide="loader-2" class="w-10 h-10 text-slate-400 animate-spin"></i>
+                    </div>
+                    <p class="text-sm text-slate-500 font-medium">Gerando QR Code...</p>
                 </div>
 
-                <!-- Phone -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Número do WhatsApp
-                        (Opcional)</label>
-                    <input type="text" id="wa-phone" placeholder="5599999999999"
-                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all">
-                    <p class="text-[10px] text-slate-400 mt-1">Apenas números, com DDI e DDD.</p>
+                <!-- QR Display State (Hidden initially) -->
+                <div id="qr-display" class="hidden flex flex-col items-center animate-in fade-in zoom-in duration-300">
+                    <div class="relative group cursor-pointer" onclick="simulateQrScan()">
+                        <div
+                            class="w-48 h-48 bg-white p-2 rounded-lg border-2 border-slate-100 shadow-sm relative overflow-hidden">
+                            <!-- Mock QR Code (Using an icon/pattern for demo) -->
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=UAZAPI_DEMO_CONNECT"
+                                alt="QR Code"
+                                class="w-full h-full opacity-80 group-hover:opacity-100 transition-opacity">
+
+                            <!-- Obfuscation / "Click to Simulate" Overlay for clarity -->
+                            <div
+                                class="absolute inset-0 flex items-center justify-center bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span
+                                    class="bg-black/70 text-white text-[10px] px-2 py-1 rounded-full font-bold shadow-lg">Clique
+                                    para Simular Leitura</span>
+                            </div>
+                        </div>
+                        <!-- Scanline Animation -->
+                        <div
+                            class="absolute top-0 left-0 w-full h-1 bg-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.6)] animate-[scan_2s_ease-in-out_infinite] pointer-events-none">
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-center">
+                        <p class="text-sm font-bold text-slate-800">Abra o WhatsApp e escaneie</p>
+                        <p class="text-xs text-slate-500 mt-1">Menu > Aparelhos conectados > Conectar um aparelho</p>
+                    </div>
                 </div>
 
-                <!-- Description -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Descrição</label>
-                    <textarea id="wa-desc" rows="2" placeholder="Ex: Número exclusivo para atendimento ao cliente."
-                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all resize-none"></textarea>
-                </div>
-
-                <!-- Actions -->
-                <div class="pt-4 flex gap-3">
-                    <button id="btn-close-modal-secondary" onclick="closeNewInstanceModal()"
-                        class="flex-1 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium">
-                        Cancelar
-                    </button>
-                    <!-- Save Button with ID -->
-                    <button id="btn-save-instance" onclick="saveNewInstance()"
-                        class="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-sm text-sm font-medium flex justify-center items-center">
-                        <i data-lucide="save" class="w-4 h-4 mr-2"></i>
-                        Salvar Instância
-                    </button>
+                <!-- Connection Success State (Hidden) -->
+                <div id="qr-success"
+                    class="hidden flex flex-col items-center justify-center py-8 animate-in fade-in zoom-in duration-300">
+                    <div
+                        class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4 text-emerald-600">
+                        <i data-lucide="check" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Conectado!</h3>
+                    <p class="text-xs text-slate-500 mt-1">Aparelho sincronizado com sucesso.</p>
                 </div>
             </div>
         </div>
