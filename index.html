@@ -5623,6 +5623,8 @@
                         return null;
                     };
 
+                    const qrBase64 = getQr(data); // Restore missing definition
+
                     // Force log to debug if QR is being found
                     console.log("FINAL QR CHECK:", qrBase64 ? "FOUND" : "NOT FOUND", data);
 
