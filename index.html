@@ -5807,6 +5807,21 @@
 
                         currentQr = getQr(data);
 
+                        // If no QR found in status AND state is not connected, try fetching connect endpoint specifically for QR
+                        if (!currentQr && state !== 'connected') {
+                            try {
+                                const resQr = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect/${instanceName}`, {
+                                    method: 'GET',
+                                    headers: { 'token': manualToken }
+                                });
+                                if (resQr.ok) {
+                                    const dataQr = await resQr.json();
+                                    const deepQr = getQr(dataQr);
+                                    if (deepQr) currentQr = deepQr;
+                                }
+                            } catch (e) { console.warn("Secondary QR Poll failed", e); }
+                        }
+
                     } else {
                         // Legacy Polling
                         const res = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connectionState/${instanceName}`, {
