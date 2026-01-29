@@ -5484,7 +5484,7 @@
         // 1. CREATE INSTANCE & GET QR
         window.initRealConnection = async function () {
             const nameInput = document.getElementById('wa-name-input');
-            const tokenInput = document.getElementById('new-instance-token'); // New Input
+            const tokenInput = document.getElementById('new-instance-token');
 
             const instanceName = nameInput.value.trim();
             const manualToken = tokenInput ? tokenInput.value.trim() : '';
@@ -5495,265 +5495,247 @@
             }
 
             // Transition UI -> Loading
-            document.getElementById('step-name').classList.add('hidden');
+            const stepName = document.getElementById('step-name');
+            if (stepName) stepName.classList.add('hidden');
             document.getElementById('qr-loading').classList.remove('hidden');
 
             try {
-                // 1. CREATE INSTANCE & GET QR
-                window.initRealConnection = async function () {
-                    const nameInput = document.getElementById('wa-name-input');
-                    const tokenInput = document.getElementById('new-instance-token');
+                // FLOW 1: Manual Token (Direct Connect)
+                if (manualToken) {
+                    console.log(`Connecting with Manual Token: ${manualToken}...`);
 
-                    const instanceName = nameInput.value.trim();
-                    const manualToken = tokenInput ? tokenInput.value.trim() : '';
+                    // POST /instance/connect ensures we act on the specific instance tied to the token
+                    const response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect`, {
+                        method: 'POST',
+                        headers: {
+                            'token': manualToken, // Use Instance Token
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ instanceName: instanceName }) // Optional but helpful
+                    });
 
-                    if (!instanceName) {
-                        alert("Por favor, digite um nome para a instância.");
+                    const data = await response.json();
+
+                    if (data && (data.qrcode || data.base64)) {
+                        const qrBase64 = data.qrcode || data.base64;
+                        document.getElementById('qr-loading').classList.add('hidden');
+                        document.getElementById('qr-display').classList.remove('hidden');
+
+                        const img = document.getElementById('qr-code-img');
+                        img.src = qrBase64.startsWith('data:image') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
+
+                        // Start Polling with SPECIFIC Token
+                        startPollingStatus(instanceName, manualToken);
                         return;
+                    } else if (data && data.instance && data.instance.status === 'connected') {
+                        // Already connected!
+                        finalizeConnection(instanceName, manualToken);
+                        return;
+                    } else {
+                        throw new Error(data.message || "Falha ao obter QR Code com o token fornecido.");
                     }
+                }
 
-                    // Transition UI -> Loading
-                    const stepName = document.getElementById('step-name');
-                    if (stepName) stepName.classList.add('hidden');
-                    document.getElementById('qr-loading').classList.remove('hidden');
+                // FLOW 2: Legacy Creation (Admin Token)
+                console.log(`Creating instance: ${instanceName}...`);
+                const response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/create`, {
+                    method: 'POST',
+                    headers: {
+                        'token': UAZAPI_CONFIG.token,
+                        'apikey': UAZAPI_CONFIG.token,
+                        'Authorization': `Bearer ${UAZAPI_CONFIG.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ instanceName: instanceName })
+                });
 
-                    try {
-                        // FLOW 1: Manual Token (Direct Connect)
-                        if (manualToken) {
-                            console.log(`Connecting with Manual Token: ${manualToken}...`);
+                const data = await response.json();
+                console.log("Create Response:", data);
 
-                            // POST /instance/connect ensures we act on the specific instance tied to the token
-                            const response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect`, {
-                                method: 'POST',
-                                headers: {
-                                    'token': manualToken, // Use Instance Token
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({ instanceName: instanceName }) // Optional but helpful
-                            });
+                if (data && (data.qrcode || data.base64)) {
+                    const qrBase64 = data.qrcode || data.base64;
+                    document.getElementById('qr-loading').classList.add('hidden');
+                    document.getElementById('qr-display').classList.remove('hidden');
 
-                            const data = await response.json();
+                    const img = document.getElementById('qr-code-img');
+                    img.src = qrBase64.startsWith('data:image') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
 
-                            if (data && (data.qrcode || data.base64)) {
-                                const qrBase64 = data.qrcode || data.base64;
-                                document.getElementById('qr-loading').classList.add('hidden');
-                                document.getElementById('qr-display').classList.remove('hidden');
+                    startPollingStatus(instanceName);
+                } else {
+                    const isExistsError = data && data.message && (
+                        data.message.toLowerCase().includes("exists") ||
+                        data.message.toLowerCase().includes("já existe")
+                    );
 
-                                const img = document.getElementById('qr-code-img');
-                                img.src = qrBase64.startsWith('data:image') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
-
-                                // Start Polling with SPECIFIC Token
-                                startPollingStatus(instanceName, manualToken);
-                                return;
-                            } else if (data && data.instance && data.instance.status === 'connected') {
-                                // Already connected!
-                                finalizeConnection(instanceName, manualToken);
-                                return;
-                            } else {
-                                throw new Error(data.message || "Falha ao obter QR Code com o token fornecido.");
-                            }
+                    if (isExistsError) {
+                        connectExistingInstance(instanceName);
+                    } else {
+                        // Fallback: If 401/Unauthorized, it means we can't create. Suggest Manual Token.
+                        if (response.status === 401) {
+                            alert("Não foi possível criar a instância automaticamente (Erro 401).\n\nSOLUÇÃO:\n1. Crie a instância '" + instanceName + "' no Painel da UAZAPI.\n2. Copie o TOKEN dela.\n3. Cole no campo 'Token da Instância' aqui.");
+                            window.closeNewInstanceModal();
+                        } else {
+                            console.warn("Create failed, attempting legacy connect...", data);
+                            connectExistingInstance(instanceName);
                         }
+                    }
+                }
 
-                        // FLOW 2: Legacy Creation (Admin Token)
-                        console.log(`Creating instance: ${instanceName}...`);
-                        const response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/create`, {
-                            method: 'POST',
+            } catch (error) {
+                console.error("API Error:", error);
+                alert(`Erro ao conectar na API: ${error.message}`);
+                window.closeNewInstanceModal();
+            }
+        };
+
+        // Fallback for existing instances
+        window.connectExistingInstance = async function (instanceName) {
+            console.log(`Fallback: Connecting to existing ${instanceName}`);
+            try {
+                // GET is the confirmed correct method for this server (POST gives 405)
+                const response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect/${instanceName}`, {
+                    method: 'GET',
+                    headers: { 'token': UAZAPI_CONFIG.token, 'apikey': UAZAPI_CONFIG.token }
+                });
+
+                // Handle 404 specifically
+                if (response.status === 404) {
+                    alert(`Instância "${instanceName}" não encontrada! (Erro 404)\n\nCertifique-se de que você CRIOU ela no Painel da UAZAPI antes de clicar em "Gerar QR Code" aqui.`);
+                    window.closeNewInstanceModal();
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data && (data.base64 || data.qrcode)) {
+                    const qrBase64 = data.base64 || data.qrcode;
+                    document.getElementById('qr-loading').classList.add('hidden');
+                    document.getElementById('qr-display').classList.remove('hidden');
+                    const img = document.getElementById('qr-code-img');
+                    img.src = qrBase64.startsWith('data:image') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
+                    startPollingStatus(instanceName);
+                } else {
+                    alert("Não consegui conectar na instância existente: " + (data.message || JSON.stringify(data)));
+                    window.closeNewInstanceModal();
+                }
+            } catch (e) {
+                alert("Erro ao conectar instância existente: " + e.message);
+                window.closeNewInstanceModal();
+            }
+        }
+
+        // 2. POLL STATUS
+        let pollInterval = null;
+        function startPollingStatus(instanceName, manualToken = null) {
+            if (pollInterval) clearInterval(pollInterval);
+
+            let attempts = 0;
+            const maxAttempts = 100; // ~5 min timeout
+
+            pollInterval = setInterval(async () => {
+                attempts++;
+                if (attempts > maxAttempts) {
+                    clearInterval(pollInterval);
+                    document.getElementById('qr-expired').classList.remove('hidden');
+                    return;
+                }
+
+                try {
+                    let state = 'disconnected';
+
+                    if (manualToken) {
+                        // Manual Token Polling (Root Status endpoint)
+                        const res = await fetch(`${UAZAPI_CONFIG.baseUrl}/status`, {
+                            method: 'GET',
+                            headers: { 'token': manualToken }
+                        });
+                        const data = await res.json();
+                        if (data && data.status && data.status.checked_instance) {
+                            state = data.status.checked_instance.connection_status;
+                        }
+                    } else {
+                        // Legacy Polling
+                        const res = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connectionState/${instanceName}`, {
+                            method: 'GET',
                             headers: {
                                 'token': UAZAPI_CONFIG.token,
-                                'apikey': UAZAPI_CONFIG.token,
-                                'Authorization': `Bearer ${UAZAPI_CONFIG.token}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({ instanceName: instanceName })
+                                'apikey': UAZAPI_CONFIG.token
+                            }
                         });
-
-                        const data = await response.json();
-                        console.log("Create Response:", data);
-
-                        if (data && (data.qrcode || data.base64)) {
-                            const qrBase64 = data.qrcode || data.base64;
-                            document.getElementById('qr-loading').classList.add('hidden');
-                            document.getElementById('qr-display').classList.remove('hidden');
-
-                            const img = document.getElementById('qr-code-img');
-                            img.src = qrBase64.startsWith('data:image') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
-
-                            startPollingStatus(instanceName);
-                        } else {
-                            const isExistsError = data && data.message && (
-                                data.message.toLowerCase().includes("exists") ||
-                                data.message.toLowerCase().includes("já existe")
-                            );
-
-                            if (isExistsError) {
-                                connectExistingInstance(instanceName);
-                            } else {
-                                // Fallback: If 401/Unauthorized, it means we can't create. Suggest Manual Token.
-                                if (response.status === 401) {
-                                    alert("Não foi possível criar a instância automaticamente (Erro 401).\n\nSOLUÇÃO:\n1. Crie a instância '" + instanceName + "' no Painel da UAZAPI.\n2. Copie o TOKEN dela.\n3. Cole no campo 'Token da Instância' aqui.");
-                                    window.closeNewInstanceModal();
-                                } else {
-                                    console.warn("Create failed, attempting legacy connect...", data);
-                                    connectExistingInstance(instanceName);
-                                }
-                            }
-                        }
-
-                    } catch (error) {
-                        console.error("API Error:", error);
-                        alert(`Erro ao conectar na API: ${error.message}`);
-                        window.closeNewInstanceModal();
+                        const statusData = await res.json();
+                        state = statusData.state || statusData.status;
                     }
+
+                    console.log(`Polling ${instanceName}: ${state}`);
+
+                    if (state === 'open' || state === 'connected') {
+                        clearInterval(pollInterval);
+                        finalizeConnection(instanceName, manualToken);
+                    }
+                } catch (e) {
+                    console.warn("Polling error:", e);
+                }
+            }, 3000); // Check every 3s
+        }
+
+        // 3. FINALIZE & SAVE
+        async function finalizeConnection(instanceName, manualToken = null) {
+            // UI Success
+            document.getElementById('qr-display').classList.add('hidden');
+            document.getElementById('qr-success').classList.remove('hidden');
+
+            try {
+                // SAVE TO LOCAL STORAGE
+                const newInstance = {
+                    id: manualToken || ('wa-' + Date.now()),
+                    name: instanceName,
+                    phone: "Carregando...",
+                    desc: 'Conectado via UAZAPI',
+                    status: 'connected',
+                    token: manualToken,
+                    createdAt: new Date().toISOString()
                 };
 
-                // Fallback for existing instances
-                window.connectExistingInstance = async function (instanceName) {
-                    console.log(`Fallback: Connecting to existing ${instanceName}`);
-                    try {
-                        // GET is the confirmed correct method for this server (POST gives 405)
-                        const response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect/${instanceName}`, {
-                            method: 'GET',
-                            headers: { 'token': UAZAPI_CONFIG.token, 'apikey': UAZAPI_CONFIG.token }
-                        });
+                const instances = JSON.parse(localStorage.getItem('wa_instances') || '[]');
+                instances.push(newInstance);
+                localStorage.setItem('wa_instances', JSON.stringify(instances));
 
-                        // Handle 404 specifically
-                        if (response.status === 404) {
-                            alert(`Instância "${instanceName}" não encontrada! (Erro 404)\n\nCertifique-se de que você CRIOU ela no Painel da UAZAPI antes de clicar em "Gerar QR Code" aqui.`);
-                            window.closeNewInstanceModal();
-                            return;
-                        }
+                setTimeout(() => {
+                    window.closeNewInstanceModal();
+                    loadWaInstances();
+                    updateWaCounters();
+                }, 2000);
 
-                        const data = await response.json();
+            } catch (e) {
+                console.error("Finalize error", e);
+                window.closeNewInstanceModal();
+            }
+        }
 
-                        if (data && (data.base64 || data.qrcode)) {
-                            const qrBase64 = data.base64 || data.qrcode;
-                            document.getElementById('qr-loading').classList.add('hidden');
-                            document.getElementById('qr-display').classList.remove('hidden');
-                            const img = document.getElementById('qr-code-img');
-                            img.src = qrBase64.startsWith('data:image') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
-                            startPollingStatus(instanceName);
-                        } else {
-                            alert("Não consegui conectar na instância existente: " + (data.message || JSON.stringify(data)));
-                            window.closeNewInstanceModal();
-                        }
-                    } catch (e) {
-                        alert("Erro ao conectar instância existente: " + e.message);
-                        window.closeNewInstanceModal();
-                    }
+        window.closeNewInstanceModal = function () {
+            if (pollInterval) clearInterval(pollInterval); // Stop Polling
+
+            const modal = document.getElementById('instance-modal');
+            const content = document.getElementById('instance-modal-content');
+
+            if (modal) {
+                modal.classList.add('opacity-0');
+                if (content) {
+                    content.classList.add('opacity-0', 'scale-95');
+                    content.classList.remove('scale-100', 'opacity-100');
                 }
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+        };
 
-                // 2. POLL STATUS
-                let pollInterval = null;
-                function startPollingStatus(instanceName, manualToken = null) {
-                    if (pollInterval) clearInterval(pollInterval);
-
-                    let attempts = 0;
-                    const maxAttempts = 100; // ~5 min timeout
-
-                    pollInterval = setInterval(async () => {
-                        attempts++;
-                        if (attempts > maxAttempts) {
-                            clearInterval(pollInterval);
-                            document.getElementById('qr-expired').classList.remove('hidden');
-                            return;
-                        }
-
-                        try {
-                            let state = 'disconnected';
-
-                            if (manualToken) {
-                                // Manual Token Polling (Root Status endpoint)
-                                const res = await fetch(`${UAZAPI_CONFIG.baseUrl}/status`, {
-                                    method: 'GET',
-                                    headers: { 'token': manualToken }
-                                });
-                                const data = await res.json();
-                                if (data && data.status && data.status.checked_instance) {
-                                    state = data.status.checked_instance.connection_status;
-                                }
-                            } else {
-                                // Legacy Polling
-                                const res = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connectionState/${instanceName}`, {
-                                    method: 'GET',
-                                    headers: {
-                                        'token': UAZAPI_CONFIG.token,
-                                        'apikey': UAZAPI_CONFIG.token
-                                    }
-                                });
-                                const statusData = await res.json();
-                                state = statusData.state || statusData.status;
-                            }
-
-                            console.log(`Polling ${instanceName}: ${state}`);
-
-                            if (state === 'open' || state === 'connected') {
-                                clearInterval(pollInterval);
-                                finalizeConnection(instanceName, manualToken);
-                            }
-                        } catch (e) {
-                            console.warn("Polling error:", e);
-                        }
-                    }, 3000); // Check every 3s
-                }
-
-                // 3. FINALIZE & SAVE
-                async function finalizeConnection(instanceName, manualToken = null) {
-                    // UI Success
-                    document.getElementById('qr-display').classList.add('hidden');
-                    document.getElementById('qr-success').classList.remove('hidden');
-
-                    try {
-                        // SAVE TO LOCAL STORAGE
-                        const newInstance = {
-                            id: manualToken || ('wa-' + Date.now()),
-                            name: instanceName,
-                            phone: "Carregando...",
-                            desc: 'Conectado via UAZAPI',
-                            status: 'connected',
-                            token: manualToken,
-                            createdAt: new Date().toISOString()
-                        };
-
-                        const instances = JSON.parse(localStorage.getItem('wa_instances') || '[]');
-                        instances.push(newInstance);
-                        localStorage.setItem('wa_instances', JSON.stringify(instances));
-
-                        setTimeout(() => {
-                            window.closeNewInstanceModal();
-                            loadWaInstances();
-                            updateWaCounters();
-                        }, 2000);
-
-                    } catch (e) {
-                        console.error("Finalize error", e);
-                        window.closeNewInstanceModal();
-                    }
-                }
-
-                window.closeNewInstanceModal = function () {
-                    if (pollInterval) clearInterval(pollInterval); // Stop Polling
-
-                    const modal = document.getElementById('instance-modal');
-                    const content = document.getElementById('instance-modal-content');
-
-                    if (modal) {
-                        modal.classList.add('opacity-0');
-                        if (content) {
-                            content.classList.add('opacity-0', 'scale-95');
-                            content.classList.remove('scale-100', 'opacity-100');
-                        }
-                        setTimeout(() => {
-                            modal.classList.add('hidden');
-                        }, 300);
-                    }
-                };
-
-                // Navigation Logic Extension for WhatsApp
-                const originalNavigateTo = window.navigateTo;
-                window.navigateTo = function (viewId) {
-                    originalNavigateTo(viewId);
-                    // No init needed for simple modal logic
-                };
+        // Navigation Logic Extension for WhatsApp
+        const originalNavigateTo = window.navigateTo;
+        window.navigateTo = function (viewId) {
+            originalNavigateTo(viewId);
+            // No init needed for simple modal logic
+        };
     </script>
     <!-- Duplicate Modal Deleted -->
 
