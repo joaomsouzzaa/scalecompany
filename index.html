@@ -911,7 +911,7 @@
                                 <svg id="connections-layer"
                                     class="absolute top-0 left-0 w-[5000px] h-[5000px] pointer-events-none overflow-visible"
                                     style="z-index: 0; transform: translate(-2500px, -2500px);">
-                                    <!-- Dynamic Lines Injected via JS -->
+                                    <!-- Dynamic lines will be drawn here -->
                                 </svg>
 
                                 <!-- TEMP Connection Layer (High Z-Index for dragging visibility) -->
@@ -920,21 +920,15 @@
                                     style="z-index: 50; transform: translate(-2500px, -2500px);">
                                 </svg>
 
-                                <!-- Level 1: CEO -->
-                                <div id="card-ceo" class="absolute z-10 w-80 group" style="left: 0px; top: -200px;">
-                                    <!-- Input Connection Area (Top) -->
-                                    <div class="conn-hit-area top-point connection-dot-in">
-                                        <div class="conn-dot"></div>
-                                    </div>
-
-                                    <!-- Output Connection Area (Bottom) -->
+                                <!-- Agent 0: CEO (Root) -->
+                                <div id="card-ceo" class="absolute z-10 w-72 group" style="left: 0px; top: -200px;">
                                     <div class="conn-hit-area bottom-point connection-dot-out"
                                         onmousedown="handleDotMouseDown(event, 'card-ceo')">
                                         <div class="conn-dot"></div>
                                     </div>
 
                                     <div
-                                        class="bg-white p-5 rounded-lg shadow-lg border border-slate-100 relative hover:shadow-xl transition-all duration-300 hover:border-orange-200 h-[220px] flex flex-col justify-between">
+                                        class="bg-slate-900 text-white p-3 rounded-lg shadow-lg border border-slate-700 relative z-20 h-[180px] flex flex-col justify-between">
                                         <div class="flex items-start gap-4">
                                             <div
                                                 class="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg shrink-0">
@@ -964,7 +958,8 @@
 
                                 <!-- Level 2: Agents (Horizontal Row) -->
                                 <!-- Agent 1: Traffic -->
-                                <div id="card-traffic" class="relative group z-10 w-72">
+                                <div id="card-traffic" class="absolute z-10 w-72 group"
+                                    style="left: -500px; top: 100px;">
                                     <div class="conn-hit-area top-point connection-dot-in">
                                         <div class="conn-dot"></div>
                                     </div>
@@ -1014,7 +1009,7 @@
                                 </div>
 
                                 <!-- Agent 2: Copy -->
-                                <div id="card-copy" class="relative group z-10 w-72">
+                                <div id="card-copy" class="absolute z-10 w-72 group" style="left: -170px; top: 100px;">
                                     <div class="conn-hit-area top-point connection-dot-in">
                                         <div class="conn-dot"></div>
                                     </div>
@@ -1063,7 +1058,8 @@
                                 </div>
 
                                 <!-- Agent 3: Content -->
-                                <div id="card-content" class="relative group z-10 w-72">
+                                <div id="card-content" class="absolute z-10 w-72 group"
+                                    style="left: 170px; top: 100px;">
                                     <div class="conn-hit-area top-point connection-dot-in">
                                         <div class="conn-dot"></div>
                                     </div>
@@ -1112,7 +1108,7 @@
                                 </div>
 
                                 <!-- Agent 4: Sales -->
-                                <div id="card-sales" class="relative group z-10 w-72">
+                                <div id="card-sales" class="absolute z-10 w-72 group" style="left: 500px; top: 100px;">
                                     <div class="conn-hit-area top-point connection-dot-in">
                                         <div class="conn-dot"></div>
                                     </div>
@@ -3020,11 +3016,8 @@
             const scale = organogramState.scale;
 
             // Calculate relative to content origin (0,0)
-            // With new Flex layout, SVG matches content size 1:1, so no 2500 offset needed.
-            const relX = (dotRect.left + dotRect.width / 2 - contentRect.left) / scale;
-            const relY = (dotRect.top + dotRect.height / 2 - contentRect.top) / scale;
-
-            return { x: relX, y: relY };
+            // Add SVG Transform Offset (2500)
+            return { x: relX + 2500, y: relY + 2500 };
         }
 
         function handleDotMouseDown(e, cardId) {
@@ -3279,19 +3272,25 @@
         }
 
         function fitOrganogram() {
-            // With Flexbox, we don't need to manually set positions.
-            // The CSS 'flex items-center justify-center' handles the layout.
+            // Reset individual card positions to default "Tree" layout
+            const positions = {
+                'card-ceo': { l: 0, t: -200 },
+                'card-traffic': { l: -500, t: 100 },
+                'card-copy': { l: -170, t: 100 },
+                'card-content': { l: 170, t: 100 },
+                'card-sales': { l: 500, t: 100 }
+            };
 
-            // Reset Zoom/Pan to defaults so Flexbox centering is visible
-            organogramState.pan = { x: 0, y: 0 };
-            organogramState.scale = 1;
-            updateOrganogramTransform();
+            Object.keys(positions).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.left = positions[id].l + 'px';
+                    el.style.top = positions[id].t + 'px';
+                }
+            });
 
-            // Redraw connections to match new grid positions
-            // Tiny delay to ensure flex layout is computed
-            setTimeout(() => {
-                drawConnections();
-            }, 50);
+            centerContent();
+            drawConnections();
         }
 
         function centerContent() {
@@ -3573,10 +3572,11 @@
             const cardId = `card-${validSlug}-${Date.now()}`;
 
             const card = document.createElement('div');
-            // Updated for Flexbox Grid: Relative, no absolute positioning
-            card.className = 'relative group z-10 w-72 animate-in fade-in zoom-in duration-500';
+            // Updated to w-72 for consistency
+            card.className = 'absolute z-10 w-72 group animate-in fade-in zoom-in duration-500';
             card.id = cardId;
-            // No style.left/top needed
+            card.style.left = '0px';
+            card.style.top = '100px';
 
             card.innerHTML = `
                 <!-- Input Connection Area (Top) -->
