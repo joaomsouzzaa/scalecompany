@@ -2981,7 +2981,8 @@
                 { id: 'conn-2', from: 'card-ceo', to: 'card-copy' },
                 { id: 'conn-3', from: 'card-ceo', to: 'card-content' },
                 { id: 'conn-4', from: 'card-ceo', to: 'card-sales' }
-            ]
+            ],
+            editingAgentId: null // New: Track which agent is being edited
         };
 
         // Initialize listeners
@@ -3654,20 +3655,48 @@
         }
 
         function editAgent(cardId) {
-            // Reuse Agent Modal but populate fields
             const card = document.getElementById(cardId);
             if (!card) return;
 
+            // Store ID
+            organogramState.editingAgentId = cardId;
+
+            // Extract data
             const name = card.querySelector('[data-field="name"]').innerText;
             const desc = card.querySelector('[data-field="desc"]').innerText;
+            let provider = card.querySelector('[data-field="provider"]').innerText.toLowerCase();
+            let model = card.querySelector('[data-field="model"]').innerText;
+
+            // Normalize provider if needed (handle visual text vs value)
+            const providerSelect = document.getElementById('agent-provider');
+            // Try to match text to value, or default to openai
+            if (!['openai', 'anthropic', 'google'].includes(provider)) provider = 'openai';
 
             // Populate Modal
             document.getElementById('agent-name').value = name;
             document.getElementById('agent-desc').value = desc;
-            document.getElementById('agent-slug').value = cardId.replace('card-', '');
+            document.getElementById('agent-slug').value = cardId.replace('card-', '').split('-')[0]; // Simple slug recovery
+            document.getElementById('agent-provider').value = provider;
 
-            // Open
-            openAgentModal();
+            // Update models then set model
+            updateModelOptions();
+
+            // Try to set model if it exists in options
+            const modelSelect = document.getElementById('agent-model');
+            // If model text is just the name, we might need value. But here we assume text match or ID match.
+            // Let's iterate options to find a match by text or value
+            for (let i = 0; i < modelSelect.options.length; i++) {
+                if (modelSelect.options[i].text === model || modelSelect.options[i].value === model) {
+                    modelSelect.selectedIndex = i;
+                    break;
+                }
+            }
+
+            // Change Save Button Text
+            const saveBtn = document.querySelector('#agent-modal button[onclick="saveAgent()"]');
+            if (saveBtn) saveBtn.innerHTML = '<i data-lucide="save" class="w-4 h-4 mr-2"></i> Salvar Alterações';
+
+            openAgentModal(true); // pass true to skip clearing
         }
 
         function deleteAgent(cardId) {
@@ -3681,11 +3710,24 @@
             }
         }
 
-        function openAgentModal() {
+        function openAgentModal(isEdit = false) {
             const modal = document.getElementById('agent-modal');
             const content = document.getElementById('agent-modal-content');
 
             if (!modal || !content) { console.error('Modal not found'); return; }
+
+            if (!isEdit) {
+                // Reset for Create Mode
+                organogramState.editingAgentId = null;
+                document.getElementById('agent-name').value = '';
+                document.getElementById('agent-slug').value = '';
+                document.getElementById('agent-desc').value = '';
+                document.getElementById('agent-provider').value = 'openai';
+                updateModelOptions();
+
+                const saveBtn = document.querySelector('#agent-modal button[onclick="saveAgent()"]');
+                if (saveBtn) saveBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 mr-2"></i> Criar Agente';
+            }
 
             modal.classList.remove('hidden');
             // Animate in
@@ -3694,12 +3736,6 @@
                 content.classList.remove('scale-95', 'opacity-0');
                 content.classList.add('scale-100', 'opacity-100');
             }, 10);
-
-            // Initialize Model Options
-            const modelSelect = document.getElementById('agent-model');
-            if (modelSelect && modelSelect.options.length === 0) {
-                updateModelOptions();
-            }
         }
 
         function closeAgentModal() {
@@ -3738,22 +3774,53 @@
                 return;
             }
 
-            // Simulate Save (Add card to UI)
-            closeAgentModal();
+            if (organogramState.editingAgentId) {
+                // UPDATE EXISTING
+                const card = document.getElementById(organogramState.editingAgentId);
+                if (card) {
+                    card.querySelector('[data-field="name"]').textContent = name;
+                    card.querySelector('[data-field="desc"]').textContent = desc;
+                    card.querySelector('[data-field="provider"]').textContent = provider;
+                    card.querySelector('[data-field="model"]').textContent = model; // Use ID or Name? Usually ID for logic, Name for display.
+                    // Let's use the text from the option for display
+                    const modelSelect = document.getElementById('agent-model');
+                    const modelName = modelSelect.options[modelSelect.selectedIndex].text;
+                    card.querySelector('[data-field="model"]').textContent = modelName;
 
-            // Show Success Notification
-            const btn = document.querySelector('#view-agents button[onclick*="openAgentModal"]');
-            if (btn) {
-                const originalText = btn.innerHTML;
-                btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 mr-2"></i> Criado!`;
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    if (window.lucide) lucide.createIcons();
-                }, 2000);
+                    // Show success on Save Button
+                    const saveBtn = document.querySelector('#agent-modal button[onclick="saveAgent()"]');
+                    if (saveBtn) {
+                        const originalText = saveBtn.innerHTML;
+                        saveBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4 mr-2"></i> Salvo!`;
+                        setTimeout(() => {
+                            saveBtn.innerHTML = originalText;
+                            closeAgentModal();
+                        }, 1000);
+                    } else {
+                        closeAgentModal();
+                    }
+                }
+            } else {
+                // CREATE NEW
+                closeAgentModal();
+
+                // Show Success Notification on "New Agent" button
+                const btn = document.querySelector('#view-agents button[onclick*="openAgentModal"]');
+                if (btn) {
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 mr-2"></i> Criado!`;
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        if (window.lucide) lucide.createIcons();
+                    }, 2000);
+                }
+
+                // Pass an object with all data
+                // For model text
+                const modelSelect = document.getElementById('agent-model');
+                const modelName = modelSelect.options[modelSelect.selectedIndex].text;
+                appendAgentToGrid({ name, slug, provider, model: modelName, desc });
             }
-
-            // Pass an object with all data
-            appendAgentToGrid({ name, slug, provider, model, desc });
         }
 
         function appendAgentToGrid(data) {
