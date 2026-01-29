@@ -822,7 +822,7 @@
                                 <p class="text-slate-500">Gerencie a hierarquia e fluxo de trabalho entre agentes de IA
                                 </p>
                             </div>
-                            <button
+                            <button onclick="openAgentModal()"
                                 class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors flex items-center shadow-lg shadow-orange-500/20">
                                 <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
                                 Novo Agente
@@ -1423,6 +1423,54 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- LLM Keys -->
+                                <div
+                                    class="flex items-start gap-4 p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
+                                    <div
+                                        class="w-12 h-12 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 shrink-0">
+                                        <i data-lucide="key" class="w-6 h-6"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <h3 class="font-medium text-slate-900">Provedores de IA</h3>
+                                            <span
+                                                class="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">Opcional</span>
+                                        </div>
+                                        <p class="text-sm text-slate-500 mb-4">Configure chaves de API para permitir que
+                                            agentes utilizem diferentes modelos.</p>
+
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label
+                                                    class="block text-xs font-semibold text-slate-500 uppercase mb-1">OpenAI
+                                                    API Key</label>
+                                                <input type="password" placeholder="sk-..."
+                                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono">
+                                            </div>
+                                            <div>
+                                                <label
+                                                    class="block text-xs font-semibold text-slate-500 uppercase mb-1">Anthropic
+                                                    API Key</label>
+                                                <input type="password" placeholder="sk-ant-..."
+                                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono">
+                                            </div>
+                                            <div>
+                                                <label
+                                                    class="block text-xs font-semibold text-slate-500 uppercase mb-1">Google
+                                                    AI Key</label>
+                                                <input type="password" placeholder="AIzam..."
+                                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono">
+                                            </div>
+                                            <div class="flex justify-end pt-2">
+                                                <button
+                                                    class="text-xs font-medium text-emerald-600 hover:text-emerald-700 flex items-center">
+                                                    <i data-lucide="check" class="w-3 h-3 mr-1"></i> Salvar Chaves
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1433,6 +1481,91 @@
 
 
     </div> <!-- End App Container -->
+
+    <!-- New Agent Modal -->
+    <div id="agent-modal"
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center transition-opacity opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 transform transition-all scale-95 opacity-0 duration-300"
+            id="agent-modal-content">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-xl">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">Editar Agente</h3>
+                    <p class="text-xs text-slate-500 mt-1">Atualize as configurações do agente de IA</p>
+                </div>
+                <button onclick="closeAgentModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                <!-- Name -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Nome</label>
+                    <input type="text" id="agent-name" placeholder="Ex: Gestor de Tráfego"
+                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all">
+                </div>
+
+                <!-- Slug -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Slug (identificador
+                        único)</label>
+                    <input type="text" id="agent-slug" placeholder="Ex: traffic"
+                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all">
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Descrição</label>
+                    <textarea id="agent-desc" rows="2" placeholder="Ex: Agente especialista em Meta Ads..."
+                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Provider -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Provider</label>
+                        <select id="agent-provider" onchange="updateModelOptions()"
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all cursor-pointer appearance-none">
+                            <option value="openai">OpenAI</option>
+                            <option value="anthropic">Anthropic</option>
+                            <option value="google">Google</option>
+                        </select>
+                    </div>
+                    <!-- Model -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Modelo</label>
+                        <select id="agent-model"
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all cursor-pointer appearance-none">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Prompt -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">System Prompt</label>
+                    <div class="relative">
+                        <textarea id="agent-prompt" rows="6"
+                            placeholder="Defina a personalidade e instruções do agente..."
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all resize-y"></textarea>
+                        <div class="absolute bottom-2 right-2 flex gap-1">
+                            <button class="p-1 bg-white border border-slate-200 rounded hover:bg-slate-50"
+                                title="Expandir" type="button"><i data-lucide="maximize-2"
+                                    class="w-3 h-3 text-slate-400"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50 rounded-b-xl">
+                <button onclick="closeAgentModal()"
+                    class="px-4 py-2 text-slate-600 hover:text-slate-800 text-sm font-medium transition-colors">Cancelar</button>
+                <button onclick="saveAgent()"
+                    class="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg shadow-lg shadow-orange-500/20 transition-all transform active:scale-95">Salvar
+                    Alterações</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Safety check for Lucide
@@ -2637,6 +2770,138 @@
                 submenu.classList.remove('max-h-96', 'opacity-100');
                 chevron.style.transform = 'rotate(0deg)';
             }
+        }
+
+        // --- Agent Logic ---
+        const AGENT_MODELS = {
+            'openai': [
+                { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
+                { id: 'gpt-4o', name: 'GPT-4o' },
+                { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' }
+            ],
+            'anthropic': [
+                { id: 'claude-3-5-sonnet-20240620', name: 'Claude 3.5 Sonnet' },
+                { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' },
+                { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku' }
+            ],
+            'google': [
+                { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
+                { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' }
+            ]
+        };
+
+        function openAgentModal() {
+            const modal = document.getElementById('agent-modal');
+            const content = document.getElementById('agent-modal-content');
+
+            if (!modal || !content) { console.error('Modal not found'); return; }
+
+            modal.classList.remove('hidden');
+            // Animate in
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+
+            // Initialize Model Options
+            const modelSelect = document.getElementById('agent-model');
+            if (modelSelect && modelSelect.options.length === 0) {
+                updateModelOptions();
+            }
+        }
+
+        function closeAgentModal() {
+            const modal = document.getElementById('agent-modal');
+            const content = document.getElementById('agent-modal-content');
+
+            if (!modal || !content) return;
+
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            modal.classList.add('opacity-0');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function updateModelOptions() {
+            const provider = document.getElementById('agent-provider').value;
+            const modelSelect = document.getElementById('agent-model');
+            const models = AGENT_MODELS[provider] || [];
+
+            modelSelect.innerHTML = models.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+        }
+
+        function saveAgent() {
+            // Get values
+            const name = document.getElementById('agent-name').value;
+            const slug = document.getElementById('agent-slug').value;
+            const provider = document.getElementById('agent-provider').value;
+            const desc = document.getElementById('agent-desc').value;
+
+            if (!name || !slug) {
+                alert('Nome e Slug são obrigatórios.');
+                return;
+            }
+
+            // Simulate Save (Add card to UI)
+            closeAgentModal();
+
+            // Show Success Notification
+            const btn = document.querySelector('#view-agents button[onclick*="openAgentModal"]');
+            if (btn) {
+                const originalText = btn.innerHTML;
+                btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 mr-2"></i> Criado!`;
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    if (window.lucide) lucide.createIcons();
+                }, 2000);
+            }
+
+            appendAgentToGrid(name, slug, provider, desc);
+        }
+
+        function appendAgentToGrid(name, slug, provider, desc) {
+            const grid = document.querySelector('#view-agents .grid.grid-cols-4');
+            // Fallback if removed/changed
+            if (!grid) {
+                console.warn("Agent grid not found");
+                return;
+            }
+
+            // Create Card HTML
+            const card = document.createElement('div');
+            card.className = "relative z-10 w-64 animate-in fade-in zoom-in duration-500 type-agent-card"; // Added class for easier selection if needed
+            card.innerHTML = `
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rounded-full border-2 border-white z-20"></div>
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group hover:-translate-y-1 hover:border-orange-200">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded bg-orange-50 flex items-center justify-center shrink-0">
+                            <i data-lucide="bot" class="w-4 h-4 text-orange-600"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                <h3 class="font-bold text-slate-800 text-sm">${name}</h3>
+                                <span class="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold uppercase">Ativo</span>
+                            </div>
+                            <p class="text-[10px] text-slate-500 leading-snug mb-2">${desc || 'Novo agente de IA'}</p>
+                            <div class="flex gap-1 mb-2 flex-wrap">
+                                <span class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">${provider}</span>
+                                <span class="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">${slug}</span>
+                            </div>
+                            <div class="flex gap-2 text-slate-400">
+                                <button class="hover:text-orange-500"><i data-lucide="eye" class="w-3 h-3"></i></button>
+                                <button class="hover:text-orange-500"><i data-lucide="settings" class="w-3 h-3"></i></button>
+                                <button class="hover:text-red-500"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+
+            grid.appendChild(card);
+            if (window.lucide) lucide.createIcons();
         }
 
         // --- Navigation Logic ---
