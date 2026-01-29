@@ -5652,6 +5652,11 @@
                         document.getElementById('qr-loading').classList.add('hidden');
                         document.getElementById('qr-display').classList.remove('hidden');
 
+                        // Set explicit loading placeholder
+                        const img = document.getElementById('qr-code-img');
+                        // Use a generic loading spinner
+                        img.src = 'https://media.tenor.com/On7kvXhzml4AAAAj/loading-gif.gif';
+
                         startPollingStatus(instanceName, manualToken);
                         return;
                     }
