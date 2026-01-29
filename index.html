@@ -5577,28 +5577,41 @@
 
                     let data = null;
 
-                    // Strategy 1: POST /instance/connect (No Params)
+                    // STRATEGY 1: GET /instance/connect/{name} (Prioritized)
+                    // This endpoint is more reliable for getting the QR code directly.
+                    console.log("Strategy 1 (Prioritized): GET /connect/{name}...");
                     try {
-                        const res = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect`, {
-                            method: 'POST',
-                            headers: { 'token': manualToken, 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ instanceName: instanceName })
+                        const res = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect/${instanceName}`, {
+                            method: 'GET',
+                            headers: { 'token': manualToken }
                         });
-                        console.log("Strategy 1 (POST) status:", res.status);
-
+                        console.log("Strategy 1 (GET) status:", res.status);
                         if (res.ok) {
                             data = await res.json();
                             console.log("Strategy 1 Data:", data);
-                        } else {
-                            // Try to read error content
-                            try {
-                                const err = await res.json();
-                                console.warn("POST Error Body:", err);
-                            } catch (e) { }
                         }
-                    } catch (e) { console.warn("POST Connect failed, trying GET fallback...", e); }
+                    } catch (e) { console.warn("GET Connect failed, trying POST fallback...", e); }
 
-                    // Helper to deep extract QR (Moved up)
+                    // STRATEGY 2: POST /instance/connect (Fallback)
+                    // Only try if GET failed to return data
+                    if (!data) {
+                        console.log("Strategy 1 Failed. Trying Strategy 2 (POST)...");
+                        try {
+                            const res = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect`, {
+                                method: 'POST',
+                                headers: { 'token': manualToken, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ instanceName: instanceName })
+                            });
+                            console.log("Strategy 2 (POST) status:", res.status);
+
+                            if (res.ok) {
+                                data = await res.json();
+                                console.log("Strategy 2 Data:", data);
+                            }
+                        } catch (e) { console.warn("POST Connect failed too", e); }
+                    }
+
+                    // Helper to deep extract QR
                     const getQr = (d) => {
                         if (!d) return null;
                         if (d.qrcode) return d.qrcode;
@@ -5609,25 +5622,6 @@
                         }
                         return null;
                     };
-
-                    // Strategy 2: If POST failed/empty OR NO QR in data, Try GET /instance/connect/{name}
-                    // NOW USING getQr(data) to check for nested QR properly!
-                    if (!data || !getQr(data)) {
-                        console.log("Strategy 1 Failed (No QR found). Trying GET Strategy...");
-                        try {
-                            const res = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect/${instanceName}`, {
-                                method: 'GET',
-                                headers: { 'token': manualToken }
-                            });
-                            console.log("Strategy 2 (GET) status:", res.status);
-                            if (res.ok) {
-                                data = await res.json();
-                                console.log("Strategy 2 Data:", data);
-                            }
-                        } catch (e) { console.warn("GET Connect failed too", e); }
-                    }
-
-                    const qrBase64 = getQr(data);
 
                     // Force log to debug if QR is being found
                     console.log("FINAL QR CHECK:", qrBase64 ? "FOUND" : "NOT FOUND", data);
@@ -5660,6 +5654,12 @@
                         const img = document.getElementById('qr-code-img');
                         img.classList.add('hidden');
                         img.src = '';
+
+                        // Show a temporary text to avoid complete white screen
+                        const loadingText = document.getElementById('temp-loading-text');
+                        if (!loadingText) {
+                            img.parentElement.insertAdjacentHTML('beforeend', '<p id="temp-loading-text" class="text-gray-500 text-sm mt-4">Aguardando QR Code...</p>');
+                        }
 
                         startPollingStatus(instanceName, manualToken);
                         return;
@@ -5845,6 +5845,9 @@
                         if (img) {
                             img.src = newSrc;
                             img.classList.remove('hidden');
+                            // Remove temp text
+                            const tempText = document.getElementById('temp-loading-text');
+                            if (tempText) tempText.remove();
                         }
                         return;
                     }
