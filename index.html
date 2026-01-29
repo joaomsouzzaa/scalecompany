@@ -3260,13 +3260,12 @@
             if (window.lucide) activeIcons = lucide.createIcons();
         }
 
-        function confirmDeleteConnection(e, connId) {
-            e.stopPropagation();
-            if (confirm('Remover esta conexão?')) {
-                organogramState.connections = organogramState.connections.filter(c => c.id !== connId);
-                drawConnections();
-            }
-        }
+        // Make globally available for inline onclick handlers
+        window.deleteConnection = function (connId) {
+            console.log("Deleting connection:", connId); // Debug log
+            organogramState.connections = organogramState.connections.filter(c => c.id !== connId);
+            drawConnections();
+        };
 
         // --- Card Actions ---
         function previewAgent(cardId) {
