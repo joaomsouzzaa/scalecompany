@@ -2583,13 +2583,37 @@
         if (sdpc) sdpc.addEventListener('click', function (event) { event.stopPropagation(); });
 
         // --- Navigation Logic ---
+        // --- Navigation Logic ---
         function navigateTo(viewId) {
             console.log("Navigating to:", viewId);
+            const overlay = document.getElementById('global-loading-overlay');
+
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+
+                // Simulate delay for smooth transition
+                setTimeout(() => {
+                    executeNavigation(viewId);
+
+                    // Fade out
+                    overlay.classList.add('opacity-0');
+                    setTimeout(() => {
+                        overlay.classList.remove('flex', 'opacity-0');
+                        overlay.classList.add('hidden');
+                    }, 300);
+                }, 400); // 400ms delay
+            } else {
+                executeNavigation(viewId);
+            }
+        }
+
+        function executeNavigation(viewId) {
             try {
                 // Persist state
                 localStorage.setItem('last_active_view', viewId);
 
-                // Add all views to manage
+                // Add all views to manage (INCLUDING WHATSAPP)
                 const views = ['dashboard', 'settings', 'agents', 'vendas', 'whatsapp'];
 
                 // Hide all views
@@ -2609,14 +2633,12 @@
 
                     // Auto-center Organogram if opening Agents view
                     if (viewId === 'agents') {
-                        // Small delay to ensure display:block applies for rect calculation
                         setTimeout(() => {
                             if (typeof fitOrganogram === 'function') fitOrganogram();
                         }, 50);
                     }
                 } else {
                     console.error("Target view not found:", viewId);
-                    // alert("Erro: Tela '" + viewId + "' não encontrada."); // Suppress alert for robustness
                 }
 
                 // Close menus if open
