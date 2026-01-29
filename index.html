@@ -6116,6 +6116,7 @@
     <script>
         const ALERTS_API_URL = 'https://tvgrkklonqfclocqfswq.supabase.co/functions/v1/whatsapp-alerts';
         const UAZAPI_TOKEN = 'f90f7cf3-5218-43ca-8493-d44f41901466'; // Fixed UAZAPI token
+        const USE_LOCALSTORAGE = true; // Set to false after deploying Edge Function
 
         let currentAlerts = [];
         let editingAlertId = null;
@@ -6144,9 +6145,18 @@
             }
 
             try {
-                const res = await fetch(ALERTS_API_URL);
-                if (!res.ok) throw new Error("Falha ao carregar alertas");
-                const alerts = await res.json();
+                let alerts;
+
+                if (USE_LOCALSTORAGE) {
+                    // Load from localStorage
+                    alerts = JSON.parse(localStorage.getItem('whatsapp_alerts') || '[]');
+                } else {
+                    // Load from API
+                    const res = await fetch(ALERTS_API_URL);
+                    if (!res.ok) throw new Error("Falha ao carregar alertas");
+                    alerts = await res.json();
+                }
+
                 currentAlerts = alerts;
                 renderAlerts(alerts);
             } catch (e) {
@@ -6391,22 +6401,43 @@
             };
 
             try {
-                let res;
-                if (editingAlertId) {
-                    res = await fetch(ALERTS_API_URL, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: editingAlertId, ...payload })
-                    });
-                } else {
-                    res = await fetch(ALERTS_API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                }
+                if (USE_LOCALSTORAGE) {
+                    // Save to localStorage
+                    const alerts = JSON.parse(localStorage.getItem('whatsapp_alerts') || '[]');
 
-                if (!res.ok) throw new Error("Erro ao salvar");
+                    if (editingAlertId) {
+                        // Update existing
+                        const index = alerts.findIndex(a => a.id === editingAlertId);
+                        if (index !== -1) {
+                            alerts[index] = { ...alerts[index], ...payload };
+                        }
+                    } else {
+                        // Create new
+                        payload.id = 'alert-' + Date.now();
+                        payload.created_at = new Date().toISOString();
+                        alerts.push(payload);
+                    }
+
+                    localStorage.setItem('whatsapp_alerts', JSON.stringify(alerts));
+                } else {
+                    // Save to API
+                    let res;
+                    if (editingAlertId) {
+                        res = await fetch(ALERTS_API_URL, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: editingAlertId, ...payload })
+                        });
+                    } else {
+                        res = await fetch(ALERTS_API_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                    }
+
+                    if (!res.ok) throw new Error("Erro ao salvar");
+                }
 
                 closeAlertModal();
                 loadAlerts();
@@ -6428,11 +6459,19 @@
             if (!confirm("Tem certeza que deseja excluir?")) return;
 
             try {
-                await fetch(ALERTS_API_URL, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id })
-                });
+                if (USE_LOCALSTORAGE) {
+                    // Delete from localStorage
+                    let alerts = JSON.parse(localStorage.getItem('whatsapp_alerts') || '[]');
+                    alerts = alerts.filter(a => a.id !== id);
+                    localStorage.setItem('whatsapp_alerts', JSON.stringify(alerts));
+                } else {
+                    // Delete from API
+                    await fetch(ALERTS_API_URL, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id })
+                    });
+                }
                 loadAlerts();
             } catch (e) {
                 alert("Erro ao excluir");
