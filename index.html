@@ -5462,29 +5462,20 @@
         };
 
         // Fallback for existing instances
-        async function connectExistingInstance(instanceName) {
+        window.connectExistingInstance = async function (instanceName) {
             console.log(`Fallback: Connecting to existing ${instanceName}`);
             try {
-                // Try GET first (Classic Evolution behavior)
-                // If fails 404/405, we might try POST later, but let's stick to GET with correct headers first
-                let response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect/${instanceName}`, {
+                // GET is the confirmed correct method for this server (POST gives 405)
+                const response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect/${instanceName}`, {
                     method: 'GET',
-                    headers: {
-                        'token': UAZAPI_CONFIG.token,
-                        'apikey': UAZAPI_CONFIG.token
-                    }
+                    headers: { 'token': UAZAPI_CONFIG.token, 'apikey': UAZAPI_CONFIG.token }
                 });
 
-                // If Method Not Allowed (405) or Not Found (404), Try POST as per User Docs
-                if (response.status === 404 || response.status === 405) {
-                    console.log("GET connect failed, trying POST...");
-                    response = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect/${instanceName}`, {
-                        method: 'POST',
-                        headers: {
-                            'token': UAZAPI_CONFIG.token,
-                            'apikey': UAZAPI_CONFIG.token
-                        }
-                    });
+                // Handle 404 specifically
+                if (response.status === 404) {
+                    alert(`Instância "${instanceName}" não encontrada! (Erro 404)\n\nCertifique-se de que você CRIOU ela no Painel da UAZAPI antes de clicar em "Gerar QR Code" aqui.`);
+                    window.closeNewInstanceModal();
+                    return;
                 }
 
                 const data = await response.json();
