@@ -5629,6 +5629,9 @@
 
                     const qrBase64 = getQr(data);
 
+                    // Force log to debug if QR is being found
+                    console.log("FINAL QR CHECK:", qrBase64 ? "FOUND" : "NOT FOUND", data);
+
                     // 1. Success: QR Found immediately
                     // 1. Success: QR Found immediately
                     if (qrBase64) {
