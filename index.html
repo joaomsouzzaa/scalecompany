@@ -5438,13 +5438,19 @@
                     // Start Polling Status
                     startPollingStatus(instanceName);
                 } else {
-                    // Check if instance already exists or other error
-                    if (data && (data.error || (data.message && data.message.includes("exists")))) {
+                    // Check strictly for "exists"
+                    const isExistsError = data && data.message && (
+                        data.message.toLowerCase().includes("exists") ||
+                        data.message.toLowerCase().includes("já existe")
+                    );
+
+                    if (isExistsError) {
                         connectExistingInstance(instanceName);
                     } else {
-                        // Graceful error
+                        // Show REAL error
                         console.error("API Error Payload:", data);
-                        alert("Erro ao criar instância: " + (data.message || JSON.stringify(data)));
+                        const msg = data.message || data.error || JSON.stringify(data);
+                        alert("Erro UAZAPI: " + msg);
                         window.closeNewInstanceModal();
                     }
                 }
