@@ -5543,8 +5543,21 @@
                         } catch (e) { console.warn("GET Connect failed too", e); }
                     }
 
-                    if (data && (data.qrcode || data.base64)) {
-                        const qrBase64 = data.qrcode || data.base64;
+                    // Helper to deep extract QR
+                    const getQr = (d) => {
+                        if (!d) return null;
+                        if (d.qrcode) return d.qrcode;
+                        if (d.base64) return d.base64;
+                        if (d.instance) {
+                            if (d.instance.qrcode) return d.instance.qrcode;
+                            if (d.instance.base64) return d.instance.base64;
+                        }
+                        return null;
+                    };
+
+                    const qrBase64 = getQr(data);
+
+                    if (qrBase64) {
                         document.getElementById('qr-loading').classList.add('hidden');
                         document.getElementById('qr-display').classList.remove('hidden');
 
