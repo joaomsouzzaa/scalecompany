@@ -5639,6 +5639,7 @@
                         document.getElementById('qr-display').classList.remove('hidden');
 
                         const img = document.getElementById('qr-code-img');
+                        img.classList.remove('hidden'); // Ensure visible
                         img.src = qrBase64.startsWith('data:image') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
 
                         startPollingStatus(instanceName, manualToken);
@@ -5650,15 +5651,15 @@
                         return;
                     }
                     // 3. FALLBACK: IF API RETURNED 200 OK but NO QR/STATUS -> Start Polling Anyway
-                    // This covers "open", "connecting", or just "status" field missing but instance exists
                     else {
                         console.log("No immediate QR or Connected status, but API connect was OK. Starting Polling...");
                         document.getElementById('qr-loading').classList.add('hidden');
                         document.getElementById('qr-display').classList.remove('hidden');
 
-                        // Spinner removed by user request
-                        // const img = document.getElementById('qr-code-img');
-                        // img.src = '';
+                        // Hide the image element itself so it doesn't show a broken icon
+                        const img = document.getElementById('qr-code-img');
+                        img.classList.add('hidden');
+                        img.src = '';
 
                         startPollingStatus(instanceName, manualToken);
                         return;
@@ -5825,8 +5826,11 @@
                     if (currentQr) {
                         const img = document.getElementById('qr-code-img');
                         const newSrc = currentQr.startsWith('data:image') ? currentQr : `data:image/png;base64,${currentQr}`;
-                        if (img && img.src !== newSrc) img.src = newSrc;
-                        // DO NOT FINALIZE if we have a QR code, even if status says 'open' (it might be 'open' for scanning)
+                        // Always update src and REMOVE hidden class
+                        if (img) {
+                            img.src = newSrc;
+                            img.classList.remove('hidden');
+                        }
                         return;
                     }
 
