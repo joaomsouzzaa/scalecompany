@@ -6040,14 +6040,6 @@
                                 <h4 class="text-sm font-bold text-slate-800 mb-3 flex items-center"><i
                                         data-lucide="send" class="w-4 h-4 mr-1.5 text-green-500"></i> Envio</h4>
 
-                                <div class="mb-4">
-                                    <label class="block text-xs font-medium text-slate-500 mb-1">Enviar usando
-                                        Instância:</label>
-                                    <select id="alert-instance-select"
-                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500">
-                                        <option value="">Selecione uma instância conectada...</option>
-                                    </select>
-                                </div>
 
                                 <div>
                                     <label class="block text-xs font-medium text-slate-500 mb-1">Destinatários</label>
@@ -6123,7 +6115,7 @@
     <!-- WHATSAPP ALERTS LOGIC -->
     <script>
         const ALERTS_API_URL = 'https://tvgrkklonqfclocqfswq.supabase.co/functions/v1/whatsapp-alerts';
-        // NOTE: Replace with dynamic URL if available in environment, but hardcoded for now based on project context
+        const UAZAPI_TOKEN = 'f90f7cf3-5218-43ca-8493-d44f41901466'; // Fixed UAZAPI token
 
         let currentAlerts = [];
         let editingAlertId = null;
@@ -6234,7 +6226,6 @@
 
             // Populate Accounts
             populateAccountSelect();
-            populateInstanceSelect();
 
             if (alert) {
                 editingAlertId = alert.id;
@@ -6244,15 +6235,6 @@
                 document.getElementById('alert-time').value = alert.schedule_time;
                 document.getElementById('alert-account-select').value = alert.config?.accountId || '';
                 document.getElementById('alert-city').value = alert.config?.city || '';
-                document.getElementById('alert-instance-select').value = alert.instance_token || ''; // This assumes token match, strictly we should match by checking implementation logic but for now token is key
-                // Find instance by token
-                const sel = document.getElementById('alert-instance-select');
-                for (let opt of sel.options) {
-                    if (opt.value === alert.instance_token) {
-                        sel.value = alert.instance_token;
-                        break;
-                    }
-                }
 
                 alertRecipients = alert.recipients || [];
             } else {
@@ -6293,49 +6275,63 @@
             }, 300);
         }
 
-        function populateAccountSelect() {
-            // Re-use logic from FB integration or just grab from DOM if needed. 
-            // Better: Read from local storage or wait for FB init to have fired?
-            // Since this runs after init, we might have `accountListContainer` populated?
-            // Let's implement a simple fetch or re-use existing
+        async function populateAccountSelect() {
             const select = document.getElementById('alert-account-select');
-            // Check existing campaign-select?
-            // Actually, we can just grab from localStorage 'fb_selected_account_id' as default, 
-            // but we need the LIST of accounts.
-            // Simplified: If user connected FB, `FB.api` call might store accounts?
-            // HACK: Use the accountDropdown items if available or just show currently selected as an option.
+            select.innerHTML = '<option value="">Carregando...</option>';
 
-            const accId = localStorage.getItem('fb_selected_account_id');
-            const accName = localStorage.getItem('fb_selected_account_name');
+            try {
+                // Try to fetch all ad accounts from Facebook
+                const fbToken = localStorage.getItem('fb_access_token');
 
-            select.innerHTML = '<option value="">Selecione...</option>';
-            if (accId) {
-                const opt = document.createElement('option');
-                opt.value = accId;
-                opt.innerText = accName || `Conta ${accId}`;
-                opt.selected = true; // Default to current
-                select.appendChild(opt);
-                // Hint
-                const optHint = document.createElement('option');
-                optHint.disabled = true;
-                optHint.innerText = "(Para carregar outras, conecte no Dashboard)";
-                select.appendChild(optHint);
+                if (fbToken && window.FB) {
+                    // Fetch all ad accounts
+                    window.FB.api('/me/adaccounts', { fields: 'id,name', access_token: fbToken }, function (response) {
+                        if (response && response.data && response.data.length > 0) {
+                            select.innerHTML = '<option value="">Selecione uma conta...</option>';
+                            response.data.forEach(acc => {
+                                const opt = document.createElement('option');
+                                const cleanId = acc.id.replace('act_', '');
+                                opt.value = cleanId;
+                                opt.innerText = acc.name;
+
+                                // Auto-select if it's the current account
+                                const savedAcc = localStorage.getItem('fb_selected_account_id');
+                                if (savedAcc === cleanId) {
+                                    opt.selected = true;
+                                }
+
+                                select.appendChild(opt);
+                            });
+                        } else {
+                            // Fallback to localStorage
+                            useFallback();
+                        }
+                    });
+                } else {
+                    // Fallback to localStorage
+                    useFallback();
+                }
+            } catch (e) {
+                console.error('Error loading accounts:', e);
+                useFallback();
+            }
+
+            function useFallback() {
+                const accId = localStorage.getItem('fb_selected_account_id');
+                const accName = localStorage.getItem('fb_selected_account_name');
+
+                select.innerHTML = '<option value="">Selecione...</option>';
+                if (accId) {
+                    const opt = document.createElement('option');
+                    opt.value = accId;
+                    opt.innerText = accName || `Conta ${accId}`;
+                    opt.selected = true;
+                    select.appendChild(opt);
+                }
             }
         }
 
-        function populateInstanceSelect() {
-            const select = document.getElementById('alert-instance-select');
-            const instances = JSON.parse(localStorage.getItem('wa_instances') || '[]');
-            select.innerHTML = '<option value="">Selecione...</option>';
-            instances.forEach(inst => {
-                if (inst.status === 'connected') {
-                    const opt = document.createElement('option');
-                    opt.value = inst.token; // IMPORTANT: We save the TOKEN
-                    opt.innerText = inst.name;
-                    select.appendChild(opt);
-                }
-            });
-        }
+        // Instance selector removed - using fixed UAZAPI token instead
 
         // --- RECIPIENTS LOGIC ---
         function addRecipient() {
@@ -6371,12 +6367,10 @@
             const time = document.getElementById('alert-time').value;
             const accountId = document.getElementById('alert-account-select').value;
             const city = document.getElementById('alert-city').value;
-            const instanceToken = document.getElementById('alert-instance-select').value;
 
             // Validations
             if (!name) return alert("Nome é obrigatório");
             if (!time) return alert("Horário é obrigatório");
-            if (!instanceToken) return alert("Selecione uma instância do WhatsApp conectada");
             if (alertRecipients.length === 0) return alert("Adicione pelo menos um destinatário");
 
             const btn = document.getElementById('btn-save-alert');
@@ -6392,7 +6386,7 @@
                     city
                 },
                 recipients: alertRecipients,
-                instance_token: instanceToken,
+                instance_token: UAZAPI_TOKEN, // Use fixed token
                 meta_token: localStorage.getItem('fb_access_token') || '' // Save current FB token
             };
 
@@ -6475,9 +6469,7 @@
             // From Modal
             const accountId = document.getElementById('alert-account-select').value;
             const city = document.getElementById('alert-city').value;
-            const instanceToken = document.getElementById('alert-instance-select').value;
 
-            if (!instanceToken) return alert("Selecione uma instância");
             if (alertRecipients.length === 0) return alert("Adicione um destinatário");
 
             const btn = document.getElementById('btn-test-alert');
@@ -6491,7 +6483,7 @@
                     body: JSON.stringify({
                         config: { accountId, city },
                         meta_token: localStorage.getItem('fb_access_token') || '',
-                        instance_token: instanceToken,
+                        instance_token: UAZAPI_TOKEN, // Use fixed token
                         recipients: alertRecipients
                     })
                 });
