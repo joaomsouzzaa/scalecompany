@@ -5203,11 +5203,18 @@
         window.openNewInstanceModal = function () {
             console.log("Opening WhatsApp Modal (Inline)");
             const modal = document.getElementById('instance-modal');
+            const content = document.getElementById('instance-modal-content');
+
             if (modal) {
                 modal.classList.remove('hidden');
                 // Force layout calc
                 void modal.offsetWidth;
                 modal.classList.remove('opacity-0');
+
+                if (content) {
+                    content.classList.remove('opacity-0', 'scale-95');
+                    content.classList.add('scale-100', 'opacity-100');
+                }
             } else {
                 console.error("Modal not found");
                 alert("Erro: Modal não encontrado!");
@@ -5216,8 +5223,15 @@
 
         window.closeNewInstanceModal = function () {
             const modal = document.getElementById('instance-modal');
+            const content = document.getElementById('instance-modal-content');
+
             if (modal) {
                 modal.classList.add('opacity-0');
+                if (content) {
+                    content.classList.add('opacity-0', 'scale-95');
+                    content.classList.remove('scale-100', 'opacity-100');
+                }
+
                 setTimeout(() => {
                     modal.classList.add('hidden');
                 }, 300);
