@@ -6484,21 +6484,54 @@
 
             if (!confirm("Isso enviará uma mensagem de teste AGORA para os destinatários. Continuar?")) return;
 
-            // Show loading toast or global overlay?
-            // Simple alert for now or status
             try {
-                const res = await fetch(`${ALERTS_API_URL}/test`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        config: alert.config,
-                        meta_token: alert.meta_token,
-                        instance_token: alert.instance_token,
-                        recipients: alert.recipients
-                    })
-                });
-                if (res.ok) alert("Teste enviado!");
-                else alert("Erro ao enviar teste.");
+                // Build test message
+                const dateDisplay = new Date().toLocaleDateString('pt-BR');
+                const testMessage = `📊 *Relatório de Teste - ${dateDisplay}*
+  
+💰 *Vendas:* R$ 0,00
+🛒 *Qtd. Vendas:* 0
+📈 *ROI:* ∞x
+📉 *CPA:* R$ 0,00
+  
+📢 *Investimento Ads:* R$ 0,00
+👀 *Impressões:* 0
+👆 *Cliques:* 0
+  
+💳 *Métodos:*
+Pix: 0 | Cartão: 0
+  
+_Gerado automaticamente pelo Scale._`;
+
+                // Send to all recipients
+                const recipients = alert.recipients || [];
+                const results = [];
+
+                for (const rec of recipients) {
+                    const cleanNumber = rec.value.replace(/\D/g, '');
+
+                    const response = await fetch('https://free.uazapi.com/send/text', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'token': UAZAPI_TOKEN
+                        },
+                        body: JSON.stringify({
+                            number: cleanNumber,
+                            text: testMessage
+                        })
+                    });
+
+                    results.push({ number: cleanNumber, success: response.ok });
+                }
+
+                const successCount = results.filter(r => r.success).length;
+                if (successCount > 0) {
+                    alert(`Teste enviado para ${successCount} destinatário(s)!`);
+                } else {
+                    alert("Erro ao enviar teste.");
+                }
             } catch (e) {
                 alert("Erro: " + e.message);
             }
@@ -6516,20 +6549,50 @@
             btn.disabled = true;
 
             try {
-                const res = await fetch(`${ALERTS_API_URL}/test`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        config: { accountId, city },
-                        meta_token: localStorage.getItem('fb_access_token') || '',
-                        instance_token: UAZAPI_TOKEN, // Use fixed token
-                        recipients: alertRecipients
-                    })
-                });
-                if (res.ok) alert("Teste enviado com sucesso!");
-                else {
-                    const d = await res.json();
-                    alert("Erro ao enviar: " + (d.error || res.statusText));
+                // Build test message (simplified version)
+                const dateDisplay = new Date().toLocaleDateString('pt-BR');
+                const testMessage = `📊 *Relatório de Teste - ${dateDisplay}*
+  
+💰 *Vendas:* R$ 0,00
+🛒 *Qtd. Vendas:* 0
+📈 *ROI:* ∞x
+📉 *CPA:* R$ 0,00
+  
+📢 *Investimento Ads:* R$ 0,00
+👀 *Impressões:* 0
+👆 *Cliques:* 0
+  
+💳 *Métodos:*
+Pix: 0 | Cartão: 0
+  
+_Gerado automaticamente pelo Scale._`;
+
+                // Send to all recipients via UAZAPI directly
+                const results = [];
+                for (const rec of alertRecipients) {
+                    const cleanNumber = rec.value.replace(/\D/g, '');
+
+                    const response = await fetch('https://free.uazapi.com/send/text', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'token': UAZAPI_TOKEN
+                        },
+                        body: JSON.stringify({
+                            number: cleanNumber,
+                            text: testMessage
+                        })
+                    });
+
+                    results.push({ number: cleanNumber, success: response.ok });
+                }
+
+                const successCount = results.filter(r => r.success).length;
+                if (successCount > 0) {
+                    alert(`Teste enviado com sucesso para ${successCount} destinatário(s)!`);
+                } else {
+                    alert("Erro ao enviar teste. Verifique o token UAZAPI e os números.");
                 }
             } catch (e) {
                 alert("Erro: " + e.message);
