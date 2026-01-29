@@ -257,17 +257,30 @@
                         class="font-medium text-sm ml-3 transition-opacity duration-300 opacity-100 sidebar-text">Vendas</span>
                 </a>
 
-                <!-- Automações Link (Inactive) -->
-                <a href="#" id="nav-automations" onclick="return false;"
-                    class="flex items-center px-3 py-3 rounded-lg text-slate-500 hover:text-slate-500 cursor-not-allowed transition-colors group overflow-hidden whitespace-nowrap min-h-[44px] mt-auto opacity-60"
-                    title="Automações (Em breve)">
-                    <i data-lucide="bot" class="w-5 h-5 min-w-[20px]"></i>
-                    <span
-                        class="font-medium text-sm ml-3 transition-opacity duration-300 opacity-100 sidebar-text">Automações</span>
-                    <span
-                        class="ml-auto text-[10px] uppercase font-bold bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700 sidebar-text">Em
-                        breve</span>
-                </a>
+                <!-- Automações Parent -->
+                <div>
+                    <button onclick="toggleAutomationsMenu()"
+                        class="w-full flex items-center justify-between px-3 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors group overflow-hidden whitespace-nowrap min-h-[44px]"
+                        id="nav-automations-parent">
+                        <div class="flex items-center">
+                            <i data-lucide="bot" class="w-5 h-5 min-w-[20px]"></i>
+                            <span
+                                class="font-medium text-sm ml-3 transition-opacity duration-300 opacity-100 sidebar-text">Automações</span>
+                        </div>
+                        <i data-lucide="chevron-down" id="automations-chevron"
+                            class="w-4 h-4 transition-transform sidebar-text"></i>
+                    </button>
+
+                    <!-- Submenu -->
+                    <div id="automations-submenu" class="ml-4 mt-1 space-y-1 hidden border-l border-slate-700 pl-2">
+                        <a href="#" onclick="navigateTo('whatsapp'); setActiveSubItem(this)"
+                            class="flex items-center px-3 py-2 rounded-lg text-slate-500 hover:text-white text-sm transition-colors group">
+                            <span
+                                class="w-1.5 h-1.5 rounded-full bg-slate-700 mr-2 transition-colors group-hover:bg-green-500"></span>
+                            <span class="sidebar-text">WhatsApp</span>
+                        </a>
+                    </div>
+                </div>
 
                 <!-- Time Parent -->
                 <div>
@@ -2871,6 +2884,48 @@
             }
         }
 
+        // --- Toggle Automations Menu ---
+        function toggleAutomationsMenu(forceClose = false) {
+            if (!forceClose && isSidebarCollapsed) {
+                toggleSidebar();
+            }
+
+            const submenu = document.getElementById('automations-submenu');
+            const chevron = document.getElementById('automations-chevron');
+
+            // Quick safety check
+            if (!submenu || !chevron) return;
+
+            // Initial Setup for animation if still using 'hidden'
+            if (submenu.classList.contains('hidden')) {
+                submenu.classList.remove('hidden');
+                submenu.classList.add('max-h-0', 'opacity-0', 'overflow-hidden', 'transition-all', 'duration-300', 'ease-in-out');
+                // Force reflow
+                void submenu.offsetWidth;
+            }
+
+            const isClosed = submenu.classList.contains('max-h-0') || forceClose;
+
+            if (forceClose) {
+                submenu.classList.add('max-h-0', 'opacity-0');
+                submenu.classList.remove('max-h-96', 'opacity-100'); // Arbitrary large height
+                chevron.style.transform = 'rotate(0deg)';
+                return;
+            }
+
+            if (isClosed) {
+                // Open
+                submenu.classList.remove('max-h-0', 'opacity-0');
+                submenu.classList.add('max-h-96', 'opacity-100');
+                chevron.style.transform = 'rotate(180deg)';
+            } else {
+                // Close
+                submenu.classList.add('max-h-0', 'opacity-0');
+                submenu.classList.remove('max-h-96', 'opacity-100');
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+
         function toggleDashboardMenu(forceClose = false) {
             if (!forceClose && isSidebarCollapsed) {
                 toggleSidebar();
@@ -5192,6 +5247,23 @@
             <span class="text-lg font-medium text-slate-800">Carregando...</span>
         </div>
     </div>
+    <!-- Load WhatsApp Logic -->
+    <script src="whatsapp_logic.js"></script>
+
+    <script>
+        // Navigation Logic Extension for WhatsApp
+        const originalNavigateTo = window.navigateTo;
+        window.navigateTo = function (viewId) {
+            originalNavigateTo(viewId);
+
+            if (viewId === 'whatsapp') {
+                // Initialize WhatsApp Logic when entering view
+                if (typeof initWhatsApp === 'function') {
+                    initWhatsApp();
+                }
+            }
+        };
+    </script>
 </body>
 
 </html>
