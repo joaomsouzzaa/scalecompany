@@ -5598,9 +5598,22 @@
                         }
                     } catch (e) { console.warn("POST Connect failed, trying GET fallback...", e); }
 
-                    // Strategy 2: If POST failed/empty, Try GET /instance/connect/{name}
-                    if (!data || (!data.qrcode && !data.base64)) {
-                        console.log("Strategy 1 Failed. Trying GET Strategy...");
+                    // Helper to deep extract QR (Moved up)
+                    const getQr = (d) => {
+                        if (!d) return null;
+                        if (d.qrcode) return d.qrcode;
+                        if (d.base64) return d.base64;
+                        if (d.instance) {
+                            if (d.instance.qrcode) return d.instance.qrcode;
+                            if (d.instance.base64) return d.instance.base64;
+                        }
+                        return null;
+                    };
+
+                    // Strategy 2: If POST failed/empty OR NO QR in data, Try GET /instance/connect/{name}
+                    // NOW USING getQr(data) to check for nested QR properly!
+                    if (!data || !getQr(data)) {
+                        console.log("Strategy 1 Failed (No QR found). Trying GET Strategy...");
                         try {
                             const res = await fetch(`${UAZAPI_CONFIG.baseUrl}/instance/connect/${instanceName}`, {
                                 method: 'GET',
@@ -5613,18 +5626,6 @@
                             }
                         } catch (e) { console.warn("GET Connect failed too", e); }
                     }
-
-                    // Helper to deep extract QR
-                    const getQr = (d) => {
-                        if (!d) return null;
-                        if (d.qrcode) return d.qrcode;
-                        if (d.base64) return d.base64;
-                        if (d.instance) {
-                            if (d.instance.qrcode) return d.instance.qrcode;
-                            if (d.instance.base64) return d.instance.base64;
-                        }
-                        return null;
-                    };
 
                     const qrBase64 = getQr(data);
 
