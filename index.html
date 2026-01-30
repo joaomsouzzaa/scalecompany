@@ -6092,15 +6092,22 @@
                             <h4 class="text-sm font-bold text-slate-800 mb-3">Preview da Mensagem</h4>
                             <div
                                 class="bg-[#E5DDD5] p-3 rounded-lg flex-1 min-h-[300px] relative overflow-hidden flex flex-col shadow-inner">
-                                <div class="bg-white rounded-lg p-3 shadow-md max-w-[90%] self-start relative text-sm text-[#111b21] leading-normal font-sans"
-                                    id="alert-preview-text">📊 <strong>Relatório Diário - 28/01/2026</strong> 💰
-                                    <strong>Vendas:</strong> R$ 0,00<br>
-                                    🛒 <strong>Qtd. Vendas:</strong> 0 📊 <strong>ROI:</strong> ∞x<br>
-                                    📉 <strong>CPA:</strong> R$ 0,00 📢 <strong>Investimento Ads:</strong> R$ 0,00<br>
-                                    👀 <strong>Impressões:</strong> 0 👆 <strong>Cliques:</strong> 0 💳
-                                    <strong>Métodos:</strong> Pix: 0 | Cartão: 0<br>
-                                    <br>
-                                    <em>Gerado automaticamente pelo Scale.</em>
+                                <div class="bg-white rounded-lg p-3 shadow-md max-w-[90%] self-start relative text-sm text-[#111b21] font-sans"
+                                    style="white-space: pre-line; line-height: 1.5;" id="alert-preview-text">📊
+                                    <strong>Relatório de Teste - 29/01/2026</strong>
+
+                                    📢 <strong>Investimento Ads:</strong> R$ 0,00
+                                    🛒 <strong>Qtd. Vendas:</strong> 0
+                                    📉 <strong>CPA:</strong> R$ 0,00
+                                    👥 <strong>Total de Participantes:</strong> 0
+                                    💵 <strong>CAC Participante:</strong> R$ 0,00
+                                    💰 <strong>Faturamento:</strong> R$ 0,00
+
+                                    💳 <strong>Métodos:</strong>
+                                    Pix: 0 | Cartão: 0
+
+                                    <em>Gerado automaticamente.
+                                        By: Scalinho</em>
                                 </div>
                                 <span
                                     class="bg-white/80 backdrop-blur-sm absolute bottom-2 right-2 text-[10px] px-1.5 py-0.5 rounded text-slate-500">Exemplo</span>
@@ -6478,13 +6485,24 @@
                 const salesData = await fetchSalesData(dateStart, dateEnd);
 
                 // Update preview
-                const dateDisplay = new Date(dateEnd).toLocaleDateString('pt-BR');
-                previewEl.innerHTML = `📊 <strong>Relatório Diário - ${dateDisplay}</strong> 💰 <strong>Vendas:</strong> R$ ${salesData.total.toFixed(2)}<br>
-🛒 <strong>Qtd. Vendas:</strong> ${salesData.count} 📊 <strong>ROI:</strong> ${salesData.roi}<br>
-📉 <strong>CPA:</strong> R$ ${salesData.cpa} 📢 <strong>Investimento Ads:</strong> R$ ${spend.toFixed(2)}<br>
-👀 <strong>Impressões:</strong> ${impressions.toLocaleString('pt-BR')} 👆 <strong>Cliques:</strong> ${clicks} 💳 <strong>Métodos:</strong> Pix: ${salesData.pix} | Cartão: ${salesData.card}<br>
-<br>
-<em>Gerado automaticamente pelo Scale.</em>`;
+                const dateStart = document.getElementById('alert-date-start').value;
+                const dateEnd = document.getElementById('alert-date-end').value;
+                const dateDisplay = `${new Date(dateStart).toLocaleDateString('pt-BR')} à ${new Date(dateEnd).toLocaleDateString('pt-BR')}`;
+
+                previewEl.innerHTML = `📊 <strong>Relatório de Teste - ${dateDisplay}</strong>
+
+📢 <strong>Investimento Ads:</strong> R$ ${spend.toFixed(2)}
+🛒 <strong>Qtd. Vendas:</strong> ${salesData.count}
+📉 <strong>CPA:</strong> R$ ${salesData.cpa}
+👥 <strong>Total de Participantes:</strong> 0
+💵 <strong>CAC Participante:</strong> R$ 0,00
+💰 <strong>Faturamento:</strong> R$ ${salesData.total.toFixed(2)}
+
+💳 <strong>Métodos:</strong>
+Pix: ${salesData.pix} | Cartão: ${salesData.card}
+
+<em>Gerado automaticamente.
+By: Scalinho</em>`;
 
             } catch (error) {
                 console.error('Error fetching preview data:', error);
